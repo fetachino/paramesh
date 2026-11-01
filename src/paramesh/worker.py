@@ -9,6 +9,7 @@ from typing import Any
 import grpc
 import torch
 
+from paramesh import telemetry
 from paramesh.journal import Journal
 from paramesh.rpc import training_pb2 as pb
 from paramesh.rpc import training_pb2_grpc as rpc
@@ -104,86 +105,116 @@ def train_worker(
         replayed = 0
         try:
             for step in range(resumed_from, steps):
-                statuses = [
-                    _rpc(client.GetProgress, pb.PullRequest(run_id=config.run_id), timeout)
-                    for client in clients
-                ]
-                positions = [item.next_steps[worker_id] for item in statuses]
-                if any(position not in (step, step + 1) for position in positions):
-                    raise ValueError("Shard progress is inconsistent with the worker journal")
-                if not journal.record.requests and any(position > step for position in positions):
-                    raise ValueError(
-                        "Missing durable gradient journal for a partially committed step"
-                    )
-                accepted = {index for index, position in enumerate(positions) if position > step}
-                committed_versions = {
-                    index: item.version for index, item in enumerate(statuses) if index in accepted
-                }
-                refresh = not bool(journal.record.requests)
-                if journal.record.requests:
-                    replayed += len(clients) - len(accepted)
-                for _ in range(100):
-                    if heartbeat_errors:
-                        raise RuntimeError("Coordinator heartbeat failed") from heartbeat_errors[0]
-                    if refresh:
-                        snapshots = [
-                            _rpc(
-                                client.PullParameters, pb.PullRequest(run_id=config.run_id), timeout
-                            )
-                            for client in clients
-                        ]
-                        values = decode_many(
-                            tensor for item in snapshots for tensor in item.tensors
+                with telemetry.span(
+                    "worker.training_step", worker_id=worker_id, run_id=config.run_id, step=step
+                ) as training_trace:
+                    iteration_started = time.perf_counter()
+                    statuses = [
+                        _rpc(client.GetProgress, pb.PullRequest(run_id=config.run_id), timeout)
+                        for client in clients
+                    ]
+                    positions = [item.next_steps[worker_id] for item in statuses]
+                    if any(position not in (step, step + 1) for position in positions):
+                        raise ValueError("Shard progress is inconsistent with the worker journal")
+                    if not journal.record.requests and any(
+                        position > step for position in positions
+                    ):
+                        raise ValueError(
+                            "Missing durable gradient journal for a partially committed step"
                         )
-                        load_parameters(network, values)
-                        network.zero_grad()
-                        loss = torch.nn.functional.mse_loss(network(inputs), targets)
-                        torch.autograd.backward(loss)
-                        requests = list(journal.record.requests)
-                        for index in range(len(clients)):
+                    accepted = {
+                        index for index, position in enumerate(positions) if position > step
+                    }
+                    committed_versions = {
+                        index: item.version
+                        for index, item in enumerate(statuses)
+                        if index in accepted
+                    }
+                    refresh = not bool(journal.record.requests)
+                    if journal.record.requests:
+                        replayed += len(clients) - len(accepted)
+                    for _ in range(100):
+                        if heartbeat_errors:
+                            raise RuntimeError(
+                                "Coordinator heartbeat failed"
+                            ) from heartbeat_errors[0]
+                        if refresh:
+                            snapshots = [
+                                _rpc(
+                                    client.PullParameters,
+                                    pb.PullRequest(run_id=config.run_id),
+                                    timeout,
+                                )
+                                for client in clients
+                            ]
+                            values = decode_many(
+                                tensor for item in snapshots for tensor in item.tensors
+                            )
+                            load_parameters(network, values)
+                            network.zero_grad()
+                            loss = torch.nn.functional.mse_loss(network(inputs), targets)
+                            torch.autograd.backward(loss)
+                            requests = list(journal.record.requests)
+                            for index in range(len(clients)):
+                                if index in accepted:
+                                    continue
+                                request = pb.GradientUpdate(
+                                    run_id=config.run_id,
+                                    worker_id=worker_id,
+                                    step=step,
+                                    base_version=snapshots[index].version,
+                                    tensors=[
+                                        encode(name, parameter.grad.detach().numpy())
+                                        for name, parameter in network.named_parameters()
+                                        if ownership[name] == index and parameter.grad is not None
+                                    ],
+                                )
+                                if len(requests) == len(clients):
+                                    requests[index] = request
+                                else:
+                                    requests.append(request)
+                            journal.prepare(requests, float(loss.detach()))
+                            refresh = False
+                        for index, client in enumerate(clients):
                             if index in accepted:
                                 continue
-                            request = pb.GradientUpdate(
-                                run_id=config.run_id,
-                                worker_id=worker_id,
-                                step=step,
-                                base_version=snapshots[index].version,
-                                tensors=[
-                                    encode(name, parameter.grad.detach().numpy())
-                                    for name, parameter in network.named_parameters()
-                                    if ownership[name] == index and parameter.grad is not None
-                                ],
+                            request = journal.record.requests[index]
+                            request.generation = session.generation
+                            try:
+                                result: pb.UpdateResult = _rpc(
+                                    client.PushGradients, request, timeout
+                                )
+                            except grpc.RpcError as error:
+                                if error.code() != grpc.StatusCode.FAILED_PRECONDITION:
+                                    raise
+                                refreshes += 1
+                                telemetry.add("refreshes")
+                                refresh = True
+                                break
+                            accepted.add(index)
+                            committed_versions[index] = result.version
+                        if len(accepted) == len(clients):
+                            losses.append(journal.record.loss)
+                            journal.complete()
+                            with progress_lock:
+                                progress[:] = [step + 1, min(committed_versions.values())]
+                            telemetry.add("worker_steps")
+                            telemetry.add("examples", len(inputs))
+                            telemetry.set_value("loss", losses[-1])
+                            telemetry.set_value("worker_step", step + 1, worker_id=worker_id)
+                            telemetry.set_value("worker_version", progress[1], worker_id=worker_id)
+                            telemetry.observe(
+                                "step_duration_seconds", time.perf_counter() - iteration_started
                             )
-                            if len(requests) == len(clients):
-                                requests[index] = request
-                            else:
-                                requests.append(request)
-                        journal.prepare(requests, float(loss.detach()))
-                        refresh = False
-                    for index, client in enumerate(clients):
-                        if index in accepted:
-                            continue
-                        request = journal.record.requests[index]
-                        request.generation = session.generation
-                        try:
-                            result: pb.UpdateResult = _rpc(client.PushGradients, request, timeout)
-                        except grpc.RpcError as error:
-                            if error.code() != grpc.StatusCode.FAILED_PRECONDITION:
-                                raise
-                            refreshes += 1
-                            refresh = True
+                            if training_trace is not None:
+                                training_trace.add_event(
+                                    "step_completed",
+                                    {"step": step + 1, "version": progress[1], "loss": losses[-1]},
+                                )
                             break
-                        accepted.add(index)
-                        committed_versions[index] = result.version
-                    if len(accepted) == len(clients):
-                        losses.append(journal.record.loss)
-                        journal.complete()
-                        with progress_lock:
-                            progress[:] = [step + 1, min(committed_versions.values())]
-                        stopped.wait(step_delay)
-                        break
-                else:
-                    raise RuntimeError("Staleness refresh limit exceeded; run did not complete")
+                    else:
+                        raise RuntimeError("Staleness refresh limit exceeded; run did not complete")
+                stopped.wait(step_delay)
             if heartbeat_errors:
                 raise RuntimeError("Coordinator heartbeat failed") from heartbeat_errors[0]
             stopped.set()

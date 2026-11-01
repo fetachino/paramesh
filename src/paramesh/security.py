@@ -11,6 +11,7 @@ from typing import Any, NamedTuple
 
 import grpc
 
+from paramesh import telemetry
 from paramesh.tensors import MAX_MESSAGE_BYTES
 
 CHANNEL_OPTIONS = [
@@ -88,6 +89,9 @@ class ServerAuth:
         if admin or (data and details.method not in ADMIN_METHODS):
             return continuation(details)
         code = grpc.StatusCode.PERMISSION_DENIED if data else grpc.StatusCode.UNAUTHENTICATED
+        telemetry.add("auth_denied", status=code.name)
+        if details.method == "/paramesh.v1.ParameterShard/PushGradients":
+            telemetry.add("rejected_updates", status=code.name)
 
         def deny(request: Any, context: Any) -> None:
             context.abort(
@@ -138,7 +142,8 @@ def open_channel(address: str, security: RpcSecurity | None = None, *, admin: bo
         channel = grpc.secure_channel(address, credentials, options=CHANNEL_OPTIONS)
     else:
         channel = grpc.insecure_channel(address, options=CHANNEL_OPTIONS)
+    interceptors = [telemetry.ClientMetrics()] if telemetry.active is not None else []
     if security is not None:
         token = security.require_admin() if admin else security.token
-        return grpc.intercept_channel(channel, _ClientAuth(token))
-    return channel
+        interceptors.append(_ClientAuth(token))
+    return grpc.intercept_channel(channel, *interceptors) if interceptors else channel

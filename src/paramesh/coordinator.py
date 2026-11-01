@@ -8,6 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 
 from paramesh.config import copy_config, validate_config
+from paramesh.events import emit
 from paramesh.rpc import training_pb2 as pb
 from paramesh.state import StateDB
 
@@ -46,6 +47,7 @@ class Coordinator:
         self.suspect_after = suspect_after
         self.unavailable_after = unavailable_after
         self.workers: dict[str, Worker] = {}
+        self.lost_workers: set[str] = set()
         self.lock = threading.Lock()
         self.storage = state
         self.fence = fence
@@ -79,6 +81,7 @@ class Coordinator:
                 )
         else:
             self._save(self.workers, self.generations)
+            emit("training_started", run_id=config.run_id, mode=pb.SyncMode.Name(config.mode))
 
     def _save(self, workers: dict[str, Worker], generations: dict[str, int]) -> None:
         if self.storage is not None:
@@ -151,6 +154,14 @@ class Coordinator:
             workers = self.workers | {worker_id: worker}
             self._save(workers, self.generations)
             self.workers = workers
+            self.lost_workers.discard(worker_id)
+            emit(
+                "worker_recovered" if generation > 1 else "worker_joined",
+                run_id=self.config.run_id,
+                worker_id=worker_id,
+                generation=generation,
+                step=worker.step,
+            )
             return pb.WorkerSession(
                 session_id=worker.session_id, config=self.config, generation=generation
             )
@@ -180,10 +191,34 @@ class Coordinator:
             workers = self.workers | {request.worker_id: updated}
             self._save(workers, self.generations)
             self.workers = workers
+            if (
+                request.completed
+                and not worker.completed
+                and len(workers) == len(self.config.worker_ids)
+                and all(item.completed for item in workers.values())
+            ):
+                emit(
+                    "training_completed",
+                    run_id=self.config.run_id,
+                    step=min(item.step for item in workers.values()),
+                )
             return self._state(request.worker_id, updated)
 
     def status(self) -> pb.RunStatus:
         with self.lock:
+            for name, worker in self.workers.items():
+                if (
+                    self._state(name, worker).health == "unavailable"
+                    and name not in self.lost_workers
+                ):
+                    self.lost_workers.add(name)
+                    emit(
+                        "worker_lost",
+                        run_id=self.config.run_id,
+                        worker_id=name,
+                        step=worker.step,
+                        generation=worker.generation,
+                    )
             return pb.RunStatus(
                 config=self.config,
                 global_step=min(

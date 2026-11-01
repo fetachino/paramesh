@@ -10,6 +10,7 @@ from pathlib import Path
 
 from google.protobuf.json_format import MessageToDict, Parse
 
+from paramesh import events, telemetry
 from paramesh.config import validate_config
 from paramesh.rpc import training_pb2 as pb
 from paramesh.rpc import training_pb2_grpc as rpc
@@ -74,6 +75,11 @@ def main() -> None:
         and (args.state_dir / ".restore-incomplete").exists()
     ):
         parser.error("Checkpoint installation is incomplete; services must remain stopped")
+    if args.command in ("coordinator", "shard", "worker", "checkpoint"):
+        role = args.id if args.command == "worker" else args.command
+        if args.command == "shard":
+            role = f"shard-{args.index}"
+        telemetry.start(role)
     security = (
         RpcSecurity.from_environment() if args.command not in ("demo", "checkpoint") else None
     )
@@ -159,6 +165,27 @@ def main() -> None:
                 unavailable_after=args.unavailable_after,
                 security=security,
             )
+            if telemetry.active is not None:
+
+                def coordinator_metrics() -> None:
+                    current = coordinator.status()
+                    telemetry.set_value("global_step", current.global_step)
+                    telemetry.set_value(
+                        "active_workers", sum(item.health == "healthy" for item in current.workers)
+                    )
+                    for item in current.workers:
+                        labels = {"worker_id": item.worker_id}
+                        telemetry.set_value("worker_step", item.step, **labels)
+                        telemetry.set_value("worker_version", item.parameter_version, **labels)
+                        telemetry.set_value(
+                            "worker_available", int(item.health == "healthy"), **labels
+                        )
+                        telemetry.set_value("worker_generation", item.generation, **labels)
+                        telemetry.set_value(
+                            "heartbeat_age_seconds", item.heartbeat_age_seconds, **labels
+                        )
+
+                telemetry.active.probes.append(coordinator_metrics)
             server, port = coordinator_server(
                 coordinator, args.bind or "127.0.0.1:50050", security=security
             )
@@ -170,13 +197,26 @@ def main() -> None:
             values = parameters()
             owners = partition(values, len(config.shard_endpoints))
             storage = StateDB(args.state_dir / f"shard-{args.index}.sqlite")
+            restored = storage.get("shard") is not None
             shard = ParameterShard(
                 config, {k: v for k, v in values.items() if owners[k] == args.index}, state=storage
             )
             server, port = shard_server(
                 shard, args.bind or config.shard_endpoints[args.index], security=security
             )
+            if telemetry.active is not None:
+
+                def shard_metrics() -> None:
+                    with shard.condition:
+                        telemetry.set_value("shard_version", shard.version)
+                        telemetry.set_value("pending_workers", len(shard.pending))
+                        for name, receipt in shard.receipts.items():
+                            telemetry.set_value("staleness", receipt.staleness, worker_id=name)
+
+                telemetry.active.probes.append(shard_metrics)
         server.start()
+        if args.command == "shard" and restored:
+            events.emit("shard_restored", run_id=config.run_id, version=shard.version)
         signal.signal(signal.SIGTERM, lambda signum, frame: server.stop(3))
         print(
             json.dumps(

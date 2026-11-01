@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from paramesh import telemetry
 from paramesh.config import copy_config, validate_config
 from paramesh.rpc import training_pb2 as pb
 from paramesh.state import StateDB
@@ -188,25 +189,32 @@ class ParameterShard:
         contributions: list[dict[str, FloatArray]],
         updates: list[tuple[pb.GradientUpdate, bytes, int]],
     ) -> None:
-        with np.errstate(over="ignore", invalid="ignore"):
-            # Float64 accumulation avoids overflowing otherwise valid float32 means.
-            proposed = {
-                name: (
-                    value.astype(np.float64)
-                    - self.config.learning_rate
-                    * sum(gradient[name].astype(np.float64) for gradient in contributions)
-                    / (len(contributions) if self.config.aggregation == pb.MEAN else 1)
-                ).astype(np.float32)
-                for name, value in self.parameters.items()
-            }
-        if any(not np.isfinite(value).all() for value in proposed.values()):
-            raise ValueError("Optimizer result must remain finite")
-        version = self.version + 1
-        receipts = self.receipts.copy()
-        for request, digest, staleness in updates:
-            receipts[request.worker_id] = Receipt(request.step, digest, version, staleness)
-        self._save(proposed, receipts, version)
-        self.parameters, self.receipts, self.version = proposed, receipts, version
+        with telemetry.span(
+            "shard.aggregate_sgd_commit", contributors=len(contributions)
+        ) as commit:
+            with np.errstate(over="ignore", invalid="ignore"):
+                # Float64 accumulation avoids overflowing otherwise valid float32 means.
+                proposed = {
+                    name: (
+                        value.astype(np.float64)
+                        - self.config.learning_rate
+                        * sum(gradient[name].astype(np.float64) for gradient in contributions)
+                        / (len(contributions) if self.config.aggregation == pb.MEAN else 1)
+                    ).astype(np.float32)
+                    for name, value in self.parameters.items()
+                }
+            if any(not np.isfinite(value).all() for value in proposed.values()):
+                raise ValueError("Optimizer result must remain finite")
+            version = self.version + 1
+            receipts = self.receipts.copy()
+            for request, digest, staleness in updates:
+                receipts[request.worker_id] = Receipt(request.step, digest, version, staleness)
+            self._save(proposed, receipts, version)
+            self.parameters, self.receipts, self.version = proposed, receipts, version
+            telemetry.add("optimizer_updates")
+            telemetry.set_value("shard_version", version)
+            if commit is not None:
+                commit.set_attribute("parameter_version", version)
 
     def push(self, request: pb.GradientUpdate, *, timeout: float | None = None) -> pb.UpdateResult:
         gradients = self._validate(request)
