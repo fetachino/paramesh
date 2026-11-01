@@ -17,13 +17,13 @@ Build in that order. Supporting infrastructure stays outside the gradient path.
 
 ## First acceptance checks
 
-1. Install the package on Python 3.12; lint, strict type checks and tests pass.
-2. Regenerate checked-in protobuf code deterministically and detect drift in CI.
-3. Reject malformed, oversized, non-finite or wrongly shaped tensors before updates.
-4. Verify deterministic sharding and worker health transitions without timing sleeps.
-5. Exercise coordinator and shard APIs through actual gRPC channels with deadlines.
-6. Train an actual CPU PyTorch model using separate worker and shard processes.
-7. Compare synchronous updates with a mathematically equivalent local reference.
-8. Record the exact commands, limitations and verification results in documentation.
+- [x] Install on Python 3.12; lint, strict type checks, tests and isolated wheel import pass.
+- [x] Regenerate checked-in protobuf code deterministically; CI is configured to detect drift.
+- [x] Reject malformed, oversized, non-finite or wrongly shaped tensors before updates.
+- [x] Verify deterministic sharding and worker health transitions with a controlled clock.
+- [x] Exercise coordinator and shard APIs through actual gRPC channels with deadlines.
+- [x] Train an actual CPU PyTorch model using separate worker and shard processes.
+- [x] Compare synchronous updates with a mathematically equivalent local reference.
+- [x] Record commands, limitations and genuine native run artifacts in documentation.
 
 No paid services, deployment claims, invented measurements or fabricated screenshots.

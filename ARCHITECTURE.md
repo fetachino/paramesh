@@ -134,8 +134,9 @@ weights against concatenated-data PyTorch SGD. Its control pipes are trusted,
 local parent-child IPC, never the training transport.
 
 Compose defines separate containers with an internal network, dropped capabilities,
-read-only filesystems and no public ports. Its runtime remains unverified locally
-until Docker is running. No Coolify, k3s, AWS or Azure deployment has been exercised.
+read-only filesystems and no public ports. Its runtime remains unverified locally:
+the engine started, but interrupted PyTorch wheel downloads prevented completing
+the image build. No Coolify, k3s, AWS or Azure deployment has been exercised.
 
 An event plane and an observability plane are planned, not embedded in the current
 gradient path. See the roadmap for checkpoint coordination, storage adapters,

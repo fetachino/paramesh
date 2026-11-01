@@ -11,7 +11,8 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Async updates and per-shard bounded-lag rejection with worker refresh.
 - [x] Concurrent duplicate-delivery and local failure-path tests.
 - [x] Separate-container Compose definition and syntax validation.
-- [ ] Exercise image builds and container training on a running Docker engine.
+- [ ] Complete the image build and container training; engine startup succeeded,
+      but interrupted PyTorch wheel downloads blocked the local build.
 - [ ] Confirm remote CI in a clean checkout; add transitive dependency locking and audit.
 - [ ] Define coordinated checkpoint epochs and a quiescence/fencing protocol.
 - [ ] Implement safe local checkpoints, integrity checks, optimizer/receipt persistence and restore.

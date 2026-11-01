@@ -11,6 +11,25 @@ paramesh demo --mode bounded --workers 2 --shards 2 --steps 20 --output artifact
 
 ## Numerical reference
 
+### Captured CPU evidence
+
+These are actual 20-step runs at commit
+`fca471cdfaa0e12bd8dcf212323b7013685e895d` with a clean working tree, recorded
+on November 1, 2026 using Windows AMD64, Python 3.12.10 and PyTorch 2.15.0+cpu.
+Each run used two workers and two nonempty shards; both workers completed.
+
+| Mode | Initial MSE | Final MSE | Final shard versions | Max absolute error vs local SGD | Raw artifact |
+| --- | --- | --- | --- | --- | --- |
+| Sync | 14.232687 | 0.733824 | 20, 20 | 5.96e-8 | [JSON](docs/evidence/sync-cpu.json) |
+| Async | 14.232687 | 0.538783 | 40, 40 | Not equivalent | [JSON](docs/evidence/async-cpu.json) |
+| Bounded | 14.232687 | 0.508454 | 40, 40 | Not equivalent | [JSON](docs/evidence/bounded-cpu.json) |
+
+These final losses are single-run observations, not a convergence ranking. Async
+and bounded runs have twice as many shard SGD updates as sync for the same local
+worker iteration count. Their artifacts were collected concurrently, so wall
+times must not be used for a performance comparison. No CPU/RAM inventory or
+steady-state benchmark was collected for these correctness runs.
+
 The sync reference uses the same seeded MLP initialization, concatenates the same
 32-example worker datasets and applies PyTorch SGD for the same number of steps.
 Worker mean-reduced MSE gradients are averaged by each shard. Since worker batches

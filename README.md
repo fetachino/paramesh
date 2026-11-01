@@ -54,6 +54,10 @@ per worker and shard-owned SGD. The JSON output records loss, shard versions,
 parameter ownership, worker completion, source provenance and the synchronous
 reference error. This command is a correctness demonstration, not a scaling benchmark.
 
+[Captured run evidence](docs/evidence/README.md) records 41 passing tests and 93.39%
+statement coverage. The 20-step sync run reduced full-dataset MSE from 14.232687
+to 0.733824 with maximum absolute parameter error `5.96e-8` versus local SGD.
+
 ```powershell
 paramesh demo --mode async --output artifacts/async.json
 paramesh demo --mode bounded --output artifacts/bounded.json
@@ -137,8 +141,10 @@ docker compose down
 
 Compose defines five separate containers, health checks, non-root execution and
 an internal network with no published ports. Workers complete 20 steps and exit.
-Restarting a shard loses its in-memory state. Compose syntax is locally validated;
-image builds and container execution need a running Docker engine. The configured
+Restarting a shard loses its in-memory state. Compose syntax is locally validated.
+The Docker engine was started, but image building was blocked by interrupted CPU
+PyTorch wheel downloads from both official endpoints; container execution remains
+unverified. The configured
 CI container job checks that both workers exit successfully. No passing CI or
 deployment claim is implied by a workflow file.
 
