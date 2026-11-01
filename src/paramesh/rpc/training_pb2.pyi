@@ -152,3 +152,44 @@ class UpdateResult(_message.Message):
     staleness: int
     duplicate: bool
     def __init__(self, version: _Optional[int] = ..., staleness: _Optional[int] = ..., duplicate: bool = ...) -> None: ...
+
+class UpdateReceipt(_message.Message):
+    __slots__ = ("worker_id", "step", "digest", "version", "staleness")
+    WORKER_ID_FIELD_NUMBER: _ClassVar[int]
+    STEP_FIELD_NUMBER: _ClassVar[int]
+    DIGEST_FIELD_NUMBER: _ClassVar[int]
+    VERSION_FIELD_NUMBER: _ClassVar[int]
+    STALENESS_FIELD_NUMBER: _ClassVar[int]
+    worker_id: str
+    step: int
+    digest: bytes
+    version: int
+    staleness: int
+    def __init__(self, worker_id: _Optional[str] = ..., step: _Optional[int] = ..., digest: _Optional[bytes] = ..., version: _Optional[int] = ..., staleness: _Optional[int] = ...) -> None: ...
+
+class ShardSnapshot(_message.Message):
+    __slots__ = ("format_version", "config_fingerprint", "model_fingerprint", "optimizer", "version", "parameters", "receipts", "worker_generations")
+    class WorkerGenerationsEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: int
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[int] = ...) -> None: ...
+    FORMAT_VERSION_FIELD_NUMBER: _ClassVar[int]
+    CONFIG_FINGERPRINT_FIELD_NUMBER: _ClassVar[int]
+    MODEL_FINGERPRINT_FIELD_NUMBER: _ClassVar[int]
+    OPTIMIZER_FIELD_NUMBER: _ClassVar[int]
+    VERSION_FIELD_NUMBER: _ClassVar[int]
+    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    RECEIPTS_FIELD_NUMBER: _ClassVar[int]
+    WORKER_GENERATIONS_FIELD_NUMBER: _ClassVar[int]
+    format_version: int
+    config_fingerprint: bytes
+    model_fingerprint: bytes
+    optimizer: str
+    version: int
+    parameters: _containers.RepeatedCompositeFieldContainer[Tensor]
+    receipts: _containers.RepeatedCompositeFieldContainer[UpdateReceipt]
+    worker_generations: _containers.ScalarMap[str, int]
+    def __init__(self, format_version: _Optional[int] = ..., config_fingerprint: _Optional[bytes] = ..., model_fingerprint: _Optional[bytes] = ..., optimizer: _Optional[str] = ..., version: _Optional[int] = ..., parameters: _Optional[_Iterable[_Union[Tensor, _Mapping]]] = ..., receipts: _Optional[_Iterable[_Union[UpdateReceipt, _Mapping]]] = ..., worker_generations: _Optional[_Mapping[str, int]] = ...) -> None: ...

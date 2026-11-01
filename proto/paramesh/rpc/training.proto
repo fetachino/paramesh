@@ -86,6 +86,26 @@ message UpdateResult {
   bool duplicate = 3;
 }
 
+message UpdateReceipt {
+  string worker_id = 1;
+  uint64 step = 2;
+  bytes digest = 3;
+  uint64 version = 4;
+  uint64 staleness = 5;
+}
+
+// Durable state is data-only protobuf, never a Python object serialization.
+message ShardSnapshot {
+  uint32 format_version = 1;
+  bytes config_fingerprint = 2;
+  bytes model_fingerprint = 3;
+  string optimizer = 4;
+  uint64 version = 5;
+  repeated Tensor parameters = 6;
+  repeated UpdateReceipt receipts = 7;
+  map<string, uint64> worker_generations = 8;
+}
+
 service Coordinator {
   rpc RegisterWorker(RegisterWorkerRequest) returns (WorkerSession);
   rpc Heartbeat(HeartbeatRequest) returns (WorkerState);

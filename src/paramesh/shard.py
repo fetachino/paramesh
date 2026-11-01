@@ -9,6 +9,7 @@ import numpy as np
 
 from paramesh.config import copy_config, validate_config
 from paramesh.rpc import training_pb2 as pb
+from paramesh.state import StateDB
 from paramesh.tensors import FloatArray, decode_many, encode
 
 
@@ -25,7 +26,13 @@ class StaleGradientError(ValueError):
 
 
 class ParameterShard:
-    def __init__(self, config: pb.RunConfig, parameters: dict[str, FloatArray]) -> None:
+    def __init__(
+        self,
+        config: pb.RunConfig,
+        parameters: dict[str, FloatArray],
+        *,
+        state: StateDB | None = None,
+    ) -> None:
         validate_config(config)
         self.config = copy_config(config)
         # Validate initial state with exactly the same rules as the wire format.
@@ -36,6 +43,87 @@ class ParameterShard:
         self.condition = threading.Condition()
         self.barrier_generation = 0
         self.barrier_deadline = 0.0
+        self.state = state
+        self.worker_generations = {name: 0 for name in config.worker_ids}
+        self.config_fingerprint = hashlib.sha256(
+            config.SerializeToString(deterministic=True)
+        ).digest()
+        self.model_fingerprint = hashlib.sha256(
+            b"".join(
+                encode(name, value).SerializeToString(deterministic=True)
+                for name, value in sorted(self.parameters.items())
+            )
+        ).digest()
+        persisted = state.get("shard") if state is not None else None
+        if persisted is not None:
+            self._restore(persisted)
+        else:
+            self._save(self.parameters, self.receipts, self.version)
+
+    def _snapshot(
+        self, parameters: dict[str, FloatArray], receipts: dict[str, Receipt], version: int
+    ) -> pb.ShardSnapshot:
+        return pb.ShardSnapshot(
+            format_version=1,
+            config_fingerprint=self.config_fingerprint,
+            model_fingerprint=self.model_fingerprint,
+            optimizer="sgd",
+            version=version,
+            parameters=[encode(name, value) for name, value in sorted(parameters.items())],
+            receipts=[
+                pb.UpdateReceipt(
+                    worker_id=name,
+                    step=value.step,
+                    digest=value.digest,
+                    version=value.version,
+                    staleness=value.staleness,
+                )
+                for name, value in sorted(receipts.items())
+            ],
+            worker_generations=self.worker_generations,
+        )
+
+    def _save(
+        self, parameters: dict[str, FloatArray], receipts: dict[str, Receipt], version: int
+    ) -> None:
+        if self.state is not None:
+            self.state.put(
+                "shard",
+                self._snapshot(parameters, receipts, version).SerializeToString(deterministic=True),
+            )
+
+    def _restore(self, payload: bytes) -> None:
+        snapshot = pb.ShardSnapshot()
+        snapshot.ParseFromString(payload)
+        if snapshot.format_version != 1 or snapshot.optimizer != "sgd":
+            raise ValueError("Unsupported shard snapshot format or optimizer")
+        if snapshot.config_fingerprint != self.config_fingerprint:
+            raise ValueError("Stored shard configuration does not match this run")
+        if snapshot.model_fingerprint != self.model_fingerprint:
+            raise ValueError("Stored shard model does not match initial manifest")
+        restored = decode_many(snapshot.parameters)
+        if restored.keys() != self.parameters.keys() or any(
+            restored[name].shape != value.shape for name, value in self.parameters.items()
+        ):
+            raise ValueError("Stored parameter manifest is inconsistent")
+        receipts: dict[str, Receipt] = {}
+        for entry in snapshot.receipts:
+            if (
+                entry.worker_id not in self.config.worker_ids
+                or entry.worker_id in receipts
+                or len(entry.digest) != 32
+                or entry.version > snapshot.version
+            ):
+                raise ValueError("Stored receipt is invalid")
+            receipts[entry.worker_id] = Receipt(
+                entry.step, entry.digest, entry.version, entry.staleness
+            )
+        if set(snapshot.worker_generations) != set(self.config.worker_ids):
+            raise ValueError("Stored worker generations do not match membership")
+        self.parameters = restored
+        self.receipts = receipts
+        self.version = snapshot.version
+        self.worker_generations = dict(snapshot.worker_generations)
 
     def pull(self, run_id: str) -> pb.Parameters:
         if run_id != self.config.run_id:
@@ -58,7 +146,11 @@ class ParameterShard:
             raise ValueError("Gradient tensor shape does not match parameter")
         return gradients
 
-    def _apply(self, contributions: list[dict[str, FloatArray]]) -> None:
+    def _apply(
+        self,
+        contributions: list[dict[str, FloatArray]],
+        updates: list[tuple[pb.GradientUpdate, bytes, int]],
+    ) -> None:
         with np.errstate(over="ignore", invalid="ignore"):
             # Float64 accumulation avoids overflowing otherwise valid float32 means.
             proposed = {
@@ -72,8 +164,12 @@ class ParameterShard:
             }
         if any(not np.isfinite(value).all() for value in proposed.values()):
             raise ValueError("Optimizer result must remain finite")
-        self.parameters = proposed
-        self.version += 1
+        version = self.version + 1
+        receipts = self.receipts.copy()
+        for request, digest, staleness in updates:
+            receipts[request.worker_id] = Receipt(request.step, digest, version, staleness)
+        self._save(proposed, receipts, version)
+        self.parameters, self.receipts, self.version = proposed, receipts, version
 
     def push(self, request: pb.GradientUpdate, *, timeout: float | None = None) -> pb.UpdateResult:
         gradients = self._validate(request)
@@ -98,10 +194,7 @@ class ParameterShard:
                 raise StaleGradientError("Gradient is too stale; refresh parameters and recompute")
             if self.config.mode == pb.SYNCHRONOUS:
                 return self._synchronize(request, digest, gradients, timeout)
-            self._apply([gradients])
-            self.receipts[request.worker_id] = Receipt(
-                request.step, digest, self.version, staleness
-            )
+            self._apply([gradients], [(request, digest, staleness)])
             return pb.UpdateResult(version=self.version, staleness=staleness)
 
     def _synchronize(
@@ -128,12 +221,13 @@ class ParameterShard:
         generation = self.barrier_generation
         if len(self.pending) == len(self.config.worker_ids):
             try:
-                self._apply([entry[2] for entry in self.pending.values()])
-            except ValueError:
+                self._apply(
+                    [entry[2] for entry in self.pending.values()],
+                    [(entry, fingerprint, 0) for entry, fingerprint, _ in self.pending.values()],
+                )
+            except Exception:
                 self._abort_barrier()
                 raise
-            for entry, fingerprint, _ in self.pending.values():
-                self.receipts[entry.worker_id] = Receipt(entry.step, fingerprint, self.version, 0)
             self.pending.clear()
             self.condition.notify_all()
         else:
