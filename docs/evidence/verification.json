@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-01",
+  "source_commit": "86fe073",
+  "tests": 41,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "coverage_percent": 93.39285714285714,
+  "coverage_gate_percent": 90,
+  "coverage_exclusions": [
+    "generated RPC bindings",
+    "CLI dispatcher"
+  ],
+  "osv_audited_packages": 54,
+  "osv_known_findings": 0
+}

@@ -1,0 +1,118 @@
+syntax = "proto3";
+package paramesh.v1;
+
+enum SyncMode {
+  SYNC_MODE_UNSPECIFIED = 0;
+  SYNCHRONOUS = 1;
+  ASYNCHRONOUS = 2;
+  BOUNDED_STALENESS = 3;
+}
+
+enum Aggregation {
+  MEAN = 0;
+  SUM = 1;
+}
+
+message Empty {}
+
+message RunConfig {
+  string run_id = 1;
+  SyncMode mode = 2;
+  repeated string shard_endpoints = 3;
+  repeated string worker_ids = 4;
+  uint32 max_staleness = 5;
+  double learning_rate = 6;
+  double barrier_timeout_seconds = 7;
+  Aggregation aggregation = 8;
+}
+
+message RegisterWorkerRequest {
+  string worker_id = 1;
+  uint32 protocol_version = 2;
+}
+
+message WorkerSession {
+  string session_id = 1;
+  RunConfig config = 2;
+}
+
+message HeartbeatRequest {
+  string run_id = 1;
+  string worker_id = 2;
+  string session_id = 3;
+  uint64 step = 4;
+  uint64 parameter_version = 5;
+  bool completed = 6;
+}
+
+message WorkerState {
+  string worker_id = 1;
+  string health = 2;
+  uint64 step = 3;
+  uint64 parameter_version = 4;
+  double heartbeat_age_seconds = 5;
+}
+
+message RunStatus {
+  RunConfig config = 1;
+  repeated WorkerState workers = 2;
+}
+
+// Canonical little-endian float32 bytes. No pickle or executable object format.
+message Tensor {
+  string name = 1;
+  repeated uint64 shape = 2;
+  string dtype = 3;
+  bytes data = 4;
+}
+
+message PullRequest { string run_id = 1; }
+message Parameters {
+  uint64 version = 1;
+  repeated Tensor tensors = 2;
+}
+
+message GradientUpdate {
+  string run_id = 1;
+  string worker_id = 2;
+  uint64 step = 3;
+  uint64 base_version = 4;
+  repeated Tensor tensors = 5;
+}
+
+message UpdateResult {
+  uint64 version = 1;
+  uint64 staleness = 2;
+  bool duplicate = 3;
+}
+
+message UpdateReceipt {
+  string worker_id = 1;
+  uint64 step = 2;
+  bytes digest = 3;
+  uint64 version = 4;
+  uint64 staleness = 5;
+}
+
+// Durable state is data-only protobuf, never a Python object serialization.
+message ShardSnapshot {
+  uint32 format_version = 1;
+  bytes config_fingerprint = 2;
+  bytes model_fingerprint = 3;
+  string optimizer = 4;
+  uint64 version = 5;
+  repeated Tensor parameters = 6;
+  repeated UpdateReceipt receipts = 7;
+  map<string, uint64> worker_generations = 8;
+}
+
+service Coordinator {
+  rpc RegisterWorker(RegisterWorkerRequest) returns (WorkerSession);
+  rpc Heartbeat(HeartbeatRequest) returns (WorkerState);
+  rpc GetStatus(Empty) returns (RunStatus);
+}
+
+service ParameterShard {
+  rpc PullParameters(PullRequest) returns (Parameters);
+  rpc PushGradients(GradientUpdate) returns (UpdateResult);
+}

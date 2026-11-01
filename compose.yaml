@@ -1,0 +1,63 @@
+x-common: &common
+  build: .
+  image: paramesh:local
+  init: true
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  networks: [training]
+
+services:
+  coordinator:
+    <<: *common
+    command: [coordinator, --config, examples/compose.json, --bind, '0.0.0.0:50050']
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, paramesh, status, --coordinator, '127.0.0.1:50050']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  shard-0:
+    <<: *common
+    command: [shard, --config, examples/compose.json, --index, '0', --bind, '0.0.0.0:50051']
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, paramesh, check-shard, --address, '127.0.0.1:50051', --run-id, compose-demo]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  shard-1:
+    <<: *common
+    command: [shard, --config, examples/compose.json, --index, '1', --bind, '0.0.0.0:50051']
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, paramesh, check-shard, --address, '127.0.0.1:50051', --run-id, compose-demo]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  worker-0:
+    <<: *common
+    command: [worker, --coordinator, 'coordinator:50050', --id, worker-0, --steps, '20']
+    depends_on:
+      coordinator: {condition: service_healthy}
+      shard-0: {condition: service_healthy}
+      shard-1: {condition: service_healthy}
+
+  worker-1:
+    <<: *common
+    command: [worker, --coordinator, 'coordinator:50050', --id, worker-1, --steps, '20']
+    depends_on:
+      coordinator: {condition: service_healthy}
+      shard-0: {condition: service_healthy}
+      shard-1: {condition: service_healthy}
+
+networks:
+  training:
+    internal: true

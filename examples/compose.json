@@ -1,0 +1,9 @@
+{
+  "run_id": "compose-demo",
+  "mode": "SYNCHRONOUS",
+  "shard_endpoints": ["shard-0:50051", "shard-1:50051"],
+  "worker_ids": ["worker-0", "worker-1"],
+  "learning_rate": 0.05,
+  "barrier_timeout_seconds": 30,
+  "aggregation": "MEAN"
+}

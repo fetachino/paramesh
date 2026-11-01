@@ -1,0 +1,9 @@
+{
+  "run_id": "local-demo",
+  "mode": "SYNCHRONOUS",
+  "shard_endpoints": ["127.0.0.1:50051", "127.0.0.1:50052"],
+  "worker_ids": ["worker-0", "worker-1"],
+  "learning_rate": 0.05,
+  "barrier_timeout_seconds": 15,
+  "aggregation": "MEAN"
+}
