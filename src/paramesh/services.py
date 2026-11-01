@@ -7,6 +7,7 @@ from typing import Any
 
 import grpc
 
+from paramesh import telemetry
 from paramesh.coordinator import Coordinator, WorkerAlreadyRegistered
 from paramesh.rpc import training_pb2 as pb
 from paramesh.rpc import training_pb2_grpc as rpc
@@ -101,11 +102,14 @@ def managed_coordinator(
 
 
 def _server(address: str, concurrency: int, security: RpcSecurity | None) -> tuple[Any, int]:
+    interceptors: list[Any] = [ServerAuth(security)] if security is not None else []
+    if telemetry.active is not None:
+        interceptors.append(telemetry.ServerMetrics())
     server = grpc.server(
         ThreadPoolExecutor(max_workers=concurrency),
         options=CHANNEL_OPTIONS,
         maximum_concurrent_rpcs=concurrency,
-        interceptors=[ServerAuth(security)] if security is not None else [],
+        interceptors=interceptors,
     )
     if security is not None and security.certificate:
         credentials = grpc.ssl_server_credentials(

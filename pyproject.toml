@@ -15,6 +15,7 @@ dependencies = ["grpcio==1.76.0", "protobuf==6.33.5", "numpy==2.3.4"]
 dev = ["grpcio-tools==1.76.0", "pytest==9.0.3", "pytest-cov==7.0.0", "ruff==0.14.3", "mypy==1.18.2", "build==1.3.0"]
 train = ["torch==2.15.0"]
 storage = ["boto3==1.43.123"]
+operations = ["nats-py==2.16.0", "prometheus-client==0.26.0", "opentelemetry-sdk==1.45.2", "opentelemetry-exporter-otlp-proto-http==1.45.2", "opentelemetry-instrumentation-grpc==0.66b2"]
 
 [project.scripts]
 paramesh = "paramesh.cli:main"
@@ -44,7 +45,7 @@ files = ["src/paramesh"]
 exclude = ["rpc/.*_pb2"]
 
 [[tool.mypy.overrides]]
-module = ["grpc", "grpc.*", "paramesh.rpc.*", "google.protobuf.json_format", "boto3", "botocore.*"]
+module = ["grpc", "grpc.*", "paramesh.rpc.*", "google.protobuf.json_format", "boto3", "botocore.*", "nats", "nats.*"]
 ignore_missing_imports = true
 follow_imports = "skip"
 

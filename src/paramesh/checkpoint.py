@@ -5,14 +5,17 @@ import json
 import os
 import re
 import tempfile
+import time
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
 
 from google.protobuf.json_format import MessageToJson
 
+from paramesh import telemetry
 from paramesh.config import validate_config
 from paramesh.coordinator import Coordinator
+from paramesh.events import emit
 from paramesh.journal import Journal
 from paramesh.rpc import training_pb2 as pb
 from paramesh.shard import ParameterShard
@@ -104,6 +107,7 @@ def _validate(records: dict[str, bytes], root: Path) -> dict[str, Any]:
 
 
 def export_checkpoint(root: Path, store: ObjectStore, checkpoint_id: str) -> dict[str, Any]:
+    started = time.perf_counter()
     key = _manifest_key(checkpoint_id)
     records: dict[str, bytes] = {}
     with ExitStack() as stack:
@@ -140,6 +144,15 @@ def export_checkpoint(root: Path, store: ObjectStore, checkpoint_id: str) -> dic
         entries.append({"role": role, "key": object_key, "sha256": digest, "size": len(payload)})
     manifest = {"format_version": 1, "checkpoint_id": checkpoint_id, **summary, "records": entries}
     store.put(key, json.dumps(manifest, sort_keys=True, allow_nan=False).encode())
+    telemetry.observe("checkpoint_duration_seconds", time.perf_counter() - started)
+    emit(
+        "checkpoint_completed",
+        run_id=summary["run_id"],
+        checkpoint_id=checkpoint_id,
+        step=summary["global_step"],
+        shard_versions=summary["shard_versions"],
+        duration_seconds=time.perf_counter() - started,
+    )
     return manifest
 
 
