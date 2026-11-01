@@ -31,16 +31,21 @@ No paid services, deployment claims, invented measurements or fabricated screens
 ## Runtime and recovery continuation
 
 The next slices follow the user's explicit continuation request. Compose remains
-the shared local/Coolify deployment definition; only the future dashboard/API may
+the shared local/Coolify deployment definition; only the dashboard/API may
 be public. Work is tracked in `tasks/todo.md`.
 
-Recovery will persist every shard commit (weights, optimizer configuration, version
+Recovery persists every shard commit (weights, optimizer configuration, version
 and latest receipts) before acknowledging it. Workers journal gradient requests
 before sending, so a crash after a partial multi-shard commit can resume the exact
 uncommitted contribution. Re-registration fences the previous worker incarnation.
 This avoids pretending that independently saved live shards form an atomic global
 checkpoint. Checkpoint manifests must record each shard's actual version and progress;
 offline restore of a complete manifest is separate from ordinary process restart.
+
+These foundations and the local operations stack are now implemented. Genuine visual
+evidence and Git-backed Coolify instructions are committed with the deployment slice;
+public verification is pending an authorized server. Azure/Azurite and controlled
+performance/failure measurements remain the next independent work.
 
 Dependencies: verified containers → durable shard/worker/coordinator state → fencing
 and authenticated RPCs → killed-process tests → checkpoint stores → events/telemetry

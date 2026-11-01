@@ -167,6 +167,13 @@ default official CPU index. No Coolify, k3s, AWS or Azure deployment has been ex
 The optional SeaweedFS storage profile has a private network and a persistent volume.
 The maintenance helper receives S3 credentials and can reach external endpoints;
 training containers receive neither storage credentials nor a public route.
-An event plane and an observability plane are planned, not embedded in the current
-gradient path. See the roadmap for online checkpoint coordination, Azure storage,
-NATS, tracing, metrics and deployment sequencing.
+The optional operations profile adds a separate lifecycle event plane and telemetry
+backends. NATS carries bounded allowlisted events, never gradient traffic. Broker
+failure does not participate in registration, fencing, SGD or durable receipts.
+Prometheus scrapes process/RPC metrics; OTel propagates gRPC trace context to Tempo.
+The dashboard persists up to 200 validated events and mirrors them to Loki.
+Its sampler uses read-only RPCs and fixed backend queries; its browser receives
+neither data-plane nor administrative credentials. UI and Grafana publish loopback
+ports through a management network, while internal networks keep training and
+operations services private. See [operations](docs/operations.md) for definitions
+and failure limits. Online checkpoint coordination, Azure and hosted validation follow.

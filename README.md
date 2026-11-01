@@ -5,11 +5,12 @@ workers, a membership coordinator and sharded authoritative model state. The
 repository owns the gRPC protocol, gradient validation, SGD updates, versioning,
 replay protection and synchronization behavior.
 
-**Status: local recovery verified.** Independent CPU workers and parameter shards
+**Status: local training, recovery and operations stack verified.** Independent CPU workers and parameter shards
 survive tested process failures using durable local state. Synchronous recovery
 is checked against equivalent uninterrupted PyTorch SGD. Offline whole-run
 checkpoints support local and authenticated S3-compatible storage, including real
-SeaweedFS tests. Operational dashboards and public deployment remain future work.
+SeaweedFS tests. A read-only operator dashboard uses actual RPC state, Prometheus,
+NATS lifecycle history, Tempo traces and Loki logs. Public deployment is pending a server.
 
 [Architecture](ARCHITECTURE.md) · [Evidence and methodology](BENCHMARKS.md) ·
 [Security boundaries](SECURITY.md) · [Roadmap](ROADMAP.md)
@@ -17,6 +18,11 @@ SeaweedFS tests. Operational dashboards and public deployment remain future work
 ![Successful recovery milestone quality and container jobs](docs/images/github-actions.png)
 
 Actual GitHub Actions results for the recovery milestone; [run details](https://github.com/fetachino/paramesh/actions/runs/41349354085).
+
+![Actual two-worker training with private parameter shards](docs/images/cluster-overview.png)
+
+Real local Compose training, with scraped loss/throughput and authenticated membership.
+Samples across services are collected separately; their step counters need not match.
 
 ## What this proves
 
@@ -185,6 +191,35 @@ job runs the same script.
 for demonstrations. A larger target continues an existing run. No Coolify/server
 deployment has been performed yet.
 
+## Inspect the operations stack
+
+```powershell
+python scripts/create_dev_env.py --operations
+docker compose --profile operations up --build -d
+```
+
+Open [the operator dashboard](http://127.0.0.1:8080) or
+[Grafana](http://127.0.0.1:3000). Both use username `operator`; their distinct
+passwords are in the local ignored `.env` file. The generator preserves existing
+values: increase `PARAMESH_STEPS` if a retained run already reached its target.
+Only these two UI ports are published, on loopback. Training, messaging, storage
+and telemetry ingestion/query ports stay private.
+
+The dashboard shows topology, membership, shard receipts, loss, throughput,
+accepted staleness, observed checkpoints, lifecycle events and actual trace spans.
+Historical correctness runs are labeled separately from live metrics. NATS carries
+lifecycle events only; its outage does not change training correctness.
+
+![A sampled training step crossing worker and shard processes](docs/images/distributed-trace.png)
+
+Actual Tempo spans include the worker step, gRPC calls and a durable shard SGD commit.
+See [operator commands and signal definitions](docs/operations.md) for startup,
+checkpoint publication, recovery, evidence checks and limits.
+
+`python scripts/verify_operations.py --isolated` starts an owned synthetic stack,
+verifies real backend data and private ports, then removes only its test resources.
+The CI container job runs both Compose verifiers against the built image.
+
 ## Verification and testing
 
 ```powershell
@@ -216,20 +251,21 @@ docs/                   Interview notes and genuine run evidence
 
 ## Current limitations and next work
 
-Operational events, metrics backends, dashboards, compression and multi-machine
-verification remain pending. Process restart requires retained local volumes;
+Compression and multi-machine verification remain pending. Process restart requires retained local volumes;
 offline whole-run recovery can use an exported local/S3 checkpoint. The system
 does not provide coordinator consensus or replicated live training state.
 The protocol is float32-only and the workload is fixed and CPU-only.
 
 See [checkpoint operator commands](docs/checkpoints.md) for private SeaweedFS,
 export, fresh-directory restore and fresh-volume installation. Checkpoints require
-stopping the full run and retain the original topology. Azure/Azurite, optional
-NATS events, observability and self-hosted deployment follow in [ROADMAP.md](ROADMAP.md).
+stopping the full run and retain the original topology. Azure/Azurite, controlled
+benchmarks and self-hosted deployment follow in [ROADMAP.md](ROADMAP.md).
 
 ## Additional documentation
 
 - [Implementation plan](tasks/plan.md)
+- [Operations and signals](docs/operations.md)
+- [Git-backed Coolify deployment](docs/coolify.md)
 - [Architecture and consistency model](ARCHITECTURE.md)
 - [Correctness evidence and benchmark policy](BENCHMARKS.md)
 - [Security model](SECURITY.md)

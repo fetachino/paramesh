@@ -23,7 +23,7 @@ RPCs but does not encrypt its traffic.
   decoding. A data credential cannot invoke administrative fencing operations.
 - TLS/mTLS tests create temporary certificates and prove that a required client
   certificate is enforced; no reusable test private key is committed.
-- Container services run as UID 10001 with dropped capabilities, no published ports
+- ParamMesh training services run as UID 10001 with dropped capabilities, no published ports
   and an internal network. Local container verification exercises credential roles,
   private ports and persistent recreation.
 - The repository ignores environment secrets and generated runtime artifacts.
@@ -37,8 +37,8 @@ protects replacement ordering, not Byzantine behavior. There is no multi-tenant
 isolation or per-node PKI. Host administrators can inspect local state and secrets;
 plaintext private-bridge traffic can be observed by privileged host processes.
 
-Dashboard identity, signed per-node grants, object-storage secret management and
-OpenBao are not implemented. Rate and size limits are not a memory/CPU denial-of-service
+Signed per-node grants, managed object-storage secrets and OpenBao are not implemented.
+Rate and size limits are not a memory/CPU denial-of-service
 guarantee. Public proxy configuration must never route coordinator or shard gRPC.
 
 ## Credentials and transport configuration
@@ -61,6 +61,22 @@ constructors permit omitted security for isolated tests; the CLI has no switch
 for deploying unauthenticated services.
 
 ## Dependencies and verification
+
+The optional dashboard authenticates one operator with a strong independent password
+and expiring HMAC-signed HttpOnly/SameSite=Strict cookies. Restart or logout invalidates
+sessions. POSTs reject cross-site/opaque origins; `Referrer-Policy: same-origin`
+preserves a usable origin for normal same-site forms. Assets are local, CSP forbids
+inline scripts/framing, HTTP bodies and thread counts are bounded, and routes are
+allowlisted. The API is read-only. It holds a data credential internally but no admin
+credential; browser responses omit service tokens. This is a small single-operator
+console, without multi-user roles, MFA or an internet-facing rate-limit gateway.
+Require HTTPS and `PARAMESH_COOKIE_SECURE=true` behind a public trusted proxy.
+
+NATS requires its own shared group token. Prometheus, Tempo and Loki assume trusted
+private networks; do not publish their ports or attach a public proxy. Grafana has
+separate credentials and loopback-only access. NATS events and telemetry are best
+effort, with bounded buffers; they are neither an audit log nor a recovery authority.
+No tensors, secrets or user datasets are recorded in lifecycle events or spans.
 
 Direct dependencies are version-pinned. The local environment was audited using
 pip-audit 2.10.1 against OSV after updating affected pins; the captured report is

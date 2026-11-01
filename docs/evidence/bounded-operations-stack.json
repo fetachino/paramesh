@@ -1,0 +1,44 @@
+{
+  "run_id": "compose-demo",
+  "mode": "BOUNDED_STALENESS",
+  "global_step": "1000",
+  "shard_versions": [
+    2000,
+    2000
+  ],
+  "max_observed_accepted_staleness": 1.0,
+  "healthy_scrapes": [
+    "coordinator",
+    "dashboard",
+    "shard-0",
+    "shard-1"
+  ],
+  "worker_counter_series": 2,
+  "loki_records_checked": 3,
+  "event_names": [
+    "training_completed",
+    "worker_joined"
+  ],
+  "trace": {
+    "trace_id": "0abbb1f4360cb599da76a64740ba3b4a",
+    "services": [
+      "shard-0",
+      "shard-1",
+      "worker-0"
+    ],
+    "spans": 9
+  },
+  "dashboard_authenticated": true,
+  "backends": {
+    "prometheus": true,
+    "tempo": true,
+    "loki": true
+  },
+  "image_id": "sha256:767501dbb65476b0b0e1a02b7be55a5451fd1f3dc89ff98437b72beccbbb2e48",
+  "environment": {
+    "commit": "f975e7bc7d41df4c3c3cc90c33451648ccc4ee4f",
+    "dirty": true,
+    "verified_at": "2026-11-01T23:14:31.864946+00:00",
+    "project": "paramesh-bounded-539d7720"
+  }
+}

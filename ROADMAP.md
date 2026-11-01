@@ -24,11 +24,12 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [ ] Measure RPC latency, byte counts, throughput, convergence and failure recovery;
       export JSON/CSV and record hardware/configuration/source metadata.
 - [ ] Add compression only after the uncompressed baseline is measured.
-- [ ] Add optional NATS lifecycle events without using it for gradient traffic.
-- [ ] Instrument Prometheus metrics, OpenTelemetry context propagation and structured lifecycle logs.
-- [ ] Exercise Grafana, Tempo and Loki against real training runs.
-- [ ] Build a focused dashboard from real coordinator/shard/worker state.
-- [ ] Capture reproducible, genuine screenshots under `docs/images/` once visible features exist.
+- [x] Add optional NATS lifecycle events without using it for gradient traffic.
+- [x] Instrument Prometheus metrics, OpenTelemetry context propagation and structured lifecycle logs.
+- [x] Exercise Grafana, Tempo and Loki against real training runs.
+- [x] Build a focused dashboard from real coordinator/shard/worker state.
+- [x] Capture genuine cluster, recovery, checkpoint, bounded-lag, Grafana and trace screenshots.
+- [x] Validate the shared Compose stack locally and document Git-backed Coolify settings.
 - [ ] Add OpenBao and Keycloak only after core recovery and the trust model are tested.
 - [ ] Validate OpenTofu/self-hosted deployment, then Coolify and k3s on available free compute.
 - [ ] Audit documentation claims, clean-clone setup, storage/failure tests and visual evidence
@@ -48,5 +49,6 @@ of having deployed their managed equivalents.
 | NATS | Operational messaging |
 | OpenTofu / Traefik | Infrastructure as code / ingress |
 
-The next priority is the operational event and observability planes, followed by
-the focused dashboard and validated Git-backed Coolify deployment instructions.
+The next independent priorities are Azure/Azurite portability and controlled
+uncompressed performance/failure baselines. Actual Coolify deployment is pending
+an available authorized server; no paid compute has been provisioned.

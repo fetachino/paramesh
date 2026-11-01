@@ -17,11 +17,13 @@ workers, sharded model ownership and explicit synchronization semantics.
   termination using write-ahead gradient journals, durable receipts and fencing.
 - Added offline whole-run checkpoints with checksummed immutable local/S3 objects,
   tested against authenticated self-hosted SeaweedFS and partial-step RPC restore.
+- Instrumented actual training with bounded NATS lifecycle events, Prometheus signals,
+  OTel/Tempo traces and Loki history; built a read-only authenticated operations console.
 
 Use the exact committed verification record for test counts, coverage and numerical
 results. Process recovery with retained local state is implemented; do not claim
 automatic live recovery from disk loss, production throughput, public cloud deployment or
-storage/observability integrations that have not been exercised.
+multi-machine scaling. The operations services are exercised locally, not hosted publicly.
 
 ## Short profile description
 
@@ -33,5 +35,6 @@ CPU workload, independent-process correctness tests and explicit recovery limita
 
 Python, PyTorch, NumPy, gRPC, Protocol Buffers, concurrency, parameter servers,
 synchronous/asynchronous training, staleness, SGD, pytest, Ruff, mypy, Docker Compose.
+NATS, Prometheus, Grafana, OpenTelemetry, Tempo, Loki, SeaweedFS and S3-compatible checkpoints.
 GitHub Actions and local Docker Compose runs have passing evidence; link the exact
 workflow/run artifact when citing a measured result.

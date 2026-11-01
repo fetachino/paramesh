@@ -14,11 +14,12 @@
   - Verify: completed training and synchronous numerical-reference comparison after recovery.
 - [x] Export/restore complete offline checkpoint manifests through local and S3-compatible stores.
   - Verify: checksums, failed/incomplete publication, local restore and actual SeaweedFS operations.
-- [ ] Add optional NATS lifecycle events; training continues while NATS is unavailable.
-- [ ] Add Prometheus metrics and distributed tracing with real observability services.
-- [ ] Build a focused operations dashboard over actual state and benchmark artifacts.
-- [ ] Capture genuine dashboard, recovery, checkpoint, metrics, trace and CI evidence.
-- [ ] Validate the same Compose definition for Git-backed Coolify and document server requirements.
+- [x] Add optional NATS lifecycle events; training continues while NATS is unavailable.
+- [x] Add Prometheus metrics and distributed tracing with real observability services.
+- [x] Build a focused operations dashboard over actual state and benchmark artifacts.
+- [x] Capture genuine dashboard, recovery, checkpoint, metrics, trace and CI evidence.
+- [x] Validate the same Compose definition locally and document Git-backed Coolify/server requirements.
+- [ ] Deploy through Coolify and verify public HTTPS once an authorized server is available.
 - [ ] Continue Azure/Azurite, benchmarks, measured compression, secrets/identity and infrastructure work.
 
 Each completed slice requires tests, lint/type checks, synchronized documentation,

@@ -70,17 +70,20 @@ retained-volume process recovery does not imply recovery after disk loss.
 17. **How are bad payloads handled?** Explicit dtype/shape/length/identity/size checks,
     finite gradients and finite proposed optimizer results precede commit.
 18. **What provides backpressure?** Bounded gRPC admission, message limits and one
-    sequential worker push. Full queue metrics and adaptive pacing remain future work.
-19. **What is required for a valid checkpoint?** A coordinated epoch/quiescence boundary,
-    durable per-shard weights/optimizer state/receipts, checksums and an atomic manifest.
+    sequential worker push. Actual in-flight, barrier and event-queue metrics are exposed;
+    adaptive training admission remains future work.
+19. **What is required for a valid checkpoint?** Stop every role, hold all state leases,
+    validate weights/optimizer configuration/receipts/journals and publish a checksummed manifest last.
     Independently saving live shards would not establish a consistent training snapshot.
 20. **How would storage portability work?** Put checkpoint blobs/manifests behind a
     tested store contract; exercise S3 operations on SeaweedFS and Azure SDK operations
-    on Azurite before claiming compatibility. Neither adapter exists yet.
-21. **Where would NATS fit?** Optional lifecycle events, outside the gradient path.
-    Training correctness should not require the event broker.
-22. **What observability is implemented?** JSON command output, status RPCs and run
-    artifacts. Prometheus, OpenTelemetry, Grafana, Tempo and Loki are not integrated yet.
+    on Azurite before claiming compatibility. Local/S3 stores and actual SeaweedFS tests
+    are implemented; Azure follows.
+21. **Where does NATS fit?** Optional allowlisted lifecycle events, outside the gradient
+    path. Actual outage/full-queue tests prove numerical training remains independent.
+22. **What observability is implemented?** Real Prometheus metrics, provisioned Grafana,
+    OTel step/RPC/SGD spans in Tempo and validated lifecycle logs mirrored to Loki.
+    The read-only dashboard uses authenticated RPCs and fixed backend queries.
 23. **What does Compose prove?** The black-box verifier trains in separate containers,
     checks data/admin credentials and private ports, then recreates the cluster and
     verifies durable resume. Core CI and local runtime runs have passed.
@@ -89,6 +92,6 @@ retained-volume process recovery does not imply recovery after disk loss.
     are not current implementations.
 25. **What are the deployment limits?** Native tests are one-host CPU runs. Coolify,
     k3s, OpenTofu and managed AWS/Azure deployments have not been exercised.
-26. **What is the next engineering risk to resolve?** Complete portable checkpoint
-    manifests and coordinated offline restore after local storage loss, followed by
-    actual operational telemetry rather than an infrastructure technology list.
+26. **What is the next engineering risk to resolve?** Azure checkpoint portability and
+    controlled uncompressed performance/failure baselines. A real server is required
+    to verify the prepared Git-backed Coolify route; no free compute is assumed.

@@ -6,11 +6,135 @@ x-common: &common
   tmpfs: [/tmp]
   cap_drop: [ALL]
   security_opt: [no-new-privileges:true]
-  networks: [training]
+  networks: [training, operations]
   environment: &worker-environment
     PARAMESH_RPC_TOKEN: ${PARAMESH_RPC_TOKEN:?Generate .env with scripts/create_dev_env.py}
+    PARAMESH_METRICS_PORT: '9100'
+    PARAMESH_METRICS_BIND: '0.0.0.0'
+    PARAMESH_NATS_URL: ${PARAMESH_NATS_URL:-}
+    PARAMESH_NATS_TOKEN: ${PARAMESH_NATS_TOKEN:-}
+    PARAMESH_OTLP_ENDPOINT: ${PARAMESH_OTLP_ENDPOINT:-}
+    PARAMESH_TRACE_SAMPLE_RATIO: ${PARAMESH_TRACE_SAMPLE_RATIO:-0.2}
 
 services:
+  dashboard:
+    <<: *common
+    profiles: [operations]
+    networks: [training, operations, management]
+    command: [dashboard, --config, '${PARAMESH_CONFIG:-examples/compose.json}', --coordinator, 'coordinator:50050', --bind, '0.0.0.0', --state-dir, /app/state]
+    environment:
+      <<: *worker-environment
+      PARAMESH_DASHBOARD_PASSWORD: ${PARAMESH_DASHBOARD_PASSWORD:-}
+      PARAMESH_COOKIE_SECURE: ${PARAMESH_COOKIE_SECURE:-false}
+      PARAMESH_EVIDENCE_DIR: /app/evidence
+    volumes: [dashboard-state:/app/state]
+    ports: ['127.0.0.1:${PARAMESH_DASHBOARD_PORT:-8080}:8080']
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2).read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  nats:
+    image: nats:2.15.2-alpine
+    profiles: [operations]
+    entrypoint: [/bin/sh, -ec]
+    command: ['test -n "$$PARAMESH_NATS_TOKEN"; exec nats-server --auth "$$PARAMESH_NATS_TOKEN" -m 8222']
+    environment:
+      PARAMESH_NATS_TOKEN: ${PARAMESH_NATS_TOKEN:-}
+    restart: unless-stopped
+    networks: [operations]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, 'http://127.0.0.1:8222/healthz']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    profiles: [operations]
+    command: [--config.file=/etc/prometheus/prometheus.yml, --storage.tsdb.path=/prometheus, --storage.tsdb.retention.time=24h, --storage.tsdb.retention.size=512MB]
+    volumes:
+      - ./ops/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - metrics:/prometheus
+    restart: unless-stopped
+    networks: [operations]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, 'http://127.0.0.1:9090/-/ready']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  tempo:
+    image: grafana/tempo:3.1.1
+    profiles: [operations]
+    command: [-target=all, -config.file=/etc/tempo.yaml]
+    volumes:
+      - ./ops/tempo.yaml:/etc/tempo.yaml:ro
+      - traces:/var/tempo
+    restart: unless-stopped
+    networks: [operations]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+  loki:
+    image: grafana/loki:3.7.9
+    profiles: [operations]
+    command: [-config.file=/etc/loki/local-config.yaml]
+    volumes:
+      - ./ops/loki.yaml:/etc/loki/local-config.yaml:ro
+      - logs:/loki
+    restart: unless-stopped
+    networks: [operations]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+  grafana:
+    image: grafana/grafana:13.3.0
+    profiles: [operations]
+    entrypoint: [/bin/sh, -ec]
+    command: ['test -n "$$GF_SECURITY_ADMIN_PASSWORD"; exec /run.sh']
+    environment:
+      GF_SECURITY_ADMIN_USER: operator
+      GF_SECURITY_ADMIN_PASSWORD: ${PARAMESH_GRAFANA_PASSWORD:-}
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+      GF_ANALYTICS_CHECK_FOR_UPDATES: 'false'
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: 'false'
+      GF_NEWS_NEWS_FEED_ENABLED: 'false'
+      GF_SECURITY_DISABLE_GRAVATAR: 'true'
+    volumes:
+      - ./ops/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/paramesh.yaml:ro
+      - ./ops/grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/paramesh.yaml:ro
+      - ./ops/grafana/dashboards:/etc/paramesh/dashboards:ro
+      - grafana:/var/lib/grafana
+    ports: ['127.0.0.1:${PARAMESH_GRAFANA_PORT:-3000}:3000']
+    restart: unless-stopped
+    networks: [operations, management]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, 'http://127.0.0.1:3000/api/health']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+
   seaweedfs:
     image: chrislusf/seaweedfs:4.51
     profiles: [storage]
@@ -34,10 +158,12 @@ services:
   checkpoint:
     <<: *common
     profiles: [maintenance]
-    networks: [storage, management]
+    networks: [storage, management, operations]
     environment:
       PARAMESH_S3_ACCESS_KEY: ${PARAMESH_S3_ACCESS_KEY:-}
       PARAMESH_S3_SECRET_KEY: ${PARAMESH_S3_SECRET_KEY:-}
+      PARAMESH_NATS_URL: ${PARAMESH_NATS_URL:-}
+      PARAMESH_NATS_TOKEN: ${PARAMESH_NATS_TOKEN:-}
     command: [checkpoint, export, --id, manual, --state-dir, /cluster, --store, /checkpoints]
     volumes:
       - coordinator-state:/cluster/coordinator
@@ -52,7 +178,7 @@ services:
     environment: &admin-environment
       <<: *worker-environment
       PARAMESH_ADMIN_TOKEN: ${PARAMESH_ADMIN_TOKEN:?Generate .env with scripts/create_dev_env.py}
-    command: [coordinator, --config, examples/compose.json, --bind, '0.0.0.0:50050']
+    command: [coordinator, --config, '${PARAMESH_CONFIG:-examples/compose.json}', --bind, '0.0.0.0:50050']
     restart: unless-stopped
     volumes: [coordinator-state:/app/state]
     healthcheck:
@@ -65,7 +191,7 @@ services:
   shard-0:
     <<: *common
     environment: *admin-environment
-    command: [shard, --config, examples/compose.json, --index, '0', --bind, '0.0.0.0:50051']
+    command: [shard, --config, '${PARAMESH_CONFIG:-examples/compose.json}', --index, '0', --bind, '0.0.0.0:50051']
     restart: unless-stopped
     volumes: [shard-0-state:/app/state]
     healthcheck:
@@ -78,7 +204,7 @@ services:
   shard-1:
     <<: *common
     environment: *admin-environment
-    command: [shard, --config, examples/compose.json, --index, '1', --bind, '0.0.0.0:50051']
+    command: [shard, --config, '${PARAMESH_CONFIG:-examples/compose.json}', --index, '1', --bind, '0.0.0.0:50051']
     restart: unless-stopped
     volumes: [shard-1-state:/app/state]
     healthcheck:
@@ -109,6 +235,8 @@ services:
       shard-1: {condition: service_healthy}
 
 networks:
+  operations:
+    internal: true
   management:
   storage:
     internal: true
@@ -116,6 +244,11 @@ networks:
     internal: true
 
 volumes:
+  dashboard-state:
+  metrics:
+  traces:
+  logs:
+  grafana:
   object-storage:
   checkpoints:
   coordinator-state:
