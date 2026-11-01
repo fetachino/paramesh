@@ -11,12 +11,14 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Async updates and per-shard bounded-lag rejection with worker refresh.
 - [x] Concurrent duplicate-delivery and local failure-path tests.
 - [x] Separate-container Compose definition and syntax validation.
-- [ ] Complete the image build and container training; engine startup succeeded,
-      but interrupted PyTorch wheel downloads blocked the local build.
-- [ ] Confirm remote CI in a clean checkout; add transitive dependency locking and audit.
+- [x] Complete local image build, authenticated container training and persistent recreation.
+- [x] Confirm passing remote quality/container jobs and a package advisory audit.
+- [ ] Add reproducible transitive dependency locking.
 - [ ] Define coordinated checkpoint epochs and a quiescence/fencing protocol.
-- [ ] Implement safe local checkpoints, integrity checks, optimizer/receipt persistence and restore.
-- [ ] Automate killed-worker/rejoin and killed-shard/restore scenarios across processes.
+- [x] Persist local parameters, optimizer configuration, receipts, worker journals and run metadata.
+- [x] Automate killed-worker/rejoin and killed-shard/restart scenarios across processes.
+- [x] Authenticate internal RPC roles, fence old generations and test optional TLS/mTLS.
+- [ ] Export complete portable checkpoints and implement coordinated offline restore.
 - [ ] Add SeaweedFS S3 checkpoint storage, then Azure SDK/Azurite tests.
 - [ ] Measure RPC latency, byte counts, throughput, convergence and failure recovery;
       export JSON/CSV and record hardware/configuration/source metadata.
@@ -45,5 +47,5 @@ of having deployed their managed equivalents.
 | NATS | Operational messaging |
 | OpenTofu / Traefik | Infrastructure as code / ingress |
 
-The next priority is coordinated checkpoint and recovery correctness, not adding
-more infrastructure to an in-memory core.
+The next priority is portable checkpoint export and complete-manifest restore,
+followed by the operational event and observability planes.

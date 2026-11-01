@@ -1,16 +1,18 @@
 import grpc
 import numpy as np
 import pytest
+import torch
 from test_coordinator import config
 from test_shard import update, weight
 
-from paramesh.coordinator import Coordinator
+from paramesh.journal import Journal
 from paramesh.rpc import training_pb2 as pb
-from paramesh.services import coordinator_server, shard_server
+from paramesh.services import coordinator_server, managed_coordinator, shard_server
 from paramesh.shard import ParameterShard
+from paramesh.state import StateDB
 from paramesh.tensors import encode, partition
-from paramesh.worker import _push, train_worker
-from paramesh.workload import load_parameters, model, parameters
+from paramesh.worker import _rpc, train_worker
+from paramesh.workload import dataset, load_parameters, local_reference, model, parameters
 
 
 def test_parameter_loading_rejects_broadcastable_shapes_before_mutating():
@@ -33,7 +35,7 @@ def test_retry_after_lost_response_preserves_exact_update_and_commits_once():
     class Transport:
         calls = 0
 
-        def PushGradients(self, request, timeout):
+        def PushGradients(self, request, timeout, **options):
             self.calls += 1
             result = shard.push(request)
             if self.calls == 1:
@@ -41,7 +43,7 @@ def test_retry_after_lost_response_preserves_exact_update_and_commits_once():
             return result
 
     client = Transport()
-    assert _push(client, update(), 1).duplicate
+    assert _rpc(client.PushGradients, update(), 1).duplicate
     assert client.calls == 2
     assert weight(shard) == pytest.approx(0.8)
 
@@ -84,7 +86,7 @@ def test_bounded_refresh_does_not_resubmit_a_previously_committed_shard():
             server.start()
             endpoints.append(f"127.0.0.1:{port}")
         settings.shard_endpoints[:] = endpoints
-        coordinator = Coordinator(settings)
+        coordinator = managed_coordinator(settings)
         server, port = coordinator_server(coordinator, "127.0.0.1:0")
         servers.append(server)
         server.start()
@@ -93,5 +95,64 @@ def test_bounded_refresh_does_not_resubmit_a_previously_committed_shard():
         assert [item.version for item in shards] == [2, 3]
         assert coordinator.status().workers[0].health == "completed"
     finally:
+        for server in servers:
+            server.stop(0).wait()
+
+
+def test_restart_finishes_original_partial_step_and_matches_local_reference(tmp_path):
+    settings = config(
+        mode=pb.SYNCHRONOUS, worker_ids=["worker-0"], shard_endpoints=["pending-0:0", "pending-1:0"]
+    )
+    initial = parameters()
+    owners = partition(initial, 2)
+    shards = [
+        ParameterShard(settings, {k: v for k, v in initial.items() if owners[k] == index})
+        for index in range(2)
+    ]
+    servers = []
+    storage = StateDB(tmp_path / "worker.sqlite")
+    try:
+        endpoints = []
+        for shard in shards:
+            server, port = shard_server(shard, "127.0.0.1:0")
+            servers.append(server)
+            server.start()
+            endpoints.append(f"127.0.0.1:{port}")
+        settings.shard_endpoints[:] = endpoints
+        coordinator = managed_coordinator(settings)
+        server, port = coordinator_server(coordinator, "127.0.0.1:0")
+        servers.append(server)
+        server.start()
+        network = model()
+        inputs, targets = dataset(0)
+        loss = torch.nn.functional.mse_loss(network(inputs), targets)
+        torch.autograd.backward(loss)
+        requests = [
+            pb.GradientUpdate(
+                run_id=settings.run_id,
+                worker_id="worker-0",
+                tensors=[
+                    encode(name, parameter.grad.detach().numpy())
+                    for name, parameter in network.named_parameters()
+                    if owners[name] == index
+                ],
+            )
+            for index in range(2)
+        ]
+        journal = Journal(settings, "worker-0", storage)
+        journal.prepare(requests, float(loss.detach()))
+        # Crash point: the first shard committed, but the second has not received its request.
+        shards[0].push(requests[0])
+        storage.close()
+        storage = StateDB(tmp_path / "worker.sqlite")
+        result = train_worker(f"127.0.0.1:{port}", "worker-0", 4, state=storage)
+        assert result["replayed_contributions"] == 1
+        expected = local_reference(1, 4, settings.learning_rate)
+        for shard in shards:
+            assert shard.version == 4
+            for name, value in shard.parameters.items():
+                np.testing.assert_allclose(value, expected[name], atol=1e-6, rtol=0)
+    finally:
+        storage.close()
         for server in servers:
             server.stop(0).wait()

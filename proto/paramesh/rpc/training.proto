@@ -34,6 +34,7 @@ message RegisterWorkerRequest {
 message WorkerSession {
   string session_id = 1;
   RunConfig config = 2;
+  uint64 generation = 3;
 }
 
 message HeartbeatRequest {
@@ -51,11 +52,13 @@ message WorkerState {
   uint64 step = 3;
   uint64 parameter_version = 4;
   double heartbeat_age_seconds = 5;
+  uint64 generation = 6;
 }
 
 message RunStatus {
   RunConfig config = 1;
   repeated WorkerState workers = 2;
+  uint64 global_step = 3;
 }
 
 // Canonical little-endian float32 bytes. No pickle or executable object format.
@@ -78,6 +81,7 @@ message GradientUpdate {
   uint64 step = 3;
   uint64 base_version = 4;
   repeated Tensor tensors = 5;
+  uint64 generation = 6;
 }
 
 message UpdateResult {
@@ -106,6 +110,28 @@ message ShardSnapshot {
   map<string, uint64> worker_generations = 8;
 }
 
+message FenceRequest {
+  string run_id = 1;
+  string worker_id = 2;
+  uint64 generation = 3;
+}
+
+message ShardProgress {
+  uint64 version = 1;
+  map<string, uint64> next_steps = 2;
+  map<string, uint64> worker_generations = 3;
+  repeated string pending_workers = 4;
+}
+
+message WorkerJournal {
+  uint32 format_version = 1;
+  bytes config_fingerprint = 2;
+  string worker_id = 3;
+  uint64 next_step = 4;
+  repeated GradientUpdate requests = 5;
+  double loss = 6;
+}
+
 service Coordinator {
   rpc RegisterWorker(RegisterWorkerRequest) returns (WorkerSession);
   rpc Heartbeat(HeartbeatRequest) returns (WorkerState);
@@ -115,4 +141,6 @@ service Coordinator {
 service ParameterShard {
   rpc PullParameters(PullRequest) returns (Parameters);
   rpc PushGradients(GradientUpdate) returns (UpdateResult);
+  rpc GetProgress(PullRequest) returns (ShardProgress);
+  rpc FenceWorker(FenceRequest) returns (Empty);
 }

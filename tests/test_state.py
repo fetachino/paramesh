@@ -33,3 +33,15 @@ def test_state_rejects_oversized_payload_without_replacing_previous(tmp_path):
         database.put("run", b"x" * (16 * 1024 * 1024 + 1))
     assert database.get("run") == b"original"
     database.close()
+
+
+def test_state_has_one_writer_and_releases_ownership_on_close(tmp_path):
+    path = tmp_path / "state.sqlite"
+    first = StateDB(path)
+    with pytest.raises(OSError, match="in use"):
+        StateDB(path)
+    first.put("run", b"preserved")
+    first.close()
+    second = StateDB(path)
+    assert second.get("run") == b"preserved"
+    second.close()

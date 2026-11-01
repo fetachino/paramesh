@@ -10,13 +10,16 @@ workers, sharded model ownership and explicit synchronization semantics.
 - Implemented coordinator membership leases and a generated gRPC protocol linking
   independent CPU training workers to authoritative parameter shards.
 - Added synchronous gradient barriers, async updates and per-shard bounded-lag
-  rejection, with validation and in-memory duplicate-delivery protection.
+  rejection, with validation and durable duplicate-delivery protection.
 - Verified synchronous model weights against an equivalent local PyTorch SGD
   reference and tested concurrent retries, lease expiry and barrier failure paths.
+- Preserved synchronous numerical behavior after actual worker/shard process
+  termination using write-ahead gradient journals, durable receipts and fencing.
 
 Use the exact committed verification record for test counts, coverage and numerical
-results. Do not describe durable fault recovery, production throughput, cloud
-deployment or storage/observability integrations as completed.
+results. Process recovery with retained local state is implemented; do not claim
+recovery from disk loss, production throughput, public cloud deployment or
+storage/observability integrations that have not been exercised.
 
 ## Short profile description
 
@@ -28,5 +31,5 @@ CPU workload, independent-process correctness tests and explicit recovery limita
 
 Python, PyTorch, NumPy, gRPC, Protocol Buffers, concurrency, parameter servers,
 synchronous/asynchronous training, staleness, SGD, pytest, Ruff, mypy, Docker Compose.
-GitHub Actions and Docker configurations are included; remote execution should be
-claimed only after actual passing runs are available.
+GitHub Actions and local Docker Compose runs have passing evidence; link the exact
+workflow/run artifact when citing a measured result.

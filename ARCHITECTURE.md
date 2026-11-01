@@ -15,10 +15,16 @@ then `healthy` after a heartbeat, `suspect` after 5 seconds and `unavailable` af
 worker remains `completed`, rather than appearing as a failed node later.
 
 Expired workers may register a fresh control-plane session; old tokens cannot
-send heartbeats. This fences control-plane sessions only. It does not implement
-training recovery or data-plane authentication. Node state is in memory and lost
-when the coordinator restarts. Shard endpoints are configured; shard health and
-dynamic registration are not implemented.
+send heartbeats. The coordinator durably reserves a monotonically increasing
+generation, fences it on every shard, then issues the new session. An interrupted
+partial fence never reuses a generation. Shard updates reject superseded generations.
+
+Run configuration, generation counters and progress survive in checksummed SQLite
+state. Restart invalidates prior leases and requires re-registration; it does not
+pretend saved monotonic-clock timestamps are live leases. `global_step` is a
+reported completed-step lower watermark across configured workers, not a global
+atomic model version. Shard endpoints remain configured; dynamic registration
+and coordinator replication are not implemented.
 
 ## Data plane and ownership
 
@@ -70,12 +76,16 @@ The shard remembers the latest accepted sequence, SHA-256 request fingerprint,
 resulting version and staleness for each configured worker. An identical retry
 returns that receipt without applying SGD again. A changed retry or sequence gap
 is rejected. Memory is bounded by membership and one in-flight barrier. Older
-receipts are not retained, and receipts are not durable. This is not an exactly-once
-delivery claim across restarts.
+receipts are not retained. Weights, SGD configuration, versions, receipts and fences
+are committed together to SQLite WAL with `synchronous=FULL` before acknowledgement.
+This supports retry after a process restart when the volume survives; it is not
+an exactly-once delivery claim after storage loss.
 
 Workers use explicit RPC deadlines and retry transient unavailable/deadline errors
 at most three times with short backoff. They reuse the original request bytes;
-they do not recompute a gradient after an ambiguous transport failure. A test
+they do not recompute a gradient after an ambiguous transport failure. Calls use
+wait-for-ready within their deadlines so reconnection can outlast a transient
+failure rather than exhausting retries immediately. A test
 simulates losing the response after commit and verifies one update, not two.
 
 ## Synchronization
@@ -115,11 +125,20 @@ no single global version, atomic multi-shard pull or classic SSP worker-clock bo
 
 ## Failure and admission boundaries
 
-Missing workers abort local synchronous barriers. Heartbeats detect expired
-sessions but do not evict membership or repair optimizer state. Restarting a
-worker with sequence zero against live shards is not supported. Restarting a
-shard loses weights and receipts. Partial cross-shard commits require a future
-coordinated checkpoint and recovery protocol.
+Missing workers abort local synchronous barriers; membership is not silently
+reduced. A worker journals complete gradient requests before sending them. After
+restart it reads each shard's progress, skips completed contributions and finishes
+the original pending step under its replacement generation. Fingerprints exclude
+only generation metadata, so replacing a worker cannot change an already committed
+gradient. Fresh bounded-mode recomputation only changes uncommitted contributions.
+
+Shard restart reloads the last durable weights and receipts before serving traffic.
+Tests actually terminate worker/shard processes and compare the completed sync run
+with local SGD. State files have an OS-owned single-writer lock released on exit
+or process death, preventing overlapping writers from corrupting worker journals.
+There is no supported rollback after losing a state volume. Whole-run checkpoint
+export and coordinated offline restore remain a separate milestone; see
+[the recovery design](docs/recovery-design.md).
 
 gRPC admission is bounded to `2 * worker_count + 4` concurrent calls per shard;
 excess requests receive resource exhaustion. Workers issue one gradient push at
@@ -134,9 +153,12 @@ weights against concatenated-data PyTorch SGD. Its control pipes are trusted,
 local parent-child IPC, never the training transport.
 
 Compose defines separate containers with an internal network, dropped capabilities,
-read-only filesystems and no public ports. Its runtime remains unverified locally:
-the engine started, but interrupted PyTorch wheel downloads prevented completing
-the image build. No Coolify, k3s, AWS or Azure deployment has been exercised.
+read-only filesystems, five persistent volumes and no public training ports. Local
+container verification checks actual training, role enforcement, clean shutdown
+and state-preserving recreation. A large dependency download was completed in
+validated ranges and matched PyTorch's published SHA-256; the local bootstrap
+mirror did not change the installed package. Normal Git-backed builds use the
+default official CPU index. No Coolify, k3s, AWS or Azure deployment has been exercised.
 
 An event plane and an observability plane are planned, not embedded in the current
 gradient path. See the roadmap for checkpoint coordination, storage adapters,

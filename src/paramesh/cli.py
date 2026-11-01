@@ -2,18 +2,20 @@
 
 import argparse
 import json
+import re
+import signal
 from importlib.metadata import version
 from pathlib import Path
 
-import grpc
 from google.protobuf.json_format import MessageToDict, Parse
 
 from paramesh.config import validate_config
-from paramesh.coordinator import Coordinator
 from paramesh.rpc import training_pb2 as pb
 from paramesh.rpc import training_pb2_grpc as rpc
-from paramesh.services import CHANNEL_OPTIONS, coordinator_server, shard_server
+from paramesh.security import RpcSecurity, open_channel
+from paramesh.services import coordinator_server, managed_coordinator, shard_server
 from paramesh.shard import ParameterShard
+from paramesh.state import StateDB
 from paramesh.tensors import partition
 
 
@@ -36,22 +38,30 @@ def main() -> None:
     demo.add_argument("--shards", type=int, default=2)
     demo.add_argument("--steps", type=int, default=20)
     demo.add_argument("--output", type=Path, default=Path("artifacts/demo.json"))
+    demo.add_argument("--failure", choices=["worker", "shard"], default=None)
     for name in ("coordinator", "shard"):
         service = commands.add_parser(name)
         service.add_argument("--config", type=Path, required=True)
         service.add_argument("--bind", default=None)
+        service.add_argument("--state-dir", type=Path, default=Path("state"))
+        if name == "coordinator":
+            service.add_argument("--suspect-after", type=float, default=5)
+            service.add_argument("--unavailable-after", type=float, default=15)
         if name == "shard":
             service.add_argument("--index", type=int, required=True)
     worker = commands.add_parser("worker")
     worker.add_argument("--coordinator", default="127.0.0.1:50050")
     worker.add_argument("--id", required=True)
     worker.add_argument("--steps", type=int, default=20)
+    worker.add_argument("--state-dir", type=Path, default=Path("state"))
+    worker.add_argument("--step-delay", type=float, default=0)
     status = commands.add_parser("status")
     status.add_argument("--coordinator", default="127.0.0.1:50050")
     check = commands.add_parser("check-shard")
     check.add_argument("--address", required=True)
     check.add_argument("--run-id", required=True)
     args = parser.parse_args()
+    security = RpcSecurity.from_environment() if args.command != "demo" else None
     if args.command == "demo":
         from paramesh.demo import run_demo
 
@@ -61,6 +71,7 @@ def main() -> None:
             shards=args.shards,
             steps=args.steps,
             output=args.output,
+            failure=args.failure,
         )
         print(
             json.dumps(
@@ -70,20 +81,49 @@ def main() -> None:
     elif args.command == "worker":
         from paramesh.worker import train_worker
 
-        print(json.dumps(train_worker(args.coordinator, args.id, args.steps)))
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", args.id):
+            parser.error("--id must be a safe worker identifier")
+        storage = StateDB(args.state_dir / f"{args.id}.sqlite")
+        try:
+            print(
+                json.dumps(
+                    train_worker(
+                        args.coordinator,
+                        args.id,
+                        args.steps,
+                        state=storage,
+                        step_delay=args.step_delay,
+                        security=security,
+                    )
+                )
+            )
+        finally:
+            storage.close()
     elif args.command == "status":
-        with grpc.insecure_channel(args.coordinator, options=CHANNEL_OPTIONS) as channel:
+        with open_channel(args.coordinator, security) as channel:
             state = rpc.CoordinatorStub(channel).GetStatus(pb.Empty(), timeout=3)
             print(json.dumps(MessageToDict(state, preserving_proto_field_name=True), indent=2))
     elif args.command == "check-shard":
-        with grpc.insecure_channel(args.address, options=CHANNEL_OPTIONS) as channel:
+        with open_channel(args.address, security) as channel:
             rpc.ParameterShardStub(channel).PullParameters(
                 pb.PullRequest(run_id=args.run_id), timeout=3
             )
     else:
         config = _load(args.config)
+        assert security is not None
+        security.require_admin()
         if args.command == "coordinator":
-            server, port = coordinator_server(Coordinator(config), args.bind or "127.0.0.1:50050")
+            storage = StateDB(args.state_dir / "coordinator.sqlite")
+            coordinator = managed_coordinator(
+                config,
+                state=storage,
+                suspect_after=args.suspect_after,
+                unavailable_after=args.unavailable_after,
+                security=security,
+            )
+            server, port = coordinator_server(
+                coordinator, args.bind or "127.0.0.1:50050", security=security
+            )
         else:
             from paramesh.workload import parameters
 
@@ -91,11 +131,15 @@ def main() -> None:
                 parser.error("--index must identify a configured shard")
             values = parameters()
             owners = partition(values, len(config.shard_endpoints))
+            storage = StateDB(args.state_dir / f"shard-{args.index}.sqlite")
             shard = ParameterShard(
-                config, {k: v for k, v in values.items() if owners[k] == args.index}
+                config, {k: v for k, v in values.items() if owners[k] == args.index}, state=storage
             )
-            server, port = shard_server(shard, args.bind or config.shard_endpoints[args.index])
+            server, port = shard_server(
+                shard, args.bind or config.shard_endpoints[args.index], security=security
+            )
         server.start()
+        signal.signal(signal.SIGTERM, lambda signum, frame: server.stop(3))
         print(
             json.dumps(
                 {
@@ -113,6 +157,7 @@ def main() -> None:
             pass
         finally:
             server.stop(3).wait()
+            storage.close()
 
 
 if __name__ == "__main__":

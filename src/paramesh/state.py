@@ -1,7 +1,9 @@
 """Small checksummed SQLite records, committed before acknowledging network work."""
 
 import hashlib
+import os
 import sqlite3
+import sys
 import threading
 from pathlib import Path
 
@@ -11,14 +13,36 @@ MAX_STATE_BYTES = 16 * 1024 * 1024
 class StateDB:
     def __init__(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        self.connection = sqlite3.connect(path, check_same_thread=False, timeout=10)
-        self.connection.execute("PRAGMA journal_mode=WAL")
-        self.connection.execute("PRAGMA synchronous=FULL")
-        self.connection.execute(
-            "CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value BLOB NOT NULL, "
-            "checksum TEXT NOT NULL)"
-        )
-        self.connection.commit()
+        descriptor = os.open(path.with_suffix(path.suffix + ".lock"), os.O_RDWR | os.O_CREAT, 0o600)
+        self._lease = os.fdopen(descriptor, "r+b")
+        try:
+            if sys.platform == "win32":
+                import msvcrt
+
+                msvcrt.locking(self._lease.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(self._lease.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as error:
+            self._lease.close()
+            raise OSError("State store is already in use by another process") from error
+        connection = None
+        try:
+            connection = sqlite3.connect(path, check_same_thread=False, timeout=10)
+            self.connection = connection
+            self.connection.execute("PRAGMA journal_mode=WAL")
+            self.connection.execute("PRAGMA synchronous=FULL")
+            self.connection.execute(
+                "CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value BLOB NOT NULL, "
+                "checksum TEXT NOT NULL)"
+            )
+            self.connection.commit()
+        except Exception:
+            if connection is not None:
+                connection.close()
+            self._lease.close()
+            raise
         self.lock = threading.Lock()
 
     def get(self, key: str) -> bytes | None:
@@ -46,4 +70,6 @@ class StateDB:
             )
 
     def close(self) -> None:
-        self.connection.close()
+        with self.lock:
+            self.connection.close()
+            self._lease.close()
