@@ -5,10 +5,10 @@ workers, a membership coordinator and sharded authoritative model state. The
 repository owns the gRPC protocol, gradient validation, SGD updates, versioning,
 replay protection and synchronization behavior.
 
-**Status: early implementation.** CPU training is exercised across independent
-processes on one host. Synchronous runs are checked against equivalent local
-PyTorch SGD. Checkpointing, restart recovery, dashboards and cloud deployments
-are future work; this is not yet a fault-tolerant training platform.
+**Status: local recovery verified.** Independent CPU workers and parameter shards
+survive tested process failures using durable local state. Synchronous recovery
+is checked against equivalent uninterrupted PyTorch SGD. Checkpoint export to
+object storage, operational dashboards and public deployment remain future work.
 
 [Architecture](ARCHITECTURE.md) · [Evidence and methodology](BENCHMARKS.md) ·
 [Security boundaries](SECURITY.md) · [Roadmap](ROADMAP.md)
@@ -18,8 +18,9 @@ are future work; this is not yet a fault-tolerant training platform.
 - Control-plane membership is separate from worker-to-shard gradient traffic.
 - Typed network boundaries reject malformed tensors and inconsistent updates.
 - Concurrent workers synchronize through explicit shard-local gradient barriers.
-- Ambiguous RPC delivery is handled by retrying identical requests without a
-  second optimizer update while the shard process remains alive.
+- Ambiguous RPC delivery and process restart preserve durable update receipts.
+- Write-ahead worker journals finish partially delivered steps without recomputing
+  their original synchronous gradients from a partly updated model.
 - Synchronous numerical correctness is compared with a real autograd baseline.
 
 ## Why this project exists
@@ -31,8 +32,8 @@ protocol underneath this project.
 
 ## Run the distributed demo
 
-Requires Python 3.12 on an x86-64 machine. The verified local environment is Windows;
-Linux verification is configured in CI but has not been run locally.
+Requires Python 3.12 on an x86-64 machine. Native Windows, local Linux containers
+and Linux GitHub Actions checks have been exercised.
 
 ```powershell
 python -m venv .venv
@@ -45,17 +46,17 @@ paramesh demo --mode sync --workers 2 --shards 2 --steps 20 --output artifacts/s
 
 On Linux, activate with `source .venv/bin/activate`. The demo starts **five child
 processes**: one coordinator, two parameter shards and two workers. Actual gRPC
-calls carry model parameters and gradients; local process pipes only carry
-startup addresses, stop signals and demo results. All child processes are cleaned
-up when the command finishes.
+calls carry model parameters and gradients. Parent-owned local IPC carries startup
+configuration, ephemeral credentials, stop signals and demo results. Temporary
+state and child processes are cleaned up when the command finishes.
 
 The workload is a seeded 4 → 8 → 1 MLP with tanh, 32 synthetic regression examples
 per worker and shard-owned SGD. The JSON output records loss, shard versions,
 parameter ownership, worker completion, source provenance and the synchronous
 reference error. This command is a correctness demonstration, not a scaling benchmark.
 
-[Captured run evidence](docs/evidence/README.md) records 41 passing tests and 93.39%
-statement coverage. The 20-step sync run reduced full-dataset MSE from 14.232687
+[Original core evidence](docs/evidence/README.md) records the baseline numerical
+run. Its 20-step sync run reduced full-dataset MSE from 14.232687
 to 0.733824 with maximum absolute parameter error `5.96e-8` versus local SGD.
 
 ```powershell
@@ -69,14 +70,16 @@ paramesh demo --mode bounded --output artifacts/bounded.json
 | --- | --- |
 | Transport | Generated `paramesh.v1` gRPC contracts, deadlines, 8 MiB RPC limit |
 | Membership | Configured worker IDs, session leases, suspect/unavailable thresholds, completion |
+| Recovery | Durable coordinator metadata, shard commits, worker journals and generation fences |
 | Ownership | Stable SHA-256 parameter-name hashing for an immutable shard count |
 | Validation | Run, worker, sequence, version, identity, shape, dtype, byte length and finite values |
 | SGD | Shard-local authoritative weights; mean or sum aggregation in synchronous mode |
 | Synchronous | Fixed membership, one contribution per worker, barrier timeout without a local commit |
 | Asynchronous | Atomic local updates with reported shard-local staleness |
 | Bounded | Reject excessive shard-local lag; refresh and recompute uncommitted contributions |
-| Delivery | Latest accepted worker-step receipt prevents duplicate application within a shard lifetime |
+| Delivery | Durable latest-step receipts prevent duplicate application after a shard restart |
 | Admission | Bounded concurrent RPCs and bounded tensor collections |
+| Security | Separate data/admin credentials, private networking and optional TLS/mTLS |
 
 ## Architecture and training flow
 
@@ -111,12 +114,31 @@ each shard's current version. Mean aggregation assumes equal worker batch sizes.
 **There is no cross-shard transaction.** A failure can leave an update committed
 on one shard and pending on another. Async and bounded pulls can observe different
 shard versions; bounded mode does not provide a globally consistent model snapshot
-or classic SSP worker-clock guarantees. Coordinated recovery is the next major
-correctness workstream.
+or classic SSP worker-clock guarantees. Durable journals preserve unfinished
+requests after a process crash; rollback after losing local state is a separate,
+currently unsupported recovery boundary.
+
+## Reproduce process recovery
+
+```powershell
+paramesh demo --failure worker --steps 20 --output artifacts/worker-recovery.json
+paramesh demo --failure shard --steps 20 --output artifacts/shard-recovery.json
+```
+
+These commands terminate a real process during synchronous training, retain its
+state, restart it and require final parameters to match local SGD within `1e-6`.
+Worker recovery includes observed heartbeat expiry and a new fencing generation.
+Reports record detection and progress-recovery durations, with intentional step
+pacing for a visible failure window. Uncommitted computation loss is labeled
+unmeasured rather than inferred from a status value.
 
 ## Start components independently
 
-Run each command in a separate terminal, with the environment activated:
+Run each command in a separate terminal, with the environment activated. Set
+`PARAMESH_RPC_TOKEN` to the same strong URL-safe credential in every component,
+and a distinct `PARAMESH_ADMIN_TOKEN` in coordinator/shard terminals only. The
+container setup below generates these without printing them. Native component
+commands fail closed when credentials are absent.
 
 ```powershell
 paramesh coordinator --config examples/local.json
@@ -126,13 +148,15 @@ paramesh worker --coordinator 127.0.0.1:50050 --id worker-0 --steps 20
 paramesh worker --coordinator 127.0.0.1:50050 --id worker-1 --steps 20
 ```
 
-Inspect membership with `paramesh status`. Shut down all components and start a
-fresh run before repeating this fixed-identity workload. Reusing a completed
-worker ID against existing shard sequence state is not a supported resume flow.
+Inspect membership with `paramesh status`. Default state lives under `state/`;
+restart against the same state to resume. An already completed worker exits
+without repeating training. Use a fresh `--state-dir` for a different run or model;
+existing state is never silently reset to fit new configuration.
 
 ## Containers
 
 ```powershell
+python scripts/create_dev_env.py
 docker compose up --build -d
 docker compose logs -f worker-0 worker-1
 docker compose exec coordinator paramesh status --coordinator coordinator:50050
@@ -141,12 +165,20 @@ docker compose down
 
 Compose defines five separate containers, health checks, non-root execution and
 an internal network with no published ports. Workers complete 20 steps and exit.
-Restarting a shard loses its in-memory state. Compose syntax is locally validated.
-The Docker engine was started, but image building was blocked by interrupted CPU
-PyTorch wheel downloads from both official endpoints; container execution remains
-unverified. The configured
-CI container job checks that both workers exit successfully. No passing CI or
-deployment claim is implied by a workflow file.
+Five named volumes retain coordinator, shard and worker state. Worker containers
+restart on failure and wait for the previous lease to expire before rejoining.
+The default private bridge uses authenticated RPCs; no service gets a public
+domain or host gRPC port.
+
+`python scripts/verify_compose.py` creates an isolated test project, trains through
+the actual container network, checks credential separation and private ports,
+recreates all containers and verifies resume without repeated training. It removes
+only its own synthetic test volumes. This check passed locally; the CI container
+job runs the same script.
+
+`PARAMESH_STEPS` and `PARAMESH_STEP_DELAY` control target steps and optional pacing
+for demonstrations. A larger target continues an existing run. No Coolify/server
+deployment has been performed yet.
 
 ## Verification and testing
 
@@ -179,10 +211,11 @@ docs/                   Interview notes and genuine run evidence
 
 ## Current limitations and next work
 
-No durable checkpoints, coordinator persistence, shard recovery, automatic worker
-rejoin, TLS, data-plane authentication, metrics backend, dashboard, compression,
-object storage or validated multi-machine deployment exists yet. The protocol is
-float32-only and the executable workload is deliberately fixed and CPU-only.
+Checkpoint export/whole-run restore, object storage, operational events, metrics
+backends, dashboards, compression and multi-machine verification remain pending.
+Recovery requires retained local volumes and a single coordinator; it does not
+provide coordinator consensus, replicated storage or recovery from disk loss.
+The protocol is float32-only and the workload is fixed and CPU-only.
 
 The cloud-portability goal is to add storage adapters for SeaweedFS/S3 and
 Azurite/Azure Blob, then optional NATS events, observability and self-hosted

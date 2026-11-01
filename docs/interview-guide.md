@@ -6,7 +6,8 @@ ParamMesh separates PyTorch gradient computation from authoritative parameter
 storage. Independent workers use a repository-owned gRPC protocol to train against
 shards that validate updates, aggregate gradients and apply SGD. The coordinator
 tracks membership and heartbeat leases. Synchronous correctness is checked against
-equivalent local training. Durable recovery is the next major milestone.
+equivalent local training, including actual worker and shard process recovery
+when durable local volumes survive.
 
 ## Two-minute walkthrough
 
@@ -24,9 +25,10 @@ shard version is too old. Neither mode promises identical convergence to sync.
 
 Retries are important: a transport deadline can occur after commit. A shard's
 latest worker-step fingerprint returns the original receipt instead of applying
-the update twice. That guarantee ends at process restart because receipts are
-currently in memory. Multi-shard commits are also not atomic. Explaining those
-limits is part of the design, not a claim that fault tolerance is complete.
+the update twice. Receipts and weights are committed together before acknowledgement.
+Workers journal gradients before delivery so a replacement can finish a partial
+step without changing its numerical meaning. Multi-shard commits remain non-atomic;
+retained-volume process recovery does not imply recovery after disk loss.
 
 ## Questions to prepare
 
@@ -48,7 +50,8 @@ limits is part of the design, not a claim that fault tolerance is complete.
 8. **When is mean aggregation equivalent to full-batch SGD?** When worker batches have
    equal sample counts and use the same mean-reduced objective, as in this workload.
 9. **What if one sync worker disappears?** The local barrier times out and clears pending
-   gradients. Membership does not silently shrink and training does not auto-recover.
+   gradients. Membership does not silently shrink. A replacement waits for lease
+   expiry, advances its fencing generation and resumes its durable gradient journal.
 10. **What is a parameter version?** A per-shard count of committed optimizer updates,
     distinct from each worker's local iteration count.
 11. **What is staleness?** The current shard version minus the worker's base version.
@@ -56,13 +59,14 @@ limits is part of the design, not a claim that fault tolerance is complete.
     it does not bound global worker clocks or provide a consistent multi-shard snapshot.
 13. **What happens after a partial multi-shard push?** Already accepted contributions
     are retained. Bounded refresh only resubmits uncommitted shards. A process failure
-    can leave partial state requiring future coordinated recovery.
+    resumes the original unfinished request set from its write-ahead journal.
 14. **What if the response is lost after commit?** The client retries the same request.
-    The current process's receipt prevents another update for that worker step.
+    The durable receipt prevents another update for that worker step after a restart.
 15. **Why not keep every receipt?** Latest-only receipts bound memory and match the
     worker's sequential push behavior. Arbitrarily old retries are rejected.
-16. **Does a coordinator lease secure gradients?** No. Session fencing applies to
-    heartbeat identity; shards still trust configured worker IDs on a private network.
+16. **Does a coordinator lease secure gradients?** Generation fencing rejects old
+    incarnations at shards, while service credentials authenticate the internal group.
+    Shared credentials do not establish individual identities or Byzantine safety.
 17. **How are bad payloads handled?** Explicit dtype/shape/length/identity/size checks,
     finite gradients and finite proposed optimizer results precede commit.
 18. **What provides backpressure?** Bounded gRPC admission, message limits and one
@@ -77,12 +81,14 @@ limits is part of the design, not a claim that fault tolerance is complete.
     Training correctness should not require the event broker.
 22. **What observability is implemented?** JSON command output, status RPCs and run
     artifacts. Prometheus, OpenTelemetry, Grafana, Tempo and Loki are not integrated yet.
-23. **What does Compose prove?** The repository defines separate-container topology and
-    validates syntax. A workflow definition alone does not prove containers ran.
-24. **How would production identity differ?** TLS/mTLS or verifiable service grants for
-    RPCs; a separate OIDC provider for a future browser dashboard. Keycloak/OpenBao
-    should not be confused with current implementations.
+23. **What does Compose prove?** The black-box verifier trains in separate containers,
+    checks data/admin credentials and private ports, then recreates the cluster and
+    verifies durable resume. Core CI and local runtime runs have passed.
+24. **How would production identity differ?** TLS/mTLS transport is tested, but per-node
+    certificate issuance/rotation and browser OIDC are separate work. Keycloak/OpenBao
+    are not current implementations.
 25. **What are the deployment limits?** Native tests are one-host CPU runs. Coolify,
     k3s, OpenTofu and managed AWS/Azure deployments have not been exercised.
-26. **What is the next engineering risk to resolve?** Coordinated recovery and fencing
-    after partial multi-shard commits, before claiming fault tolerance or adding a large UI.
+26. **What is the next engineering risk to resolve?** Complete portable checkpoint
+    manifests and coordinated offline restore after local storage loss, followed by
+    actual operational telemetry rather than an infrastructure technology list.

@@ -40,22 +40,29 @@ the source was restored before final verification.
 The bounded refresh test injects a competing update through actual shard logic
 while a real gRPC worker has already committed to another shard. It verifies one
 refresh and no duplicate application on the earlier shard. That controlled test
-is distinct from a killed-process recovery demonstration, which is not implemented.
+is distinct from the newer killed-process recovery demonstrations.
 
 Generated bindings and the CLI dispatcher are excluded from coverage. The report
 includes worker/server code executed by spawned processes. Native tests ran on
-Windows; remote GitHub Actions has not been exercised by this local work.
+Windows. [The core CI record](ci-baseline.json) now records actual passing remote
+quality and container jobs; the original baseline files above remain historical.
 
 No screenshots are included yet because there is no running dashboard or
 observability UI to capture honestly.
 
-## Container verification limit
+## Local container verification
 
 Docker Desktop was started successfully and reported engine version 29.7.2.
-`docker compose config --quiet` passes. The image build reached dependency
-installation, but the 209.5 MB Linux CPU PyTorch wheel download was interrupted
-at 19.4 MB. An alternate official endpoint also interrupted at 5.2 MB. Both
-attempts were canceled after establishing that the dependency download remained
-unreliable. No application container was started and no container-training result
-is claimed. Dockerfile dependency installation is cached separately from source
-changes so subsequent application edits do not require another PyTorch download.
+The interrupted 209.5 MB CPU-wheel download was completed using validated byte
+ranges and matched the SHA-256 published by PyTorch:
+`0955c7e3446326293f48af18fad67872fa31dee5a36a87690eb9e5be8b465be3`.
+A temporary loopback mirror supplied those exact bytes to the normal Dockerfile;
+normal Git-backed builds still default to the official CPU package index.
+
+Local verification completed five-container training at step 20, enforced data/admin
+credentials and denied unauthenticated parameter reads. No training service published
+a host port. Recreating the services retained weights, versions and journals: workers
+resumed from completed step 20 with empty new-loss histories, rather than retraining.
+`scripts/verify_compose.py` reproduces these checks in a uniquely named project and
+removes only that project's synthetic test volumes. Its report is written under
+`artifacts/compose-verification.json`. No public deployment is claimed.
