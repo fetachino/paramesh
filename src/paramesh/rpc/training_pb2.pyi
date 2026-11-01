@@ -58,12 +58,14 @@ class RegisterWorkerRequest(_message.Message):
     def __init__(self, worker_id: _Optional[str] = ..., protocol_version: _Optional[int] = ...) -> None: ...
 
 class WorkerSession(_message.Message):
-    __slots__ = ("session_id", "config")
+    __slots__ = ("session_id", "config", "generation")
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     CONFIG_FIELD_NUMBER: _ClassVar[int]
+    GENERATION_FIELD_NUMBER: _ClassVar[int]
     session_id: str
     config: RunConfig
-    def __init__(self, session_id: _Optional[str] = ..., config: _Optional[_Union[RunConfig, _Mapping]] = ...) -> None: ...
+    generation: int
+    def __init__(self, session_id: _Optional[str] = ..., config: _Optional[_Union[RunConfig, _Mapping]] = ..., generation: _Optional[int] = ...) -> None: ...
 
 class HeartbeatRequest(_message.Message):
     __slots__ = ("run_id", "worker_id", "session_id", "step", "parameter_version", "completed")
@@ -82,26 +84,30 @@ class HeartbeatRequest(_message.Message):
     def __init__(self, run_id: _Optional[str] = ..., worker_id: _Optional[str] = ..., session_id: _Optional[str] = ..., step: _Optional[int] = ..., parameter_version: _Optional[int] = ..., completed: bool = ...) -> None: ...
 
 class WorkerState(_message.Message):
-    __slots__ = ("worker_id", "health", "step", "parameter_version", "heartbeat_age_seconds")
+    __slots__ = ("worker_id", "health", "step", "parameter_version", "heartbeat_age_seconds", "generation")
     WORKER_ID_FIELD_NUMBER: _ClassVar[int]
     HEALTH_FIELD_NUMBER: _ClassVar[int]
     STEP_FIELD_NUMBER: _ClassVar[int]
     PARAMETER_VERSION_FIELD_NUMBER: _ClassVar[int]
     HEARTBEAT_AGE_SECONDS_FIELD_NUMBER: _ClassVar[int]
+    GENERATION_FIELD_NUMBER: _ClassVar[int]
     worker_id: str
     health: str
     step: int
     parameter_version: int
     heartbeat_age_seconds: float
-    def __init__(self, worker_id: _Optional[str] = ..., health: _Optional[str] = ..., step: _Optional[int] = ..., parameter_version: _Optional[int] = ..., heartbeat_age_seconds: _Optional[float] = ...) -> None: ...
+    generation: int
+    def __init__(self, worker_id: _Optional[str] = ..., health: _Optional[str] = ..., step: _Optional[int] = ..., parameter_version: _Optional[int] = ..., heartbeat_age_seconds: _Optional[float] = ..., generation: _Optional[int] = ...) -> None: ...
 
 class RunStatus(_message.Message):
-    __slots__ = ("config", "workers")
+    __slots__ = ("config", "workers", "global_step")
     CONFIG_FIELD_NUMBER: _ClassVar[int]
     WORKERS_FIELD_NUMBER: _ClassVar[int]
+    GLOBAL_STEP_FIELD_NUMBER: _ClassVar[int]
     config: RunConfig
     workers: _containers.RepeatedCompositeFieldContainer[WorkerState]
-    def __init__(self, config: _Optional[_Union[RunConfig, _Mapping]] = ..., workers: _Optional[_Iterable[_Union[WorkerState, _Mapping]]] = ...) -> None: ...
+    global_step: int
+    def __init__(self, config: _Optional[_Union[RunConfig, _Mapping]] = ..., workers: _Optional[_Iterable[_Union[WorkerState, _Mapping]]] = ..., global_step: _Optional[int] = ...) -> None: ...
 
 class Tensor(_message.Message):
     __slots__ = ("name", "shape", "dtype", "data")
@@ -130,18 +136,20 @@ class Parameters(_message.Message):
     def __init__(self, version: _Optional[int] = ..., tensors: _Optional[_Iterable[_Union[Tensor, _Mapping]]] = ...) -> None: ...
 
 class GradientUpdate(_message.Message):
-    __slots__ = ("run_id", "worker_id", "step", "base_version", "tensors")
+    __slots__ = ("run_id", "worker_id", "step", "base_version", "tensors", "generation")
     RUN_ID_FIELD_NUMBER: _ClassVar[int]
     WORKER_ID_FIELD_NUMBER: _ClassVar[int]
     STEP_FIELD_NUMBER: _ClassVar[int]
     BASE_VERSION_FIELD_NUMBER: _ClassVar[int]
     TENSORS_FIELD_NUMBER: _ClassVar[int]
+    GENERATION_FIELD_NUMBER: _ClassVar[int]
     run_id: str
     worker_id: str
     step: int
     base_version: int
     tensors: _containers.RepeatedCompositeFieldContainer[Tensor]
-    def __init__(self, run_id: _Optional[str] = ..., worker_id: _Optional[str] = ..., step: _Optional[int] = ..., base_version: _Optional[int] = ..., tensors: _Optional[_Iterable[_Union[Tensor, _Mapping]]] = ...) -> None: ...
+    generation: int
+    def __init__(self, run_id: _Optional[str] = ..., worker_id: _Optional[str] = ..., step: _Optional[int] = ..., base_version: _Optional[int] = ..., tensors: _Optional[_Iterable[_Union[Tensor, _Mapping]]] = ..., generation: _Optional[int] = ...) -> None: ...
 
 class UpdateResult(_message.Message):
     __slots__ = ("version", "staleness", "duplicate")
@@ -193,3 +201,55 @@ class ShardSnapshot(_message.Message):
     receipts: _containers.RepeatedCompositeFieldContainer[UpdateReceipt]
     worker_generations: _containers.ScalarMap[str, int]
     def __init__(self, format_version: _Optional[int] = ..., config_fingerprint: _Optional[bytes] = ..., model_fingerprint: _Optional[bytes] = ..., optimizer: _Optional[str] = ..., version: _Optional[int] = ..., parameters: _Optional[_Iterable[_Union[Tensor, _Mapping]]] = ..., receipts: _Optional[_Iterable[_Union[UpdateReceipt, _Mapping]]] = ..., worker_generations: _Optional[_Mapping[str, int]] = ...) -> None: ...
+
+class FenceRequest(_message.Message):
+    __slots__ = ("run_id", "worker_id", "generation")
+    RUN_ID_FIELD_NUMBER: _ClassVar[int]
+    WORKER_ID_FIELD_NUMBER: _ClassVar[int]
+    GENERATION_FIELD_NUMBER: _ClassVar[int]
+    run_id: str
+    worker_id: str
+    generation: int
+    def __init__(self, run_id: _Optional[str] = ..., worker_id: _Optional[str] = ..., generation: _Optional[int] = ...) -> None: ...
+
+class ShardProgress(_message.Message):
+    __slots__ = ("version", "next_steps", "worker_generations", "pending_workers")
+    class NextStepsEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: int
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[int] = ...) -> None: ...
+    class WorkerGenerationsEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: int
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[int] = ...) -> None: ...
+    VERSION_FIELD_NUMBER: _ClassVar[int]
+    NEXT_STEPS_FIELD_NUMBER: _ClassVar[int]
+    WORKER_GENERATIONS_FIELD_NUMBER: _ClassVar[int]
+    PENDING_WORKERS_FIELD_NUMBER: _ClassVar[int]
+    version: int
+    next_steps: _containers.ScalarMap[str, int]
+    worker_generations: _containers.ScalarMap[str, int]
+    pending_workers: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, version: _Optional[int] = ..., next_steps: _Optional[_Mapping[str, int]] = ..., worker_generations: _Optional[_Mapping[str, int]] = ..., pending_workers: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class WorkerJournal(_message.Message):
+    __slots__ = ("format_version", "config_fingerprint", "worker_id", "next_step", "requests", "loss")
+    FORMAT_VERSION_FIELD_NUMBER: _ClassVar[int]
+    CONFIG_FINGERPRINT_FIELD_NUMBER: _ClassVar[int]
+    WORKER_ID_FIELD_NUMBER: _ClassVar[int]
+    NEXT_STEP_FIELD_NUMBER: _ClassVar[int]
+    REQUESTS_FIELD_NUMBER: _ClassVar[int]
+    LOSS_FIELD_NUMBER: _ClassVar[int]
+    format_version: int
+    config_fingerprint: bytes
+    worker_id: str
+    next_step: int
+    requests: _containers.RepeatedCompositeFieldContainer[GradientUpdate]
+    loss: float
+    def __init__(self, format_version: _Optional[int] = ..., config_fingerprint: _Optional[bytes] = ..., worker_id: _Optional[str] = ..., next_step: _Optional[int] = ..., requests: _Optional[_Iterable[_Union[GradientUpdate, _Mapping]]] = ..., loss: _Optional[float] = ...) -> None: ...

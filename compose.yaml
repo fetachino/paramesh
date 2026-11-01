@@ -7,12 +7,18 @@ x-common: &common
   cap_drop: [ALL]
   security_opt: [no-new-privileges:true]
   networks: [training]
+  environment: &worker-environment
+    PARAMESH_RPC_TOKEN: ${PARAMESH_RPC_TOKEN:?Generate .env with scripts/create_dev_env.py}
 
 services:
   coordinator:
     <<: *common
+    environment: &admin-environment
+      <<: *worker-environment
+      PARAMESH_ADMIN_TOKEN: ${PARAMESH_ADMIN_TOKEN:?Generate .env with scripts/create_dev_env.py}
     command: [coordinator, --config, examples/compose.json, --bind, '0.0.0.0:50050']
     restart: unless-stopped
+    volumes: [coordinator-state:/app/state]
     healthcheck:
       test: [CMD, paramesh, status, --coordinator, '127.0.0.1:50050']
       interval: 5s
@@ -22,8 +28,10 @@ services:
 
   shard-0:
     <<: *common
+    environment: *admin-environment
     command: [shard, --config, examples/compose.json, --index, '0', --bind, '0.0.0.0:50051']
     restart: unless-stopped
+    volumes: [shard-0-state:/app/state]
     healthcheck:
       test: [CMD, paramesh, check-shard, --address, '127.0.0.1:50051', --run-id, compose-demo]
       interval: 5s
@@ -33,8 +41,10 @@ services:
 
   shard-1:
     <<: *common
+    environment: *admin-environment
     command: [shard, --config, examples/compose.json, --index, '1', --bind, '0.0.0.0:50051']
     restart: unless-stopped
+    volumes: [shard-1-state:/app/state]
     healthcheck:
       test: [CMD, paramesh, check-shard, --address, '127.0.0.1:50051', --run-id, compose-demo]
       interval: 5s
@@ -44,7 +54,9 @@ services:
 
   worker-0:
     <<: *common
-    command: [worker, --coordinator, 'coordinator:50050', --id, worker-0, --steps, '20']
+    command: [worker, --coordinator, 'coordinator:50050', --id, worker-0, --steps, '${PARAMESH_STEPS:-20}', --step-delay, '${PARAMESH_STEP_DELAY:-0}']
+    restart: on-failure
+    volumes: [worker-0-state:/app/state]
     depends_on:
       coordinator: {condition: service_healthy}
       shard-0: {condition: service_healthy}
@@ -52,7 +64,9 @@ services:
 
   worker-1:
     <<: *common
-    command: [worker, --coordinator, 'coordinator:50050', --id, worker-1, --steps, '20']
+    command: [worker, --coordinator, 'coordinator:50050', --id, worker-1, --steps, '${PARAMESH_STEPS:-20}', --step-delay, '${PARAMESH_STEP_DELAY:-0}']
+    restart: on-failure
+    volumes: [worker-1-state:/app/state]
     depends_on:
       coordinator: {condition: service_healthy}
       shard-0: {condition: service_healthy}
@@ -61,3 +75,10 @@ services:
 networks:
   training:
     internal: true
+
+volumes:
+  coordinator-state:
+  shard-0-state:
+  shard-1-state:
+  worker-0-state:
+  worker-1-state:

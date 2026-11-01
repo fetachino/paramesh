@@ -202,6 +202,16 @@ class ParameterShardStub(object):
                 request_serializer=paramesh_dot_rpc_dot_training__pb2.GradientUpdate.SerializeToString,
                 response_deserializer=paramesh_dot_rpc_dot_training__pb2.UpdateResult.FromString,
                 _registered_method=True)
+        self.GetProgress = channel.unary_unary(
+                '/paramesh.v1.ParameterShard/GetProgress',
+                request_serializer=paramesh_dot_rpc_dot_training__pb2.PullRequest.SerializeToString,
+                response_deserializer=paramesh_dot_rpc_dot_training__pb2.ShardProgress.FromString,
+                _registered_method=True)
+        self.FenceWorker = channel.unary_unary(
+                '/paramesh.v1.ParameterShard/FenceWorker',
+                request_serializer=paramesh_dot_rpc_dot_training__pb2.FenceRequest.SerializeToString,
+                response_deserializer=paramesh_dot_rpc_dot_training__pb2.Empty.FromString,
+                _registered_method=True)
 
 
 class ParameterShardServicer(object):
@@ -219,6 +229,18 @@ class ParameterShardServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetProgress(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def FenceWorker(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ParameterShardServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -231,6 +253,16 @@ def add_ParameterShardServicer_to_server(servicer, server):
                     servicer.PushGradients,
                     request_deserializer=paramesh_dot_rpc_dot_training__pb2.GradientUpdate.FromString,
                     response_serializer=paramesh_dot_rpc_dot_training__pb2.UpdateResult.SerializeToString,
+            ),
+            'GetProgress': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetProgress,
+                    request_deserializer=paramesh_dot_rpc_dot_training__pb2.PullRequest.FromString,
+                    response_serializer=paramesh_dot_rpc_dot_training__pb2.ShardProgress.SerializeToString,
+            ),
+            'FenceWorker': grpc.unary_unary_rpc_method_handler(
+                    servicer.FenceWorker,
+                    request_deserializer=paramesh_dot_rpc_dot_training__pb2.FenceRequest.FromString,
+                    response_serializer=paramesh_dot_rpc_dot_training__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -287,6 +319,60 @@ class ParameterShard(object):
             '/paramesh.v1.ParameterShard/PushGradients',
             paramesh_dot_rpc_dot_training__pb2.GradientUpdate.SerializeToString,
             paramesh_dot_rpc_dot_training__pb2.UpdateResult.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetProgress(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/paramesh.v1.ParameterShard/GetProgress',
+            paramesh_dot_rpc_dot_training__pb2.PullRequest.SerializeToString,
+            paramesh_dot_rpc_dot_training__pb2.ShardProgress.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def FenceWorker(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/paramesh.v1.ParameterShard/FenceWorker',
+            paramesh_dot_rpc_dot_training__pb2.FenceRequest.SerializeToString,
+            paramesh_dot_rpc_dot_training__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,

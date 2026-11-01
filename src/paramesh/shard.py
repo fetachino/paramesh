@@ -61,7 +61,11 @@ class ParameterShard:
             self._save(self.parameters, self.receipts, self.version)
 
     def _snapshot(
-        self, parameters: dict[str, FloatArray], receipts: dict[str, Receipt], version: int
+        self,
+        parameters: dict[str, FloatArray],
+        receipts: dict[str, Receipt],
+        version: int,
+        generations: dict[str, int] | None = None,
     ) -> pb.ShardSnapshot:
         return pb.ShardSnapshot(
             format_version=1,
@@ -80,16 +84,22 @@ class ParameterShard:
                 )
                 for name, value in sorted(receipts.items())
             ],
-            worker_generations=self.worker_generations,
+            worker_generations=self.worker_generations if generations is None else generations,
         )
 
     def _save(
-        self, parameters: dict[str, FloatArray], receipts: dict[str, Receipt], version: int
+        self,
+        parameters: dict[str, FloatArray],
+        receipts: dict[str, Receipt],
+        version: int,
+        generations: dict[str, int] | None = None,
     ) -> None:
         if self.state is not None:
             self.state.put(
                 "shard",
-                self._snapshot(parameters, receipts, version).SerializeToString(deterministic=True),
+                self._snapshot(parameters, receipts, version, generations).SerializeToString(
+                    deterministic=True
+                ),
             )
 
     def _restore(self, payload: bytes) -> None:
@@ -134,6 +144,33 @@ class ParameterShard:
                 tensors=[encode(name, value) for name, value in sorted(self.parameters.items())],
             )
 
+    def progress(self, run_id: str) -> pb.ShardProgress:
+        if run_id != self.config.run_id:
+            raise ValueError("Wrong run ID")
+        with self.condition:
+            return pb.ShardProgress(
+                version=self.version,
+                next_steps={
+                    name: self.receipts[name].step + 1 if name in self.receipts else 0
+                    for name in self.config.worker_ids
+                },
+                worker_generations=self.worker_generations,
+                pending_workers=sorted(self.pending),
+            )
+
+    def fence(self, run_id: str, worker_id: str, generation: int) -> None:
+        if run_id != self.config.run_id or worker_id not in self.worker_generations:
+            raise ValueError("Wrong run or worker ID")
+        with self.condition:
+            if generation < self.worker_generations[worker_id]:
+                raise ValueError("Worker generation cannot move backwards")
+            if generation == self.worker_generations[worker_id]:
+                return
+            proposed = self.worker_generations | {worker_id: generation}
+            self._save(self.parameters, self.receipts, self.version, proposed)
+            self.worker_generations = proposed
+            self._abort_barrier()
+
     def _validate(self, request: pb.GradientUpdate) -> dict[str, FloatArray]:
         if request.run_id != self.config.run_id:
             raise ValueError("Wrong run ID")
@@ -173,8 +210,13 @@ class ParameterShard:
 
     def push(self, request: pb.GradientUpdate, *, timeout: float | None = None) -> pb.UpdateResult:
         gradients = self._validate(request)
-        digest = hashlib.sha256(request.SerializeToString(deterministic=True)).digest()
+        semantic = pb.GradientUpdate()
+        semantic.CopyFrom(request)
+        semantic.ClearField("generation")
+        digest = hashlib.sha256(semantic.SerializeToString(deterministic=True)).digest()
         with self.condition:
+            if request.generation != self.worker_generations[request.worker_id]:
+                raise PermissionError("Worker generation is fenced; re-register before updating")
             previous = self.receipts.get(request.worker_id)
             if previous and request.step == previous.step:
                 if digest != previous.digest:

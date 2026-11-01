@@ -1,24 +1,27 @@
 """PyTorch gradient producer; authoritative weights and SGD live on the shards."""
 
+import math
 import threading
+import time
 from contextlib import ExitStack
 from typing import Any
 
 import grpc
 import torch
 
+from paramesh.journal import Journal
 from paramesh.rpc import training_pb2 as pb
 from paramesh.rpc import training_pb2_grpc as rpc
-from paramesh.services import CHANNEL_OPTIONS
+from paramesh.security import RpcSecurity, open_channel
+from paramesh.state import StateDB
 from paramesh.tensors import decode_many, encode, partition
 from paramesh.workload import dataset, load_parameters, model
 
 
-def _push(client: Any, request: pb.GradientUpdate, timeout: float) -> pb.UpdateResult:
+def _rpc(method: Any, request: Any, timeout: float) -> Any:
     for attempt in range(3):
         try:
-            result: pb.UpdateResult = client.PushGradients(request, timeout=timeout)
-            return result
+            return method(request, timeout=timeout, wait_for_ready=True)
         except grpc.RpcError as error:
             if (
                 error.code()
@@ -34,10 +37,19 @@ def _push(client: Any, request: pb.GradientUpdate, timeout: float) -> pb.UpdateR
 
 
 def train_worker(
-    address: str, worker_id: str, steps: int, *, timeout: float = 10
+    address: str,
+    worker_id: str,
+    steps: int,
+    *,
+    timeout: float = 10,
+    state: StateDB | None = None,
+    step_delay: float = 0,
+    security: RpcSecurity | None = None,
 ) -> dict[str, Any]:
-    if steps < 1 or timeout <= 0:
+    if steps < 1 or not math.isfinite(timeout) or timeout <= 0:
         raise ValueError("steps and timeout must be positive")
+    if not math.isfinite(step_delay) or step_delay < 0:
+        raise ValueError("step_delay must be finite and nonnegative")
     torch.set_num_threads(1)
     network = model()
     progress = [0, 0]
@@ -45,21 +57,26 @@ def train_worker(
     stopped = threading.Event()
     heartbeat_errors: list[Exception] = []
     with ExitStack() as stack:
-        channel = stack.enter_context(grpc.insecure_channel(address, options=CHANNEL_OPTIONS))
+        channel = stack.enter_context(open_channel(address, security))
         grpc.channel_ready_future(channel).result(timeout=timeout)
         coordinator = rpc.CoordinatorStub(channel)
-        session = coordinator.RegisterWorker(
-            pb.RegisterWorkerRequest(worker_id=worker_id, protocol_version=1), timeout=timeout
-        )
+        session = _register(coordinator, worker_id, timeout)
         config = session.config
         inputs, targets = dataset(list(config.worker_ids).index(worker_id))
         clients = [
-            rpc.ParameterShardStub(
-                stack.enter_context(grpc.insecure_channel(endpoint, options=CHANNEL_OPTIONS))
-            )
+            rpc.ParameterShardStub(stack.enter_context(open_channel(endpoint, security)))
             for endpoint in config.shard_endpoints
         ]
         ownership = partition(dict(network.named_parameters()), len(clients))
+        journal = Journal(config, worker_id, state)
+        resumed_from = journal.record.next_step
+        if resumed_from > steps:
+            raise ValueError("Requested training target precedes durable worker progress")
+        statuses = [
+            _rpc(client.GetProgress, pb.PullRequest(run_id=config.run_id), timeout)
+            for client in clients
+        ]
+        progress[:] = [resumed_from, min(item.version for item in statuses)]
 
         def heartbeat() -> None:
             try:
@@ -84,49 +101,86 @@ def train_worker(
         thread.start()
         losses: list[float] = []
         refreshes = 0
+        replayed = 0
         try:
-            for step in range(steps):
-                accepted: set[int] = set()
-                committed_versions: dict[int, int] = {}
+            for step in range(resumed_from, steps):
+                statuses = [
+                    _rpc(client.GetProgress, pb.PullRequest(run_id=config.run_id), timeout)
+                    for client in clients
+                ]
+                positions = [item.next_steps[worker_id] for item in statuses]
+                if any(position not in (step, step + 1) for position in positions):
+                    raise ValueError("Shard progress is inconsistent with the worker journal")
+                if not journal.record.requests and any(position > step for position in positions):
+                    raise ValueError(
+                        "Missing durable gradient journal for a partially committed step"
+                    )
+                accepted = {index for index, position in enumerate(positions) if position > step}
+                committed_versions = {
+                    index: item.version for index, item in enumerate(statuses) if index in accepted
+                }
+                refresh = not bool(journal.record.requests)
+                if journal.record.requests:
+                    replayed += len(clients) - len(accepted)
                 for _ in range(100):
                     if heartbeat_errors:
                         raise RuntimeError("Coordinator heartbeat failed") from heartbeat_errors[0]
-                    snapshots = [
-                        client.PullParameters(pb.PullRequest(run_id=config.run_id), timeout=timeout)
-                        for client in clients
-                    ]
-                    values = decode_many(tensor for item in snapshots for tensor in item.tensors)
-                    load_parameters(network, values)
-                    network.zero_grad()
-                    loss = torch.nn.functional.mse_loss(network(inputs), targets)
-                    torch.autograd.backward(loss)
+                    if refresh:
+                        snapshots = [
+                            _rpc(
+                                client.PullParameters, pb.PullRequest(run_id=config.run_id), timeout
+                            )
+                            for client in clients
+                        ]
+                        values = decode_many(
+                            tensor for item in snapshots for tensor in item.tensors
+                        )
+                        load_parameters(network, values)
+                        network.zero_grad()
+                        loss = torch.nn.functional.mse_loss(network(inputs), targets)
+                        torch.autograd.backward(loss)
+                        requests = list(journal.record.requests)
+                        for index in range(len(clients)):
+                            if index in accepted:
+                                continue
+                            request = pb.GradientUpdate(
+                                run_id=config.run_id,
+                                worker_id=worker_id,
+                                step=step,
+                                base_version=snapshots[index].version,
+                                tensors=[
+                                    encode(name, parameter.grad.detach().numpy())
+                                    for name, parameter in network.named_parameters()
+                                    if ownership[name] == index and parameter.grad is not None
+                                ],
+                            )
+                            if len(requests) == len(clients):
+                                requests[index] = request
+                            else:
+                                requests.append(request)
+                        journal.prepare(requests, float(loss.detach()))
+                        refresh = False
                     for index, client in enumerate(clients):
                         if index in accepted:
                             continue
-                        request = pb.GradientUpdate(
-                            run_id=config.run_id,
-                            worker_id=worker_id,
-                            step=step,
-                            base_version=snapshots[index].version,
-                            tensors=[
-                                encode(name, parameter.grad.detach().numpy())
-                                for name, parameter in network.named_parameters()
-                                if ownership[name] == index and parameter.grad is not None
-                            ],
-                        )
+                        request = journal.record.requests[index]
+                        request.generation = session.generation
                         try:
-                            result = _push(client, request, timeout)
+                            result: pb.UpdateResult = _rpc(client.PushGradients, request, timeout)
                         except grpc.RpcError as error:
                             if error.code() != grpc.StatusCode.FAILED_PRECONDITION:
                                 raise
                             refreshes += 1
+                            refresh = True
                             break
                         accepted.add(index)
                         committed_versions[index] = result.version
                     if len(accepted) == len(clients):
-                        losses.append(float(loss.detach()))
+                        losses.append(journal.record.loss)
+                        journal.complete()
                         with progress_lock:
                             progress[:] = [step + 1, min(committed_versions.values())]
+                        stopped.wait(step_delay)
                         break
                 else:
                     raise RuntimeError("Staleness refresh limit exceeded; run did not complete")
@@ -152,7 +206,31 @@ def train_worker(
                 "steps": steps,
                 "losses": losses,
                 "refreshes": refreshes,
+                "resumed_from": resumed_from,
+                "replayed_contributions": replayed,
             }
         finally:
             stopped.set()
             thread.join(timeout=timeout + 1)
+
+
+def _register(coordinator: Any, worker_id: str, timeout: float) -> pb.WorkerSession:
+    deadline = time.monotonic() + 120
+    while True:
+        try:
+            session: pb.WorkerSession = coordinator.RegisterWorker(
+                pb.RegisterWorkerRequest(worker_id=worker_id, protocol_version=1), timeout=timeout
+            )
+            return session
+        except grpc.RpcError as error:
+            if (
+                error.code()
+                not in (
+                    grpc.StatusCode.ALREADY_EXISTS,
+                    grpc.StatusCode.UNAVAILABLE,
+                    grpc.StatusCode.DEADLINE_EXCEEDED,
+                )
+                or time.monotonic() >= deadline
+            ):
+                raise
+            threading.Event().wait(0.2)
