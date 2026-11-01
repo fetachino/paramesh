@@ -27,3 +27,21 @@ Build in that order. Supporting infrastructure stays outside the gradient path.
 - [x] Record commands, limitations and genuine native run artifacts in documentation.
 
 No paid services, deployment claims, invented measurements or fabricated screenshots.
+
+## Runtime and recovery continuation
+
+The next slices follow the user's explicit continuation request. Compose remains
+the shared local/Coolify deployment definition; only the future dashboard/API may
+be public. Work is tracked in `tasks/todo.md`.
+
+Recovery will persist every shard commit (weights, optimizer configuration, version
+and latest receipts) before acknowledging it. Workers journal gradient requests
+before sending, so a crash after a partial multi-shard commit can resume the exact
+uncommitted contribution. Re-registration fences the previous worker incarnation.
+This avoids pretending that independently saved live shards form an atomic global
+checkpoint. Checkpoint manifests must record each shard's actual version and progress;
+offline restore of a complete manifest is separate from ordinary process restart.
+
+Dependencies: verified containers → durable shard/worker/coordinator state → fencing
+and authenticated RPCs → killed-process tests → checkpoint stores → events/telemetry
+→ operations dashboard and genuine screenshots → validated Coolify instructions.
