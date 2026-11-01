@@ -24,7 +24,7 @@ paramesh = "paramesh.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-paramesh = ["py.typed", "rpc/*.pyi"]
+paramesh = ["py.typed", "rpc/*.pyi", "web/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

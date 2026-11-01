@@ -5,6 +5,7 @@ import json
 import os
 import re
 import signal
+import threading
 from importlib.metadata import version
 from pathlib import Path
 
@@ -69,13 +70,19 @@ def main() -> None:
     checkpoint.add_argument("--store", type=Path, default=Path("checkpoints"))
     checkpoint.add_argument("--s3-endpoint")
     checkpoint.add_argument("--bucket")
+    dashboard = commands.add_parser("dashboard", help="Serve the read-only operator console")
+    dashboard.add_argument("--config", type=Path, required=True)
+    dashboard.add_argument("--coordinator", default="127.0.0.1:50050")
+    dashboard.add_argument("--bind", default="127.0.0.1")
+    dashboard.add_argument("--port", type=int, default=8080)
+    dashboard.add_argument("--state-dir", type=Path, default=Path("state/dashboard"))
     args = parser.parse_args()
     if (
         args.command in ("coordinator", "shard", "worker")
         and (args.state_dir / ".restore-incomplete").exists()
     ):
         parser.error("Checkpoint installation is incomplete; services must remain stopped")
-    if args.command in ("coordinator", "shard", "worker", "checkpoint"):
+    if args.command in ("coordinator", "shard", "worker", "checkpoint", "dashboard"):
         role = args.id if args.command == "worker" else args.command
         if args.command == "shard":
             role = f"shard-{args.index}"
@@ -122,6 +129,52 @@ def main() -> None:
                 {key: value for key, value in report.items() if key != "worker_results"}, indent=2
             )
         )
+    elif args.command == "dashboard":
+        from paramesh.dashboard import DashboardServer
+        from paramesh.monitor import ClusterView, EventSink
+        from paramesh.operations import EventLog
+
+        assert security is not None
+        secure = os.environ.get("PARAMESH_COOKIE_SECURE", "false").lower()
+        if secure not in ("true", "false"):
+            parser.error("PARAMESH_COOKIE_SECURE must be true or false")
+        storage = StateDB(args.state_dir / "dashboard.sqlite")
+        log = EventLog(storage)
+        sink = EventSink(
+            log,
+            os.environ.get("PARAMESH_NATS_URL", ""),
+            os.environ.get("PARAMESH_NATS_TOKEN", ""),
+            os.environ.get("PARAMESH_LOKI_URL", "http://loki:3100"),
+        )
+        view = ClusterView(
+            _load(args.config),
+            args.coordinator,
+            security,
+            log,
+            sink,
+            os.environ.get("PARAMESH_PROMETHEUS_URL", "http://prometheus:9090"),
+            os.environ.get("PARAMESH_TEMPO_URL", "http://tempo:3200"),
+            Path(os.environ.get("PARAMESH_EVIDENCE_DIR", "docs/evidence")),
+        )
+        http = DashboardServer(
+            (args.bind, args.port),
+            view,
+            os.environ.get("PARAMESH_DASHBOARD_PASSWORD", ""),
+            secure_cookie=secure == "true",
+        )
+        signal.signal(
+            signal.SIGTERM,
+            lambda signum, frame: threading.Thread(target=http.shutdown, daemon=True).start(),
+        )
+        try:
+            http.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            view.close()
+            sink.close()
+            http.server_close()
+            storage.close()
     elif args.command == "worker":
         from paramesh.worker import train_worker
 
