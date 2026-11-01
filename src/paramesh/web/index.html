@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ParamMesh · Training operations</title>
+  <link rel="icon" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+<aside class="sidebar">
+  <a href="#overview" class="wordmark"><span class="logo-mark" aria-hidden="true">P</span> ParamMesh</a>
+  <p class="sidebar-caption">TRAINING OPERATIONS</p>
+  <nav aria-label="Primary">
+    <a href="#overview" data-nav="overview"><span aria-hidden="true">◫</span> Overview</a>
+    <a href="#workers" data-nav="workers"><span aria-hidden="true">▥</span> Workers &amp; shards</a>
+    <a href="#recovery" data-nav="recovery"><span aria-hidden="true">↻</span> Recovery</a>
+    <a href="#traces" data-nav="traces"><span aria-hidden="true">⌁</span> Traces</a>
+    <a href="#benchmarks" data-nav="benchmarks"><span aria-hidden="true">▤</span> Evidence</a>
+  </nav>
+  <div class="sidebar-footer"><span class="status-dot" aria-hidden="true"></span> Local CPU cluster<br><span>Synthetic regression · RPC v1</span></div>
+</aside>
+<div class="workspace">
+  <header class="topbar"><div><span class="muted">Workspace / </span><span id="run-name">Connecting…</span></div>
+    <div class="toolbar"><span id="sample-age" class="muted">Not sampled</span><button id="live-toggle" aria-pressed="true">Live updates</button><button id="refresh">Refresh</button><form method="post" action="/logout"><button type="submit">Sign out</button></form></div>
+  </header>
+  <main id="main" tabindex="-1">
+    <div class="page-heading"><div><p class="eyebrow" id="page-eyebrow">CLUSTER / OVERVIEW</p><h1 id="page-title">Training overview</h1><p class="muted" id="page-description">Authoritative state, training signals and recovery evidence.</p></div><span class="badge" id="run-phase">Connecting</span></div>
+    <p class="notice" id="connection-error" role="status" hidden></p>
+    <section data-view="overview" aria-label="Cluster overview">
+      <div class="metric-strip">
+        <article><h2>Global step</h2><strong id="global-step">—</strong><p>Completed-step lower watermark</p></article>
+        <article><h2>Active workers</h2><strong id="active-workers">—</strong><p id="worker-health-note">Waiting for membership</p></article>
+        <article><h2>Worker steps / s</h2><strong id="steps-rate">—</strong><p id="examples-rate">Examples / s not sampled</p></article>
+        <article><h2>Last worker MSE</h2><strong id="mean-loss">—</strong><p>Worker-local, before each update</p></article>
+      </div>
+      <section class="panel topology-panel"><div class="panel-heading"><h2>Cluster topology</h2><span id="mode-badge" class="badge">Mode unknown</span></div><div id="topology" class="topology"><p class="empty">Loading configured services…</p></div><div class="panel-foot"><span>Control plane · membership &amp; leases</span><span>Data plane · gRPC pulls &amp; gradients</span><span id="barrier-count">Barrier state not sampled</span></div></section>
+      <div class="chart-grid"><section class="panel"><div class="panel-heading"><h2>Worker loss</h2><span>15-minute history · MSE</span></div><div class="chart" id="loss-chart"></div></section><section class="panel"><div class="panel-heading"><h2>Training throughput</h2><span>Worker steps / second</span></div><div class="chart" id="throughput-chart"></div></section></div>
+      <div class="detail-grid"><section class="panel"><div class="panel-heading"><h2>Transport &amp; backends</h2><span>Observed signals</span></div><dl id="transport" class="data-list"></dl></section><section class="panel"><div class="panel-heading"><h2>Recent lifecycle events</h2><a href="#recovery">View history →</a></div><div id="recent-events" class="events-list"></div></section></div>
+    </section>
+    <section data-view="workers" hidden aria-label="Worker and shard state">
+      <section class="panel"><div class="panel-heading"><h2>Worker membership</h2><span>Coordinator heartbeat reports</span></div><div class="table-scroll"><table><thead><tr><th scope="col">Worker</th><th scope="col">State</th><th scope="col">Step</th><th scope="col">Parameter version</th><th scope="col">Generation</th><th scope="col">Heartbeat age</th></tr></thead><tbody id="workers-body"></tbody></table></div></section>
+      <div class="chart-grid"><section class="panel"><div class="panel-heading"><h2>Shard versions</h2><span>Authoritative commit counters</span></div><div class="chart" id="versions-chart"></div></section><section class="panel"><div class="panel-heading"><h2>Accepted gradient staleness</h2><span id="staleness-bound">Per worker / shard</span></div><div class="chart" id="staleness-chart"></div></section></div>
+      <section class="panel"><div class="panel-heading"><h2>Shard progress</h2><span>Actual receipt and barrier metadata</span></div><div class="table-scroll"><table><thead><tr><th scope="col">Shard</th><th scope="col">RPC status</th><th scope="col">Version</th><th scope="col">Next worker steps</th><th scope="col">Pending contributions</th></tr></thead><tbody id="shards-body"></tbody></table></div></section>
+    </section>
+    <section data-view="recovery" hidden aria-label="Recovery and checkpoint history">
+        <section class="panel"><div class="panel-heading"><h2>Whole-run restore evidence</h2><span>Recorded local / S3 verification</span></div><div class="checkpoint-detail" id="restore-evidence"></div></section>
+      <div class="detail-grid"><section class="panel"><div class="panel-heading"><h2>Latest observed checkpoint</h2><span>Published-manifest event</span></div><div id="checkpoint-detail" class="checkpoint-detail"></div></section><section class="panel"><div class="panel-heading"><h2>Verified failure scenarios</h2><span>Recorded correctness runs</span></div><div id="recovery-evidence"></div></section></div>
+      <section class="panel"><div class="panel-heading"><h2>Lifecycle history</h2><label class="inline-label" for="event-filter">Show <select id="event-filter"><option value="all">All events</option><option value="faults">Failures &amp; recovery</option><option value="checkpoints">Checkpoints</option></select></label></div><p id="event-status" class="panel-note"></p><div class="table-scroll"><table><thead><tr><th scope="col">Time</th><th scope="col">Event</th><th scope="col">Service</th><th scope="col">Run / worker</th><th scope="col">Progress</th></tr></thead><tbody id="events-body"></tbody></table></div></section>
+    </section>
+    <section data-view="traces" hidden aria-label="Distributed traces">
+      <section class="panel"><div class="panel-heading"><h2>Recent training steps</h2><span>OpenTelemetry → Tempo</span></div><p class="panel-note">Inspect a real worker step across gRPC, gradient aggregation and the durable SGD commit.</p><div id="traces-list" class="traces-list"></div></section>
+      <section class="panel" id="trace-panel" hidden><div class="panel-heading"><h2>Distributed trace</h2><code id="trace-id"></code></div><div id="trace-detail" class="trace-detail"></div></section>
+    </section>
+    <section data-view="benchmarks" hidden aria-label="Captured correctness evidence">
+      <section class="panel"><div class="panel-heading"><h2>Captured CPU correctness runs</h2><span>Two workers · two shards · 20 local iterations</span></div><p class="panel-note">Single observations from committed reports. Async and bounded runs make twice as many shard updates as sync; these values are not a convergence or speedup ranking.</p><div class="table-scroll"><table><thead><tr><th scope="col">Mode</th><th scope="col">Initial MSE</th><th scope="col">Final MSE</th><th scope="col">Shard versions</th><th scope="col">Reference error</th><th scope="col">Source</th></tr></thead><tbody id="benchmark-body"></tbody></table></div></section>
+      <div class="chart-grid"><section class="panel"><div class="panel-heading"><h2>Recorded worker loss</h2><span>Before each local update</span></div><div class="chart" id="benchmark-chart"></div></section><section class="panel"><div class="panel-heading"><h2>Actual fault timings</h2><span>Single deliberately paced runs</span></div><div id="failure-bars" class="failure-bars"></div></section></div>
+    </section>
+    <footer class="page-footer"><span>ParamMesh · Private authenticated gRPC · Stateless SGD</span><a href="/api/state" download="paramesh-state.json">Download observed state</a></footer>
+  </main>
+</div>
+</body>
+</html>
