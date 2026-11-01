@@ -72,6 +72,16 @@ def test_missing_worker_times_out_without_mutating_or_retaining_gradients():
     assert weight(server) == pytest.approx(0.6)
 
 
+def test_sync_sum_aggregation_is_distinct_from_mean():
+    server = shard(mode=pb.SYNCHRONOUS, aggregation=pb.SUM)
+    with ThreadPoolExecutor(2) as pool:
+        first = pool.submit(server.push, update(gradient=2))
+        second = pool.submit(server.push, update(worker="worker-1", gradient=4))
+        first.result(timeout=2)
+        second.result(timeout=2)
+    assert weight(server) == pytest.approx(0.4)
+
+
 @pytest.mark.parametrize(
     "change",
     [

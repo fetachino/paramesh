@@ -13,17 +13,24 @@ class SyncMode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     SYNCHRONOUS: _ClassVar[SyncMode]
     ASYNCHRONOUS: _ClassVar[SyncMode]
     BOUNDED_STALENESS: _ClassVar[SyncMode]
+
+class Aggregation(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    MEAN: _ClassVar[Aggregation]
+    SUM: _ClassVar[Aggregation]
 SYNC_MODE_UNSPECIFIED: SyncMode
 SYNCHRONOUS: SyncMode
 ASYNCHRONOUS: SyncMode
 BOUNDED_STALENESS: SyncMode
+MEAN: Aggregation
+SUM: Aggregation
 
 class Empty(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
 class RunConfig(_message.Message):
-    __slots__ = ("run_id", "mode", "shard_endpoints", "worker_ids", "max_staleness", "learning_rate", "barrier_timeout_seconds")
+    __slots__ = ("run_id", "mode", "shard_endpoints", "worker_ids", "max_staleness", "learning_rate", "barrier_timeout_seconds", "aggregation")
     RUN_ID_FIELD_NUMBER: _ClassVar[int]
     MODE_FIELD_NUMBER: _ClassVar[int]
     SHARD_ENDPOINTS_FIELD_NUMBER: _ClassVar[int]
@@ -31,6 +38,7 @@ class RunConfig(_message.Message):
     MAX_STALENESS_FIELD_NUMBER: _ClassVar[int]
     LEARNING_RATE_FIELD_NUMBER: _ClassVar[int]
     BARRIER_TIMEOUT_SECONDS_FIELD_NUMBER: _ClassVar[int]
+    AGGREGATION_FIELD_NUMBER: _ClassVar[int]
     run_id: str
     mode: SyncMode
     shard_endpoints: _containers.RepeatedScalarFieldContainer[str]
@@ -38,7 +46,8 @@ class RunConfig(_message.Message):
     max_staleness: int
     learning_rate: float
     barrier_timeout_seconds: float
-    def __init__(self, run_id: _Optional[str] = ..., mode: _Optional[_Union[SyncMode, str]] = ..., shard_endpoints: _Optional[_Iterable[str]] = ..., worker_ids: _Optional[_Iterable[str]] = ..., max_staleness: _Optional[int] = ..., learning_rate: _Optional[float] = ..., barrier_timeout_seconds: _Optional[float] = ...) -> None: ...
+    aggregation: Aggregation
+    def __init__(self, run_id: _Optional[str] = ..., mode: _Optional[_Union[SyncMode, str]] = ..., shard_endpoints: _Optional[_Iterable[str]] = ..., worker_ids: _Optional[_Iterable[str]] = ..., max_staleness: _Optional[int] = ..., learning_rate: _Optional[float] = ..., barrier_timeout_seconds: _Optional[float] = ..., aggregation: _Optional[_Union[Aggregation, str]] = ...) -> None: ...
 
 class RegisterWorkerRequest(_message.Message):
     __slots__ = ("worker_id", "protocol_version")
@@ -57,18 +66,20 @@ class WorkerSession(_message.Message):
     def __init__(self, session_id: _Optional[str] = ..., config: _Optional[_Union[RunConfig, _Mapping]] = ...) -> None: ...
 
 class HeartbeatRequest(_message.Message):
-    __slots__ = ("run_id", "worker_id", "session_id", "step", "parameter_version")
+    __slots__ = ("run_id", "worker_id", "session_id", "step", "parameter_version", "completed")
     RUN_ID_FIELD_NUMBER: _ClassVar[int]
     WORKER_ID_FIELD_NUMBER: _ClassVar[int]
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     STEP_FIELD_NUMBER: _ClassVar[int]
     PARAMETER_VERSION_FIELD_NUMBER: _ClassVar[int]
+    COMPLETED_FIELD_NUMBER: _ClassVar[int]
     run_id: str
     worker_id: str
     session_id: str
     step: int
     parameter_version: int
-    def __init__(self, run_id: _Optional[str] = ..., worker_id: _Optional[str] = ..., session_id: _Optional[str] = ..., step: _Optional[int] = ..., parameter_version: _Optional[int] = ...) -> None: ...
+    completed: bool
+    def __init__(self, run_id: _Optional[str] = ..., worker_id: _Optional[str] = ..., session_id: _Optional[str] = ..., step: _Optional[int] = ..., parameter_version: _Optional[int] = ..., completed: bool = ...) -> None: ...
 
 class WorkerState(_message.Message):
     __slots__ = ("worker_id", "health", "step", "parameter_version", "heartbeat_age_seconds")

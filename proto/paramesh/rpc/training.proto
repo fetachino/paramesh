@@ -8,6 +8,11 @@ enum SyncMode {
   BOUNDED_STALENESS = 3;
 }
 
+enum Aggregation {
+  MEAN = 0;
+  SUM = 1;
+}
+
 message Empty {}
 
 message RunConfig {
@@ -18,6 +23,7 @@ message RunConfig {
   uint32 max_staleness = 5;
   double learning_rate = 6;
   double barrier_timeout_seconds = 7;
+  Aggregation aggregation = 8;
 }
 
 message RegisterWorkerRequest {
@@ -36,6 +42,7 @@ message HeartbeatRequest {
   string session_id = 3;
   uint64 step = 4;
   uint64 parameter_version = 5;
+  bool completed = 6;
 }
 
 message WorkerState {

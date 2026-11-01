@@ -52,6 +52,22 @@ def test_duplicate_live_worker_and_unsupported_protocol_are_rejected():
         coordinator.register("stranger", 1)
 
 
+def test_completed_worker_is_not_reported_as_lost_after_lease_expiry():
+    now = [0.0]
+    coordinator = Coordinator(config(), clock=lambda: now[0])
+    session = coordinator.register("worker-0", 1)
+    coordinator.heartbeat(
+        pb.HeartbeatRequest(
+            run_id="test-run",
+            worker_id="worker-0",
+            session_id=session.session_id,
+            completed=True,
+        )
+    )
+    now[0] = 100
+    assert coordinator.status().workers[0].health == "completed"
+
+
 @pytest.mark.parametrize(
     "changes",
     [

@@ -20,6 +20,10 @@ class Receipt:
     staleness: int
 
 
+class StaleGradientError(ValueError):
+    """A worker must refresh and recompute before retrying this shard."""
+
+
 class ParameterShard:
     def __init__(self, config: pb.RunConfig, parameters: dict[str, FloatArray]) -> None:
         validate_config(config)
@@ -31,6 +35,7 @@ class ParameterShard:
         self.pending: dict[str, tuple[pb.GradientUpdate, bytes, dict[str, FloatArray]]] = {}
         self.condition = threading.Condition()
         self.barrier_generation = 0
+        self.barrier_deadline = 0.0
 
     def pull(self, run_id: str) -> pb.Parameters:
         if run_id != self.config.run_id:
@@ -61,7 +66,7 @@ class ParameterShard:
                     value.astype(np.float64)
                     - self.config.learning_rate
                     * sum(gradient[name].astype(np.float64) for gradient in contributions)
-                    / len(contributions)
+                    / (len(contributions) if self.config.aggregation == pb.MEAN else 1)
                 ).astype(np.float32)
                 for name, value in self.parameters.items()
             }
@@ -90,7 +95,7 @@ class ParameterShard:
             if self.config.mode == pb.SYNCHRONOUS and staleness != 0:
                 raise ValueError("Synchronous gradient must reference the current version")
             if self.config.mode == pb.BOUNDED_STALENESS and staleness > self.config.max_staleness:
-                raise ValueError("Gradient is too stale; refresh parameters and recompute")
+                raise StaleGradientError("Gradient is too stale; refresh parameters and recompute")
             if self.config.mode == pb.SYNCHRONOUS:
                 return self._synchronize(request, digest, gradients, timeout)
             self._apply([gradients])
@@ -106,6 +111,16 @@ class ParameterShard:
         gradients: dict[str, FloatArray],
         timeout: float | None,
     ) -> pb.UpdateResult:
+        now = time.monotonic()
+        limit = self.config.barrier_timeout_seconds
+        incoming_deadline = now + (min(limit, timeout) if timeout is not None else limit)
+        if not self.pending:
+            self.barrier_deadline = incoming_deadline
+        else:
+            self.barrier_deadline = min(self.barrier_deadline, incoming_deadline)
+        if now >= self.barrier_deadline:
+            self._abort_barrier()
+            raise TimeoutError("Synchronous barrier deadline expired before contribution")
         pending = self.pending.get(request.worker_id)
         if pending and digest != pending[1]:
             raise ValueError("Worker has already contributed different contents to this barrier")
@@ -122,12 +137,10 @@ class ParameterShard:
             self.pending.clear()
             self.condition.notify_all()
         else:
-            limit = self.config.barrier_timeout_seconds
-            deadline = time.monotonic() + (min(limit, timeout) if timeout is not None else limit)
             while self.version == request.base_version:
                 if generation != self.barrier_generation:
                     raise TimeoutError("Synchronous barrier was aborted; no update committed")
-                remaining = deadline - time.monotonic()
+                remaining = self.barrier_deadline - time.monotonic()
                 if remaining <= 0:
                     self._abort_barrier()
                     raise TimeoutError("Missing worker at synchronous gradient barrier")

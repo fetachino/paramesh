@@ -24,41 +24,43 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1bparamesh/rpc/training.proto\x12\x0bparamesh.v1\"\x07\n\x05\x45mpty\"\xbc\x01\n\tRunConfig\x12\x0e\n\x06run_id\x18\x01 \x01(\t\x12#\n\x04mode\x18\x02 \x01(\x0e\x32\x15.paramesh.v1.SyncMode\x12\x17\n\x0fshard_endpoints\x18\x03 \x03(\t\x12\x12\n\nworker_ids\x18\x04 \x03(\t\x12\x15\n\rmax_staleness\x18\x05 \x01(\r\x12\x15\n\rlearning_rate\x18\x06 \x01(\x01\x12\x1f\n\x17\x62\x61rrier_timeout_seconds\x18\x07 \x01(\x01\"D\n\x15RegisterWorkerRequest\x12\x11\n\tworker_id\x18\x01 \x01(\t\x12\x18\n\x10protocol_version\x18\x02 \x01(\r\"K\n\rWorkerSession\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12&\n\x06\x63onfig\x18\x02 \x01(\x0b\x32\x16.paramesh.v1.RunConfig\"r\n\x10HeartbeatRequest\x12\x0e\n\x06run_id\x18\x01 \x01(\t\x12\x11\n\tworker_id\x18\x02 \x01(\t\x12\x12\n\nsession_id\x18\x03 \x01(\t\x12\x0c\n\x04step\x18\x04 \x01(\x04\x12\x19\n\x11parameter_version\x18\x05 \x01(\x04\"x\n\x0bWorkerState\x12\x11\n\tworker_id\x18\x01 \x01(\t\x12\x0e\n\x06health\x18\x02 \x01(\t\x12\x0c\n\x04step\x18\x03 \x01(\x04\x12\x19\n\x11parameter_version\x18\x04 \x01(\x04\x12\x1d\n\x15heartbeat_age_seconds\x18\x05 \x01(\x01\"^\n\tRunStatus\x12&\n\x06\x63onfig\x18\x01 \x01(\x0b\x32\x16.paramesh.v1.RunConfig\x12)\n\x07workers\x18\x02 \x03(\x0b\x32\x18.paramesh.v1.WorkerState\"B\n\x06Tensor\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05shape\x18\x02 \x03(\x04\x12\r\n\x05\x64type\x18\x03 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x04 \x01(\x0c\"\x1d\n\x0bPullRequest\x12\x0e\n\x06run_id\x18\x01 \x01(\t\"C\n\nParameters\x12\x0f\n\x07version\x18\x01 \x01(\x04\x12$\n\x07tensors\x18\x02 \x03(\x0b\x32\x13.paramesh.v1.Tensor\"}\n\x0eGradientUpdate\x12\x0e\n\x06run_id\x18\x01 \x01(\t\x12\x11\n\tworker_id\x18\x02 \x01(\t\x12\x0c\n\x04step\x18\x03 \x01(\x04\x12\x14\n\x0c\x62\x61se_version\x18\x04 \x01(\x04\x12$\n\x07tensors\x18\x05 \x03(\x0b\x32\x13.paramesh.v1.Tensor\"E\n\x0cUpdateResult\x12\x0f\n\x07version\x18\x01 \x01(\x04\x12\x11\n\tstaleness\x18\x02 \x01(\x04\x12\x11\n\tduplicate\x18\x03 \x01(\x08*_\n\x08SyncMode\x12\x19\n\x15SYNC_MODE_UNSPECIFIED\x10\x00\x12\x0f\n\x0bSYNCHRONOUS\x10\x01\x12\x10\n\x0c\x41SYNCHRONOUS\x10\x02\x12\x15\n\x11\x42OUNDED_STALENESS\x10\x03\x32\xde\x01\n\x0b\x43oordinator\x12P\n\x0eRegisterWorker\x12\".paramesh.v1.RegisterWorkerRequest\x1a\x1a.paramesh.v1.WorkerSession\x12\x44\n\tHeartbeat\x12\x1d.paramesh.v1.HeartbeatRequest\x1a\x18.paramesh.v1.WorkerState\x12\x37\n\tGetStatus\x12\x12.paramesh.v1.Empty\x1a\x16.paramesh.v1.RunStatus2\x9e\x01\n\x0eParameterShard\x12\x43\n\x0ePullParameters\x12\x18.paramesh.v1.PullRequest\x1a\x17.paramesh.v1.Parameters\x12G\n\rPushGradients\x12\x1b.paramesh.v1.GradientUpdate\x1a\x19.paramesh.v1.UpdateResultb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1bparamesh/rpc/training.proto\x12\x0bparamesh.v1\"\x07\n\x05\x45mpty\"\xeb\x01\n\tRunConfig\x12\x0e\n\x06run_id\x18\x01 \x01(\t\x12#\n\x04mode\x18\x02 \x01(\x0e\x32\x15.paramesh.v1.SyncMode\x12\x17\n\x0fshard_endpoints\x18\x03 \x03(\t\x12\x12\n\nworker_ids\x18\x04 \x03(\t\x12\x15\n\rmax_staleness\x18\x05 \x01(\r\x12\x15\n\rlearning_rate\x18\x06 \x01(\x01\x12\x1f\n\x17\x62\x61rrier_timeout_seconds\x18\x07 \x01(\x01\x12-\n\x0b\x61ggregation\x18\x08 \x01(\x0e\x32\x18.paramesh.v1.Aggregation\"D\n\x15RegisterWorkerRequest\x12\x11\n\tworker_id\x18\x01 \x01(\t\x12\x18\n\x10protocol_version\x18\x02 \x01(\r\"K\n\rWorkerSession\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12&\n\x06\x63onfig\x18\x02 \x01(\x0b\x32\x16.paramesh.v1.RunConfig\"\x85\x01\n\x10HeartbeatRequest\x12\x0e\n\x06run_id\x18\x01 \x01(\t\x12\x11\n\tworker_id\x18\x02 \x01(\t\x12\x12\n\nsession_id\x18\x03 \x01(\t\x12\x0c\n\x04step\x18\x04 \x01(\x04\x12\x19\n\x11parameter_version\x18\x05 \x01(\x04\x12\x11\n\tcompleted\x18\x06 \x01(\x08\"x\n\x0bWorkerState\x12\x11\n\tworker_id\x18\x01 \x01(\t\x12\x0e\n\x06health\x18\x02 \x01(\t\x12\x0c\n\x04step\x18\x03 \x01(\x04\x12\x19\n\x11parameter_version\x18\x04 \x01(\x04\x12\x1d\n\x15heartbeat_age_seconds\x18\x05 \x01(\x01\"^\n\tRunStatus\x12&\n\x06\x63onfig\x18\x01 \x01(\x0b\x32\x16.paramesh.v1.RunConfig\x12)\n\x07workers\x18\x02 \x03(\x0b\x32\x18.paramesh.v1.WorkerState\"B\n\x06Tensor\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05shape\x18\x02 \x03(\x04\x12\r\n\x05\x64type\x18\x03 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x04 \x01(\x0c\"\x1d\n\x0bPullRequest\x12\x0e\n\x06run_id\x18\x01 \x01(\t\"C\n\nParameters\x12\x0f\n\x07version\x18\x01 \x01(\x04\x12$\n\x07tensors\x18\x02 \x03(\x0b\x32\x13.paramesh.v1.Tensor\"}\n\x0eGradientUpdate\x12\x0e\n\x06run_id\x18\x01 \x01(\t\x12\x11\n\tworker_id\x18\x02 \x01(\t\x12\x0c\n\x04step\x18\x03 \x01(\x04\x12\x14\n\x0c\x62\x61se_version\x18\x04 \x01(\x04\x12$\n\x07tensors\x18\x05 \x03(\x0b\x32\x13.paramesh.v1.Tensor\"E\n\x0cUpdateResult\x12\x0f\n\x07version\x18\x01 \x01(\x04\x12\x11\n\tstaleness\x18\x02 \x01(\x04\x12\x11\n\tduplicate\x18\x03 \x01(\x08*_\n\x08SyncMode\x12\x19\n\x15SYNC_MODE_UNSPECIFIED\x10\x00\x12\x0f\n\x0bSYNCHRONOUS\x10\x01\x12\x10\n\x0c\x41SYNCHRONOUS\x10\x02\x12\x15\n\x11\x42OUNDED_STALENESS\x10\x03* \n\x0b\x41ggregation\x12\x08\n\x04MEAN\x10\x00\x12\x07\n\x03SUM\x10\x01\x32\xde\x01\n\x0b\x43oordinator\x12P\n\x0eRegisterWorker\x12\".paramesh.v1.RegisterWorkerRequest\x1a\x1a.paramesh.v1.WorkerSession\x12\x44\n\tHeartbeat\x12\x1d.paramesh.v1.HeartbeatRequest\x1a\x18.paramesh.v1.WorkerState\x12\x37\n\tGetStatus\x12\x12.paramesh.v1.Empty\x1a\x16.paramesh.v1.RunStatus2\x9e\x01\n\x0eParameterShard\x12\x43\n\x0ePullParameters\x12\x18.paramesh.v1.PullRequest\x1a\x17.paramesh.v1.Parameters\x12G\n\rPushGradients\x12\x1b.paramesh.v1.GradientUpdate\x1a\x19.paramesh.v1.UpdateResultb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'paramesh.rpc.training_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_SYNCMODE']._serialized_start=1091
-  _globals['_SYNCMODE']._serialized_end=1186
+  _globals['_SYNCMODE']._serialized_start=1158
+  _globals['_SYNCMODE']._serialized_end=1253
+  _globals['_AGGREGATION']._serialized_start=1255
+  _globals['_AGGREGATION']._serialized_end=1287
   _globals['_EMPTY']._serialized_start=44
   _globals['_EMPTY']._serialized_end=51
   _globals['_RUNCONFIG']._serialized_start=54
-  _globals['_RUNCONFIG']._serialized_end=242
-  _globals['_REGISTERWORKERREQUEST']._serialized_start=244
-  _globals['_REGISTERWORKERREQUEST']._serialized_end=312
-  _globals['_WORKERSESSION']._serialized_start=314
-  _globals['_WORKERSESSION']._serialized_end=389
-  _globals['_HEARTBEATREQUEST']._serialized_start=391
-  _globals['_HEARTBEATREQUEST']._serialized_end=505
-  _globals['_WORKERSTATE']._serialized_start=507
-  _globals['_WORKERSTATE']._serialized_end=627
-  _globals['_RUNSTATUS']._serialized_start=629
-  _globals['_RUNSTATUS']._serialized_end=723
-  _globals['_TENSOR']._serialized_start=725
-  _globals['_TENSOR']._serialized_end=791
-  _globals['_PULLREQUEST']._serialized_start=793
-  _globals['_PULLREQUEST']._serialized_end=822
-  _globals['_PARAMETERS']._serialized_start=824
-  _globals['_PARAMETERS']._serialized_end=891
-  _globals['_GRADIENTUPDATE']._serialized_start=893
-  _globals['_GRADIENTUPDATE']._serialized_end=1018
-  _globals['_UPDATERESULT']._serialized_start=1020
-  _globals['_UPDATERESULT']._serialized_end=1089
-  _globals['_COORDINATOR']._serialized_start=1189
-  _globals['_COORDINATOR']._serialized_end=1411
-  _globals['_PARAMETERSHARD']._serialized_start=1414
-  _globals['_PARAMETERSHARD']._serialized_end=1572
+  _globals['_RUNCONFIG']._serialized_end=289
+  _globals['_REGISTERWORKERREQUEST']._serialized_start=291
+  _globals['_REGISTERWORKERREQUEST']._serialized_end=359
+  _globals['_WORKERSESSION']._serialized_start=361
+  _globals['_WORKERSESSION']._serialized_end=436
+  _globals['_HEARTBEATREQUEST']._serialized_start=439
+  _globals['_HEARTBEATREQUEST']._serialized_end=572
+  _globals['_WORKERSTATE']._serialized_start=574
+  _globals['_WORKERSTATE']._serialized_end=694
+  _globals['_RUNSTATUS']._serialized_start=696
+  _globals['_RUNSTATUS']._serialized_end=790
+  _globals['_TENSOR']._serialized_start=792
+  _globals['_TENSOR']._serialized_end=858
+  _globals['_PULLREQUEST']._serialized_start=860
+  _globals['_PULLREQUEST']._serialized_end=889
+  _globals['_PARAMETERS']._serialized_start=891
+  _globals['_PARAMETERS']._serialized_end=958
+  _globals['_GRADIENTUPDATE']._serialized_start=960
+  _globals['_GRADIENTUPDATE']._serialized_end=1085
+  _globals['_UPDATERESULT']._serialized_start=1087
+  _globals['_UPDATERESULT']._serialized_end=1156
+  _globals['_COORDINATOR']._serialized_start=1290
+  _globals['_COORDINATOR']._serialized_end=1512
+  _globals['_PARAMETERSHARD']._serialized_start=1515
+  _globals['_PARAMETERSHARD']._serialized_end=1673
 # @@protoc_insertion_point(module_scope)

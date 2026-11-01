@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from paramesh.tensors import decode, encode, partition
+from paramesh.tensors import decode, decode_many, encode, partition
 
 
 def test_wire_roundtrip_owns_memory_and_uses_float32():
@@ -40,3 +40,19 @@ def test_sharding_is_deterministic_and_complete():
     assert set(first.values()) == {0, 1, 2, 3}
     with pytest.raises(ValueError):
         partition(names, 0)
+
+
+def test_tensor_collection_rejects_duplicates_and_oversized_values():
+    item = encode("weights", np.ones(1, dtype=np.float32))
+    with pytest.raises(ValueError, match="Duplicate"):
+        decode_many([item, item])
+    item.shape[:] = [2 * 1024 * 1024]
+    with pytest.raises(ValueError, match="size"):
+        decode(item)
+
+
+def test_scalar_roundtrip_and_zero_dimensions():
+    scalar = np.array(3, dtype=np.float32)
+    assert decode(encode("scalar", scalar)).shape == ()
+    with pytest.raises(ValueError, match="size"):
+        encode("empty", np.zeros(0, dtype=np.float32))

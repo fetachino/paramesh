@@ -11,6 +11,8 @@ def validate_config(config: pb.RunConfig) -> None:
         raise ValueError("run_id must be a safe identifier of at most 64 characters")
     if config.mode not in (pb.SYNCHRONOUS, pb.ASYNCHRONOUS, pb.BOUNDED_STALENESS):
         raise ValueError("Unknown synchronization mode")
+    if config.aggregation not in (pb.MEAN, pb.SUM):
+        raise ValueError("Unknown gradient aggregation")
     if not 1 <= len(config.shard_endpoints) <= 16 or any(not x for x in config.shard_endpoints):
         raise ValueError("Configure between 1 and 16 shard endpoints")
     if len(set(config.shard_endpoints)) != len(config.shard_endpoints):

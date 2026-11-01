@@ -17,6 +17,7 @@ class Worker:
     step: int = 0
     version: int = 0
     acknowledged: bool = False
+    completed: bool = False
 
 
 class Coordinator:
@@ -40,7 +41,9 @@ class Coordinator:
 
     def _state(self, worker_id: str, worker: Worker) -> pb.WorkerState:
         age = max(0, self.clock() - worker.last_seen)
-        if age >= self.unavailable_after:
+        if worker.completed:
+            health = "completed"
+        elif age >= self.unavailable_after:
             health = "unavailable"
         elif age >= self.suspect_after:
             health = "suspect"
@@ -76,6 +79,7 @@ class Coordinator:
                 worker is None
                 or worker.session_id != request.session_id
                 or self._state(request.worker_id, worker).health == "unavailable"
+                or (worker.completed and not request.completed)
             ):
                 raise PermissionError("Session is unknown, expired or superseded; re-register")
             if request.step < worker.step or request.parameter_version < worker.version:
@@ -84,6 +88,7 @@ class Coordinator:
             worker.step = request.step
             worker.version = request.parameter_version
             worker.acknowledged = True
+            worker.completed = request.completed
             return self._state(request.worker_id, worker)
 
     def status(self) -> pb.RunStatus:

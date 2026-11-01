@@ -9,7 +9,7 @@ import grpc
 from paramesh.coordinator import Coordinator
 from paramesh.rpc import training_pb2 as pb
 from paramesh.rpc import training_pb2_grpc as rpc
-from paramesh.shard import ParameterShard
+from paramesh.shard import ParameterShard, StaleGradientError
 from paramesh.tensors import MAX_MESSAGE_BYTES
 
 CHANNEL_OPTIONS = [
@@ -21,6 +21,8 @@ CHANNEL_OPTIONS = [
 def _call[T](context: Any, operation: Callable[[], T]) -> T:
     try:
         return operation()
+    except StaleGradientError as error:
+        context.abort(grpc.StatusCode.FAILED_PRECONDITION, str(error))
     except ValueError as error:
         context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(error))
     except PermissionError as error:
