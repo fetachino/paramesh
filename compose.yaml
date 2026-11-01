@@ -11,6 +11,42 @@ x-common: &common
     PARAMESH_RPC_TOKEN: ${PARAMESH_RPC_TOKEN:?Generate .env with scripts/create_dev_env.py}
 
 services:
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.51
+    profiles: [storage]
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - 'test -n "$$AWS_ACCESS_KEY_ID"; test -n "$$AWS_SECRET_ACCESS_KEY"; exec weed mini -dir=/data -ip=seaweedfs -volume.max=1'
+    environment:
+      AWS_ACCESS_KEY_ID: ${PARAMESH_S3_ACCESS_KEY:-}
+      AWS_SECRET_ACCESS_KEY: ${PARAMESH_S3_SECRET_KEY:-}
+      S3_BUCKET: paramesh-checkpoints
+    restart: unless-stopped
+    volumes: [object-storage:/data]
+    networks: [storage]
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, 'http://127.0.0.1:9333/cluster/status']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+
+  checkpoint:
+    <<: *common
+    profiles: [maintenance]
+    networks: [storage, management]
+    environment:
+      PARAMESH_S3_ACCESS_KEY: ${PARAMESH_S3_ACCESS_KEY:-}
+      PARAMESH_S3_SECRET_KEY: ${PARAMESH_S3_SECRET_KEY:-}
+    command: [checkpoint, export, --id, manual, --state-dir, /cluster, --store, /checkpoints]
+    volumes:
+      - coordinator-state:/cluster/coordinator
+      - shard-0-state:/cluster/shard-0
+      - shard-1-state:/cluster/shard-1
+      - worker-0-state:/cluster/worker-0
+      - worker-1-state:/cluster/worker-1
+      - checkpoints:/checkpoints
+
   coordinator:
     <<: *common
     environment: &admin-environment
@@ -73,10 +109,15 @@ services:
       shard-1: {condition: service_healthy}
 
 networks:
+  management:
+  storage:
+    internal: true
   training:
     internal: true
 
 volumes:
+  object-storage:
+  checkpoints:
   coordinator-state:
   shard-0-state:
   shard-1-state:

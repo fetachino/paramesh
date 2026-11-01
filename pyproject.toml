@@ -14,6 +14,7 @@ dependencies = ["grpcio==1.76.0", "protobuf==6.33.5", "numpy==2.3.4"]
 [project.optional-dependencies]
 dev = ["grpcio-tools==1.76.0", "pytest==9.0.3", "pytest-cov==7.0.0", "ruff==0.14.3", "mypy==1.18.2", "build==1.3.0"]
 train = ["torch==2.15.0"]
+storage = ["boto3==1.43.123"]
 
 [project.scripts]
 paramesh = "paramesh.cli:main"
@@ -43,7 +44,7 @@ files = ["src/paramesh"]
 exclude = ["rpc/.*_pb2"]
 
 [[tool.mypy.overrides]]
-module = ["grpc", "grpc.*", "paramesh.rpc.*", "google.protobuf.json_format"]
+module = ["grpc", "grpc.*", "paramesh.rpc.*", "google.protobuf.json_format", "boto3", "botocore.*"]
 ignore_missing_imports = true
 follow_imports = "skip"
 

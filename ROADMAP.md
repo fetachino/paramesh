@@ -18,8 +18,9 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Persist local parameters, optimizer configuration, receipts, worker journals and run metadata.
 - [x] Automate killed-worker/rejoin and killed-shard/restart scenarios across processes.
 - [x] Authenticate internal RPC roles, fence old generations and test optional TLS/mTLS.
-- [ ] Export complete portable checkpoints and implement coordinated offline restore.
-- [ ] Add SeaweedFS S3 checkpoint storage, then Azure SDK/Azurite tests.
+- [x] Export whole-run checkpoints and validate offline restore, including partial steps.
+- [x] Add local and authenticated SeaweedFS S3 checkpoint storage with immutable publication.
+- [ ] Add Azure SDK/Azurite tests.
 - [ ] Measure RPC latency, byte counts, throughput, convergence and failure recovery;
       export JSON/CSV and record hardware/configuration/source metadata.
 - [ ] Add compression only after the uncompressed baseline is measured.
@@ -47,5 +48,5 @@ of having deployed their managed equivalents.
 | NATS | Operational messaging |
 | OpenTofu / Traefik | Infrastructure as code / ingress |
 
-The next priority is portable checkpoint export and complete-manifest restore,
-followed by the operational event and observability planes.
+The next priority is the operational event and observability planes, followed by
+the focused dashboard and validated Git-backed Coolify deployment instructions.

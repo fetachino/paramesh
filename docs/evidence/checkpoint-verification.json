@@ -1,0 +1,12 @@
+{
+  "source_commit": "683504b757e5f332bbbc4d1e5db6f28cb7148051",
+  "source_dirty": true,
+  "tests": 80,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "statement_coverage_percent": null,
+  "coverage_gate_percent": 90,
+  "captured_at": "2026-11-01T21:28:12.2517278Z",
+  "scope": "Native tests including real SeaweedFS; development tree before milestone commit"
+}

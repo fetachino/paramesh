@@ -54,6 +54,12 @@ Local publication must be atomic; an S3-compatible backend publishes the manifes
 only after all content-addressed objects are present. Azure Blob can implement the
 same contract later. An incomplete upload is not a completed checkpoint.
 
+The implemented first portable cut is offline: every service database must release
+its process lease before export. All source leases are held while reading the cut.
+Restore validates all objects in staging, then publishes a fresh directory. A separate
+installation command supports empty mounted volumes and blocks service startup with
+incomplete markers until every role is written. See [operator commands](checkpoints.md).
+
 ## Verification sequence
 
 - Domain persistence: reopen exact state, retry receipts, disk failure and corruption.

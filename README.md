@@ -7,11 +7,16 @@ replay protection and synchronization behavior.
 
 **Status: local recovery verified.** Independent CPU workers and parameter shards
 survive tested process failures using durable local state. Synchronous recovery
-is checked against equivalent uninterrupted PyTorch SGD. Checkpoint export to
-object storage, operational dashboards and public deployment remain future work.
+is checked against equivalent uninterrupted PyTorch SGD. Offline whole-run
+checkpoints support local and authenticated S3-compatible storage, including real
+SeaweedFS tests. Operational dashboards and public deployment remain future work.
 
 [Architecture](ARCHITECTURE.md) · [Evidence and methodology](BENCHMARKS.md) ·
 [Security boundaries](SECURITY.md) · [Roadmap](ROADMAP.md)
+
+![Successful recovery milestone quality and container jobs](docs/images/github-actions.png)
+
+Actual GitHub Actions results for the recovery milestone; [run details](https://github.com/fetachino/paramesh/actions/runs/41349354085).
 
 ## What this proves
 
@@ -40,7 +45,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
-python -m pip install -e ".[dev,train]"
+python -m pip install -e ".[dev,train,storage]"
 paramesh demo --mode sync --workers 2 --shards 2 --steps 20 --output artifacts/sync.json
 ```
 
@@ -211,16 +216,16 @@ docs/                   Interview notes and genuine run evidence
 
 ## Current limitations and next work
 
-Checkpoint export/whole-run restore, object storage, operational events, metrics
-backends, dashboards, compression and multi-machine verification remain pending.
-Recovery requires retained local volumes and a single coordinator; it does not
-provide coordinator consensus, replicated storage or recovery from disk loss.
+Operational events, metrics backends, dashboards, compression and multi-machine
+verification remain pending. Process restart requires retained local volumes;
+offline whole-run recovery can use an exported local/S3 checkpoint. The system
+does not provide coordinator consensus or replicated live training state.
 The protocol is float32-only and the workload is fixed and CPU-only.
 
-The cloud-portability goal is to add storage adapters for SeaweedFS/S3 and
-Azurite/Azure Blob, then optional NATS events, observability and self-hosted
-deployment. Those integrations must earn their place through tests and evidence;
-they are not current capabilities. See [ROADMAP.md](ROADMAP.md).
+See [checkpoint operator commands](docs/checkpoints.md) for private SeaweedFS,
+export, fresh-directory restore and fresh-volume installation. Checkpoints require
+stopping the full run and retain the original topology. Azure/Azurite, optional
+NATS events, observability and self-hosted deployment follow in [ROADMAP.md](ROADMAP.md).
 
 ## Additional documentation
 

@@ -136,9 +136,13 @@ Shard restart reloads the last durable weights and receipts before serving traff
 Tests actually terminate worker/shard processes and compare the completed sync run
 with local SGD. State files have an OS-owned single-writer lock released on exit
 or process death, preventing overlapping writers from corrupting worker journals.
-There is no supported rollback after losing a state volume. Whole-run checkpoint
-export and coordinated offline restore remain a separate milestone; see
-[the recovery design](docs/recovery-design.md).
+Whole-run offline checkpoints preserve coordinator metadata, shard snapshots and
+worker journals together. Export holds all source database leases; restore validates
+every object before publishing fresh state. A partial multi-shard step retains its
+original gradient bytes. Local and S3-compatible immutable stores publish manifests
+last; an interrupted upload is not restorable. See [the recovery design](docs/recovery-design.md)
+and [operator commands](docs/checkpoints.md). Live peers must never be mixed with
+an older restored shard. Topology remapping and online coordinated cuts are unsupported.
 
 gRPC admission is bounded to `2 * worker_count + 4` concurrent calls per shard;
 excess requests receive resource exhaustion. Workers issue one gradient push at
@@ -160,6 +164,9 @@ validated ranges and matched PyTorch's published SHA-256; the local bootstrap
 mirror did not change the installed package. Normal Git-backed builds use the
 default official CPU index. No Coolify, k3s, AWS or Azure deployment has been exercised.
 
+The optional SeaweedFS storage profile has a private network and a persistent volume.
+The maintenance helper receives S3 credentials and can reach external endpoints;
+training containers receive neither storage credentials nor a public route.
 An event plane and an observability plane are planned, not embedded in the current
-gradient path. See the roadmap for checkpoint coordination, storage adapters,
+gradient path. See the roadmap for online checkpoint coordination, Azure storage,
 NATS, tracing, metrics and deployment sequencing.
