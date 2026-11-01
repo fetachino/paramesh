@@ -15,10 +15,12 @@ workers, sharded model ownership and explicit synchronization semantics.
   reference and tested concurrent retries, lease expiry and barrier failure paths.
 - Preserved synchronous numerical behavior after actual worker/shard process
   termination using write-ahead gradient journals, durable receipts and fencing.
+- Added offline whole-run checkpoints with checksummed immutable local/S3 objects,
+  tested against authenticated self-hosted SeaweedFS and partial-step RPC restore.
 
 Use the exact committed verification record for test counts, coverage and numerical
 results. Process recovery with retained local state is implemented; do not claim
-recovery from disk loss, production throughput, public cloud deployment or
+automatic live recovery from disk loss, production throughput, public cloud deployment or
 storage/observability integrations that have not been exercised.
 
 ## Short profile description

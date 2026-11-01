@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import re
 import signal
 from importlib.metadata import version
@@ -60,9 +61,46 @@ def main() -> None:
     check = commands.add_parser("check-shard")
     check.add_argument("--address", required=True)
     check.add_argument("--run-id", required=True)
+    checkpoint = commands.add_parser("checkpoint", help="Export/restore an offline whole run")
+    checkpoint.add_argument("action", choices=["export", "restore", "install"])
+    checkpoint.add_argument("--id", required=True)
+    checkpoint.add_argument("--state-dir", type=Path, required=True)
+    checkpoint.add_argument("--store", type=Path, default=Path("checkpoints"))
+    checkpoint.add_argument("--s3-endpoint")
+    checkpoint.add_argument("--bucket")
     args = parser.parse_args()
-    security = RpcSecurity.from_environment() if args.command != "demo" else None
-    if args.command == "demo":
+    if (
+        args.command in ("coordinator", "shard", "worker")
+        and (args.state_dir / ".restore-incomplete").exists()
+    ):
+        parser.error("Checkpoint installation is incomplete; services must remain stopped")
+    security = (
+        RpcSecurity.from_environment() if args.command not in ("demo", "checkpoint") else None
+    )
+    if args.command == "checkpoint":
+        from paramesh.checkpoint import export_checkpoint, install_checkpoint, restore_checkpoint
+        from paramesh.storage import LocalStore, ObjectStore, S3Store
+
+        store: ObjectStore
+        if args.s3_endpoint:
+            store = S3Store(
+                args.s3_endpoint,
+                args.bucket or "",
+                os.environ.get("PARAMESH_S3_ACCESS_KEY", ""),
+                os.environ.get("PARAMESH_S3_SECRET_KEY", ""),
+            )
+        else:
+            if args.bucket:
+                parser.error("--bucket requires --s3-endpoint")
+            store = LocalStore(args.store)
+        if args.action == "export":
+            report = export_checkpoint(args.state_dir, store, args.id)
+        elif args.action == "install":
+            report = install_checkpoint(store, args.id, args.state_dir)
+        else:
+            report = restore_checkpoint(store, args.id, args.state_dir)
+        print(json.dumps(report, indent=2))
+    elif args.command == "demo":
         from paramesh.demo import run_demo
 
         report = run_demo(

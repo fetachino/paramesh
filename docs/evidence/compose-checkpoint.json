@@ -1,0 +1,273 @@
+{
+  "project": "paramesh-check-0317a4b79b",
+  "source_commit": "683504b757e5f332bbbc4d1e5db6f28cb7148051",
+  "source_dirty": true,
+  "engine_version": "29.9.2",
+  "initial_workers": [
+    {
+      "worker_id": "worker-0",
+      "steps": 20,
+      "losses": [
+        20.71241569519043,
+        18.751750946044922,
+        16.691438674926758,
+        14.417372703552246,
+        12.010741233825684,
+        9.650433540344238,
+        7.522831916809082,
+        5.757127285003662,
+        4.399211883544922,
+        3.4210174083709717,
+        2.750734329223633,
+        2.3055248260498047,
+        2.012932300567627,
+        1.8187098503112793,
+        1.686029076576233,
+        1.5913925170898438,
+        1.5203516483306885,
+        1.4641742706298828,
+        1.4175941944122314,
+        1.3774036169052124
+      ],
+      "refreshes": 0,
+      "resumed_from": 0,
+      "replayed_contributions": 0
+    },
+    {
+      "worker_id": "worker-1",
+      "steps": 20,
+      "losses": [
+        7.752960205078125,
+        7.09056282043457,
+        6.336277008056641,
+        5.430955410003662,
+        4.406224727630615,
+        3.3546082973480225,
+        2.3865983486175537,
+        1.5873961448669434,
+        0.9927112460136414,
+        0.5913145542144775,
+        0.34456390142440796,
+        0.20694845914840698,
+        0.13876566290855408,
+        0.11070558428764343,
+        0.10353478044271469,
+        0.10579647123813629,
+        0.11126339435577393,
+        0.11688685417175293,
+        0.12139326333999634,
+        0.12442107498645782
+      ],
+      "refreshes": 0,
+      "resumed_from": 0,
+      "replayed_contributions": 0
+    }
+  ],
+  "restored_workers": [
+    {
+      "worker_id": "worker-0",
+      "steps": 20,
+      "losses": [],
+      "refreshes": 0,
+      "resumed_from": 20,
+      "replayed_contributions": 0
+    },
+    {
+      "worker_id": "worker-1",
+      "steps": 20,
+      "losses": [],
+      "refreshes": 0,
+      "resumed_from": 20,
+      "replayed_contributions": 0
+    }
+  ],
+  "initial_status": {
+    "config": {
+      "run_id": "compose-demo",
+      "mode": "SYNCHRONOUS",
+      "shard_endpoints": [
+        "shard-0:50051",
+        "shard-1:50051"
+      ],
+      "worker_ids": [
+        "worker-0",
+        "worker-1"
+      ],
+      "learning_rate": 0.05,
+      "barrier_timeout_seconds": 30.0
+    },
+    "workers": [
+      {
+        "worker_id": "worker-0",
+        "health": "completed",
+        "step": "20",
+        "parameter_version": "20",
+        "heartbeat_age_seconds": 4.367308181000226,
+        "generation": "1"
+      },
+      {
+        "worker_id": "worker-1",
+        "health": "completed",
+        "step": "20",
+        "parameter_version": "20",
+        "heartbeat_age_seconds": 4.3726053660002435,
+        "generation": "1"
+      }
+    ],
+    "global_step": "20"
+  },
+  "restored_status": {
+    "config": {
+      "run_id": "compose-demo",
+      "mode": "SYNCHRONOUS",
+      "shard_endpoints": [
+        "shard-0:50051",
+        "shard-1:50051"
+      ],
+      "worker_ids": [
+        "worker-0",
+        "worker-1"
+      ],
+      "learning_rate": 0.05,
+      "barrier_timeout_seconds": 30.0
+    },
+    "workers": [
+      {
+        "worker_id": "worker-0",
+        "health": "completed",
+        "step": "20",
+        "parameter_version": "20",
+        "heartbeat_age_seconds": 4.1938647700008005,
+        "generation": "2"
+      },
+      {
+        "worker_id": "worker-1",
+        "health": "completed",
+        "step": "20",
+        "parameter_version": "20",
+        "heartbeat_age_seconds": 4.246190883000963,
+        "generation": "2"
+      }
+    ],
+    "global_step": "20"
+  },
+  "host_port_bindings": {
+    "coordinator": {},
+    "shard-0": {},
+    "shard-1": {},
+    "worker-0": {},
+    "worker-1": {}
+  },
+  "rpc_roles": {
+    "shard_versions": [
+      20,
+      20
+    ],
+    "unauthenticated_read_denied": true,
+    "admin_access_denied": true
+  },
+  "checkpoint": {
+    "format_version": 1,
+    "checkpoint_id": "verified",
+    "run_id": "compose-demo",
+    "global_step": 20,
+    "shard_versions": [
+      20,
+      20
+    ],
+    "optimizer": "sgd",
+    "records": [
+      {
+        "role": "coordinator",
+        "key": "blobs/1c9be743cffe3632c46dd3d431d718dc6942c2ab1e0fd29b27dcd408684c7283",
+        "sha256": "1c9be743cffe3632c46dd3d431d718dc6942c2ab1e0fd29b27dcd408684c7283",
+        "size": 416
+      },
+      {
+        "role": "shard-0",
+        "key": "blobs/79ea6b65cf1dba6c94b9abfeceeaabd97692c825c3ce3212c363d0f9ca055032",
+        "sha256": "79ea6b65cf1dba6c94b9abfeceeaabd97692c825c3ce3212c363d0f9ca055032",
+        "size": 264
+      },
+      {
+        "role": "shard-1",
+        "key": "blobs/54a2466e63a69ea9913cbae761ef6da78d2c8e4a1a2a6f356e46aef8cd53d241",
+        "sha256": "54a2466e63a69ea9913cbae761ef6da78d2c8e4a1a2a6f356e46aef8cd53d241",
+        "size": 458
+      },
+      {
+        "role": "worker-0",
+        "key": "blobs/50e191d7d6043add40c8c221ce2a827802efc422e1360005134cb7f666f89a5d",
+        "sha256": "50e191d7d6043add40c8c221ce2a827802efc422e1360005134cb7f666f89a5d",
+        "size": 57
+      },
+      {
+        "role": "worker-1",
+        "key": "blobs/82db7bec6fa163b11fcee8a32fb69a8d78f553828a7d5a452ff3c0db27ff60a6",
+        "sha256": "82db7bec6fa163b11fcee8a32fb69a8d78f553828a7d5a452ff3c0db27ff60a6",
+        "size": 57
+      }
+    ]
+  },
+  "s3_checkpoint": {
+    "format_version": 1,
+    "checkpoint_id": "verified-s3",
+    "run_id": "compose-demo",
+    "global_step": 20,
+    "shard_versions": [
+      20,
+      20
+    ],
+    "optimizer": "sgd",
+    "records": [
+      {
+        "role": "coordinator",
+        "key": "blobs/1c9be743cffe3632c46dd3d431d718dc6942c2ab1e0fd29b27dcd408684c7283",
+        "sha256": "1c9be743cffe3632c46dd3d431d718dc6942c2ab1e0fd29b27dcd408684c7283",
+        "size": 416
+      },
+      {
+        "role": "shard-0",
+        "key": "blobs/79ea6b65cf1dba6c94b9abfeceeaabd97692c825c3ce3212c363d0f9ca055032",
+        "sha256": "79ea6b65cf1dba6c94b9abfeceeaabd97692c825c3ce3212c363d0f9ca055032",
+        "size": 264
+      },
+      {
+        "role": "shard-1",
+        "key": "blobs/54a2466e63a69ea9913cbae761ef6da78d2c8e4a1a2a6f356e46aef8cd53d241",
+        "sha256": "54a2466e63a69ea9913cbae761ef6da78d2c8e4a1a2a6f356e46aef8cd53d241",
+        "size": 458
+      },
+      {
+        "role": "worker-0",
+        "key": "blobs/50e191d7d6043add40c8c221ce2a827802efc422e1360005134cb7f666f89a5d",
+        "sha256": "50e191d7d6043add40c8c221ce2a827802efc422e1360005134cb7f666f89a5d",
+        "size": 57
+      },
+      {
+        "role": "worker-1",
+        "key": "blobs/82db7bec6fa163b11fcee8a32fb69a8d78f553828a7d5a452ff3c0db27ff60a6",
+        "sha256": "82db7bec6fa163b11fcee8a32fb69a8d78f553828a7d5a452ff3c0db27ff60a6",
+        "size": 57
+      }
+    ]
+  },
+  "checkpoint_restored_workers": [
+    {
+      "worker_id": "worker-0",
+      "steps": 20,
+      "losses": [],
+      "refreshes": 0,
+      "resumed_from": 20,
+      "replayed_contributions": 0
+    },
+    {
+      "worker_id": "worker-1",
+      "steps": 20,
+      "losses": [],
+      "refreshes": 0,
+      "resumed_from": 20,
+      "replayed_contributions": 0
+    }
+  ]
+}

@@ -10,27 +10,30 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> None:
     project = f"paramesh-check-{uuid.uuid4().hex[:10]}"
+    restored_project = f"{project}-restore"
 
     def command(*arguments: str, timeout: int = 180) -> str:
         return subprocess.check_output(arguments, cwd=ROOT, text=True, timeout=timeout).strip()
 
-    def compose(*arguments: str) -> str:
-        return command("docker", "compose", "--project-name", project, *arguments)
+    def compose(*arguments: str, project_name: str = project) -> str:
+        return command("docker", "compose", "--project-name", project_name, *arguments)
 
-    def workers() -> list[dict]:
+    def workers(project_name: str = project) -> list[dict]:
         results = []
         for name in ("worker-0", "worker-1"):
-            container = compose("ps", "-aq", name)
+            container = compose("ps", "-aq", name, project_name=project_name)
             assert container, f"Missing {name} container"
             assert command("docker", "wait", container) == "0", f"{name} exited unsuccessfully"
-            output = compose("logs", "--no-color", "--no-log-prefix", name)
+            output = compose(
+                "logs", "--no-color", "--no-log-prefix", name, project_name=project_name
+            )
             reports = [json.loads(line) for line in output.splitlines() if line.startswith("{")]
             results.append(
                 next(item for item in reversed(reports) if item.get("worker_id") == name)
             )
         return results
 
-    def status() -> dict:
+    def status(project_name: str = project) -> dict:
         return json.loads(
             compose(
                 "exec",
@@ -40,6 +43,7 @@ def main() -> None:
                 "status",
                 "--coordinator",
                 "coordinator:50050",
+                project_name=project_name,
             )
         )
 
@@ -94,6 +98,86 @@ print(json.dumps({'shard_versions':versions,'unauthenticated_read_denied':True,'
         )
         assert roles["shard_versions"] == [target, target]
         compose("down")
+        checkpoint = json.loads(
+            compose(
+                "run",
+                "--rm",
+                "--no-deps",
+                "checkpoint",
+                "checkpoint",
+                "export",
+                "--id",
+                "verified",
+                "--state-dir",
+                "/cluster",
+                "--store",
+                "/checkpoints",
+            )
+        )
+        assert checkpoint["global_step"] == target
+        assert checkpoint["shard_versions"] == [target, target]
+        compose("--profile", "storage", "up", "-d", "--wait", "seaweedfs")
+        s3_checkpoint = json.loads(
+            compose(
+                "run",
+                "--rm",
+                "--no-deps",
+                "checkpoint",
+                "checkpoint",
+                "export",
+                "--id",
+                "verified-s3",
+                "--state-dir",
+                "/cluster",
+                "--s3-endpoint",
+                "http://seaweedfs:8333",
+                "--bucket",
+                "paramesh-checkpoints",
+            )
+        )
+        assert s3_checkpoint["records"] == checkpoint["records"]
+        s3_restore = json.loads(
+            compose(
+                "run",
+                "--rm",
+                "--no-deps",
+                "checkpoint",
+                "checkpoint",
+                "restore",
+                "--id",
+                "verified-s3",
+                "--state-dir",
+                "/tmp/s3-restored",
+                "--s3-endpoint",
+                "http://seaweedfs:8333",
+                "--bucket",
+                "paramesh-checkpoints",
+            )
+        )
+        assert s3_restore == s3_checkpoint
+        compose(
+            "run",
+            "--rm",
+            "--no-deps",
+            "--volume",
+            f"{project}_checkpoints:/checkpoints",
+            "checkpoint",
+            "checkpoint",
+            "install",
+            "--id",
+            "verified",
+            "--state-dir",
+            "/cluster",
+            "--store",
+            "/checkpoints",
+            project_name=restored_project,
+        )
+        compose("up", "-d", "--no-build", project_name=restored_project)
+        checkpoint_workers = workers(restored_project)
+        assert all(
+            item["resumed_from"] == target and not item["losses"] for item in checkpoint_workers
+        )
+        assert int(status(restored_project)["global_step"]) == target
         compose("up", "-d", "--no-build")
         restored_workers = workers()
         restored_status = status()
@@ -118,19 +202,36 @@ print(json.dumps({'shard_versions':versions,'unauthenticated_read_denied':True,'
             "restored_status": restored_status,
             "host_port_bindings": ports,
             "rpc_roles": roles,
+            "checkpoint": checkpoint,
+            "s3_checkpoint": s3_checkpoint,
+            "checkpoint_restored_workers": checkpoint_workers,
         }
         output = ROOT / "artifacts" / "compose-verification.json"
         output.parent.mkdir(exist_ok=True)
         output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-        print("Compose passed: training, RPC roles, private ports and durable recreation.")
+        print(
+            "Compose passed: training, RPC roles, private ports, restart and local/S3 checkpoints."
+        )
     finally:
         # Only this invocation's unique project and synthetic test volumes are removed.
-        subprocess.run(
-            ["docker", "compose", "--project-name", project, "down", "--volumes"],
-            cwd=ROOT,
-            check=True,
-            timeout=120,
-        )
+        for owned_project in (restored_project, project):
+            subprocess.run(
+                [
+                    "docker",
+                    "compose",
+                    "--project-name",
+                    owned_project,
+                    "--profile",
+                    "storage",
+                    "--profile",
+                    "maintenance",
+                    "down",
+                    "--volumes",
+                ],
+                cwd=ROOT,
+                check=True,
+                timeout=120,
+            )
 
 
 if __name__ == "__main__":

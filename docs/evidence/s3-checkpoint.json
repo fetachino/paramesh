@@ -1,0 +1,43 @@
+{
+  "backend": "SeaweedFS 4.51",
+  "authenticated": true,
+  "conditional_publication": true,
+  "partial_step_roundtrip": true,
+  "manifest": {
+    "format_version": 1,
+    "checkpoint_id": "s3-partial",
+    "run_id": "test-run",
+    "global_step": 0,
+    "shard_versions": [
+      1,
+      0
+    ],
+    "optimizer": "sgd",
+    "records": [
+      {
+        "role": "coordinator",
+        "key": "blobs/86c5d8bb79d4a089da8c6269c75506135cac561732e0cb40d7357c4cc4173357",
+        "sha256": "86c5d8bb79d4a089da8c6269c75506135cac561732e0cb40d7357c4cc4173357",
+        "size": 321
+      },
+      {
+        "role": "shard-0",
+        "key": "blobs/b78a66482b7138e9ff2682ed0f4e9f69c43312bd6547f862b471440bd368d0c1",
+        "sha256": "b78a66482b7138e9ff2682ed0f4e9f69c43312bd6547f862b471440bd368d0c1",
+        "size": 198
+      },
+      {
+        "role": "shard-1",
+        "key": "blobs/d5101e666d0b813f04c00fbd68753623b8e44939877371d0a69d99de22c7ff9c",
+        "sha256": "d5101e666d0b813f04c00fbd68753623b8e44939877371d0a69d99de22c7ff9c",
+        "size": 342
+      },
+      {
+        "role": "worker-0",
+        "key": "blobs/ac8970722f054f9557ea510d8a87502c0aed86a3da66f97e04b3cfc619fb54c3",
+        "sha256": "ac8970722f054f9557ea510d8a87502c0aed86a3da66f97e04b3cfc619fb54c3",
+        "size": 416
+      }
+    ]
+  }
+}

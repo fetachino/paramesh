@@ -12,7 +12,7 @@
   - Verify: missing/wrong credentials fail; data credentials cannot mutate administrative state.
 - [x] Kill/restart workers and shards during real training; record detection, recovery and journal replay.
   - Verify: completed training and synchronous numerical-reference comparison after recovery.
-- [ ] Export/restore complete checkpoint manifests through local and S3-compatible stores.
+- [x] Export/restore complete offline checkpoint manifests through local and S3-compatible stores.
   - Verify: checksums, failed/incomplete publication, local restore and actual SeaweedFS operations.
 - [ ] Add optional NATS lifecycle events; training continues while NATS is unavailable.
 - [ ] Add Prometheus metrics and distributed tracing with real observability services.

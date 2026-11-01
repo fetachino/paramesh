@@ -54,7 +54,28 @@ is labeled `unknown`, such as when using a wheel outside a checkout.
 when their results arrive. It includes imports, startup, training and final heartbeat;
 it excludes shard/coordinator startup, cleanup and the local reference. It is not
 steady-state throughput or an RPC latency metric. No speedup, scaling efficiency,
-recovery time, compression gain or cloud performance is claimed.
+compression gain or cloud performance is claimed. Recovery timings below use a
+separate deliberately paced fault scenario.
+
+## Captured process recovery
+
+Clean source `f92103a92071a339253fcad5203642151af650ad`, Windows AMD64,
+Python 3.12.10/PyTorch 2.15.0+cpu, November 1, 2026. Two workers/two shards,
+20 synchronous steps, 0.1-second deliberate per-step delay. Test leases are
+1.5 seconds suspect / 3 seconds unavailable, not the default 5 / 15 seconds.
+
+| Actual terminated process | Detection | Time from termination to later progress | Final shard versions | Raw report |
+| --- | --- | --- | --- | --- |
+| Worker 0 | 3.000 s heartbeat lease | 7.047 s | 20, 20 | [worker recovery](docs/evidence/worker-recovery.json) |
+| Shard 0 | 0.562 s observer RPC failure | 4.828 s | 20, 20 | [shard recovery](docs/evidence/shard-recovery.json) |
+
+Both runs finish with maximum parameter error `5.96e-8` against uninterrupted local
+SGD. The worker replacement advances generation 1 to 2 and resumes from durable
+step 7. These single-run timings include replacement process startup/imports;
+they are not recovery SLAs or steady-state benchmarks. These particular runs did
+not replay an in-flight contribution. A separate checkpoint/RPC integration test
+forces partial delivery and verifies one replay without duplicate application.
+Uncommitted computation lost before journaling is not instrumented.
 
 ## Future performance work
 

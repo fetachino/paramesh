@@ -6,9 +6,10 @@ RUN python -m pip install --no-cache-dir --upgrade pip setuptools \
     && python -m pip install --no-cache-dir "$TORCH_SOURCE" --index-url https://download-r2.pytorch.org/whl/cpu
 COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
-RUN python -m pip install --no-cache-dir '.[train]' \
+RUN python -m pip install --no-cache-dir '.[train,storage]' \
     && useradd --create-home --uid 10001 paramesh \
-    && mkdir /app/state && chown 10001:10001 /app/state
+    && mkdir -p /app/state /checkpoints /cluster/coordinator /cluster/shard-0 /cluster/shard-1 /cluster/worker-0 /cluster/worker-1 \
+    && chown -R 10001:10001 /app/state /checkpoints /cluster
 COPY examples ./examples
 USER 10001
 ENTRYPOINT ["paramesh"]

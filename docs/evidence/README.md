@@ -1,7 +1,8 @@
 # Verification evidence
 
 Captured on November 1, 2026. These are actual native CPU runs and local checks;
-they do not establish a cloud deployment or durable failure recovery.
+they do not establish a cloud deployment. The original baseline remains below;
+newer durable recovery artifacts are documented separately.
 
 | Artifact | What it proves |
 | --- | --- |
@@ -47,12 +48,14 @@ includes worker/server code executed by spawned processes. Native tests ran on
 Windows. [The core CI record](ci-baseline.json) now records actual passing remote
 quality and container jobs; the original baseline files above remain historical.
 
-No screenshots are included yet because there is no running dashboard or
-observability UI to capture honestly.
+The genuine [CI screenshot](../images/github-actions.png) captures successful
+quality and container jobs for `f92103a`, Actions run `41349354085`. It is an actual
+browser screenshot, converted losslessly from the browser's JPEG to PNG; no status
+text or results were altered. Dashboard/observability screenshots remain pending.
 
 ## Local container verification
 
-Docker Desktop was started successfully and reported engine version 29.7.2.
+The final recovery verification reported Docker engine version 29.9.2.
 The interrupted 209.5 MB CPU-wheel download was completed using validated byte
 ranges and matched the SHA-256 published by PyTorch:
 `0955c7e3446326293f48af18fad67872fa31dee5a36a87690eb9e5be8b465be3`.
@@ -66,3 +69,20 @@ resumed from completed step 20 with empty new-loss histories, rather than retrai
 `scripts/verify_compose.py` reproduces these checks in a uniquely named project and
 removes only that project's synthetic test volumes. Its report is written under
 `artifacts/compose-verification.json`. No public deployment is claimed.
+
+## Durable recovery milestone
+
+[Worker termination](worker-recovery.json), [shard termination](shard-recovery.json)
+and [Compose recreation](compose-recovery.json) were captured from clean source
+`f92103a`. See [benchmark methodology](../../BENCHMARKS.md) for timing boundaries.
+GitHub Actions runs `41349354085` and `41349349193` passed quality and container jobs
+on that head before [PR #2](https://github.com/fetachino/paramesh/pull/2) was merged.
+
+## Checkpoint storage
+
+[The S3 contract report](s3-checkpoint.json) records an actual authenticated SeaweedFS
+4.51 round trip with a partially delivered step (shard versions 1 and 0), conditional
+manifest publication and restored worker journal. This artifact was produced during
+development of the checkpoint milestone; its own manifest does not claim a clean
+source commit or production benchmark. The native RPC restore test independently
+resumes that partial cut and compares the final model with uninterrupted SGD.
