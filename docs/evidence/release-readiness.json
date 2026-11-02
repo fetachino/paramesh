@@ -1,0 +1,145 @@
+{
+  "verified_at": "2026-11-02T04:36:50.486256+00:00",
+  "scope": "Local development release-readiness audit; no hosted deployment or release tag",
+  "clean_clone": {
+    "source": "https://github.com/fetachino/paramesh.git",
+    "commit": "add0356d7c60d4e079ba0b2984e4e3db4124f2d7",
+    "merged_as": "30240275de91f0b022ed6affaa986178f40d5f5f",
+    "final_working_tree_clean": true,
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "install": "uv 0.13.6 sync --locked --all-extras",
+    "lock_sha256": "11d58fdce10c6addd71df2237ec3e6f24e93023aa9160a843220a3fe79107736",
+    "tests": {
+      "tests": 117,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "coverage_percent": 91.9981498612396
+  },
+  "checks": [
+    "Ruff lint and format",
+    "strict mypy",
+    "generated protocol drift",
+    "JavaScript syntax",
+    "86 installed packages compatible",
+    "Compose operations/storage configuration",
+    "public Markdown local links",
+    "configured local credential scan of tracked files",
+    "ignored local content excluded from source/package/Docker context",
+    "15 archived benchmark artifact checksums",
+    "10 recorded screenshot hashes",
+    "captured Azure report checksum"
+  ],
+  "dependency_audit": {
+    "tool": "pip-audit 2.10.1",
+    "service": "OSV",
+    "packages": 86,
+    "known_advisories": 0,
+    "artifact_sha256": "c138a68e7666b3a7491e57b7abe4370e2158eabe7cea3da8c7f3c5d69381cbe6"
+  },
+  "package_validation": {
+    "build_source_commit": "ae2a445bcb348c3a85fdb87c6b9f60f9c12773a9",
+    "wheel_sha256": "a6c62f6a804d2e1b13ec27f7bc3a21b2ea264cf1dc450f445c7faaffc0b96069",
+    "sdist_sha256": "14d27a6411378843234bfc74cd7993e3668664b5587d54f74645254b27d640a1",
+    "fresh_wheel_storage_install": true,
+    "isolated_site_packages_import": true,
+    "cli_version": "0.1.0",
+    "installed_packages_compatible": 22
+  },
+  "exact_head_ci": {
+    "head": "add0356d7c60d4e079ba0b2984e4e3db4124f2d7",
+    "runs": [
+      41388822098,
+      41388817261
+    ],
+    "quality": "success",
+    "container": "success"
+  },
+  "retained_stack": {
+    "operations_ready": true,
+    "services": [
+      {
+        "Service": "coordinator",
+        "State": "running",
+        "Health": "healthy",
+        "ExitCode": 0
+      },
+      {
+        "Service": "dashboard",
+        "State": "running",
+        "Health": "healthy",
+        "ExitCode": 0
+      },
+      {
+        "Service": "grafana",
+        "State": "running",
+        "Health": "healthy",
+        "ExitCode": 0
+      },
+      {
+        "Service": "loki",
+        "State": "running",
+        "Health": "",
+        "ExitCode": 0
+      },
+      {
+        "Service": "nats",
+        "State": "running",
+        "Health": "healthy",
+        "ExitCode": 0
+      },
+      {
+        "Service": "prometheus",
+        "State": "running",
+        "Health": "healthy",
+        "ExitCode": 0
+      },
+      {
+        "Service": "seaweedfs",
+        "State": "running",
+        "Health": "healthy",
+        "ExitCode": 0
+      },
+      {
+        "Service": "shard-0",
+        "State": "running",
+        "Health": "healthy",
+        "ExitCode": 0
+      },
+      {
+        "Service": "shard-1",
+        "State": "running",
+        "Health": "healthy",
+        "ExitCode": 0
+      },
+      {
+        "Service": "tempo",
+        "State": "running",
+        "Health": "",
+        "ExitCode": 0
+      },
+      {
+        "Service": "worker-0",
+        "State": "exited",
+        "Health": "",
+        "ExitCode": 0
+      },
+      {
+        "Service": "worker-1",
+        "State": "exited",
+        "Health": "",
+        "ExitCode": 0
+      }
+    ]
+  },
+  "audit_fix": "Grafana generator now explicitly writes LF; actual Windows generation matches committed JSON bytes",
+  "limits": [
+    "Known-credential/advisory scans are not a penetration test or complete secret-history audit",
+    "Python dependencies are locked; base OS/image layers are not bit-for-bit pinned",
+    "No managed Azure, multi-host network/compression, public HTTPS or Coolify deployment validation",
+    "Fixed CPU float32 workload, offline checkpoints, original topology, no coordinator consensus/live-state replication",
+    "No v1.0.0 release tag created"
+  ]
+}

@@ -272,4 +272,5 @@ benchmarks and authorized self-hosted deployment follow in [ROADMAP.md](ROADMAP.
 - [Git-backed Coolify deployment](docs/coolify.md)
 - [Architecture and consistency model](ARCHITECTURE.md)
 - [Correctness evidence and benchmark policy](BENCHMARKS.md)
+- [Local release-readiness audit and deployment limits](docs/release-readiness.md)
 - [Security model](SECURITY.md)

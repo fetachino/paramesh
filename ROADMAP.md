@@ -31,10 +31,13 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Build a focused dashboard from real coordinator/shard/worker state.
 - [x] Capture genuine cluster, recovery, checkpoint, bounded-lag, Grafana and trace screenshots.
 - [x] Validate the shared Compose stack locally and document Git-backed Coolify settings.
-- [ ] Add OpenBao and Keycloak only after core recovery and the trust model are tested.
-- [ ] Validate OpenTofu/self-hosted deployment, then Coolify and k3s on available free compute.
-- [ ] Audit documentation claims, clean-clone setup, storage/failure tests and visual evidence
-      before a release. No `v1.0.0` tag is justified yet.
+- [x] Assess additional identity/secrets infrastructure against the current private single-operator model;
+      defer OpenBao/Keycloak until actual target requirements justify them.
+- [ ] Validate self-hosted deployment on an authorized server; add OpenTofu/k3s only if the target requires them.
+- [x] Audit local documentation claims, clean-clone setup, storage/failure tests,
+      package/security checks and preserved visual evidence; see [readiness audit](docs/release-readiness.md).
+- [ ] Validate actual hosted HTTPS, isolation and rollback before a production release.
+      No `v1.0.0` tag is justified yet.
 
 ## Intended cloud portability
 

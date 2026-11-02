@@ -125,3 +125,11 @@ November 2, 2026 UTC, preserve clean-source provenance, host CPU/RAM, exact lock
 verified in tests and captured bytes are protected against Git line-ending conversion.
 These healthy single-host measurements are distinct from the historical correctness
 and deliberately paced recovery evidence above.
+
+## Local readiness audit
+
+[Readiness record](release-readiness.json) links a fresh GitHub clone/new locked
+environment with 117 passing tests, 92.00% coverage, zero known OSV advisories across
+86 installed packages, package checks, preserved screenshots/raw captures and the
+retained operations stack. [Scope and remaining gates](../release-readiness.md)
+distinguish local verification from the pending hosted deployment.

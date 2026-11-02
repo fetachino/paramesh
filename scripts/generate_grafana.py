@@ -68,7 +68,7 @@ def main() -> None:
     }
     path = Path(__file__).resolve().parents[1] / "ops/grafana/dashboards/paramesh.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(dashboard, indent=2) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(dashboard, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":
