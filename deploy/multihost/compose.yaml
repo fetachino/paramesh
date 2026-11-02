@@ -1,0 +1,91 @@
+x-multihost-environment: &multihost-environment
+  PARAMESH_TLS_CA: /run/paramesh/tls/ca.pem
+  PARAMESH_TLS_CERT: /run/paramesh/tls/rpc.crt
+  PARAMESH_TLS_KEY: /run/paramesh/tls/rpc.key
+  PARAMESH_REQUIRE_CLIENT_CERT: 'true'
+  PARAMESH_NATS_TLS_CA: /run/paramesh/tls/ca.pem
+x-multihost-tls-volume: &multihost-tls-volume '${PARAMESH_TLS_DIR:?Set PARAMESH_TLS_DIR to the host TLS directory}:/run/paramesh/tls:ro'
+
+services:
+  coordinator:
+    command: [coordinator, --config, /run/paramesh/run.json, --bind, '0.0.0.0:50050']
+    environment:
+      <<: *multihost-environment
+      PARAMESH_ADMIN_TOKEN: ${PARAMESH_ADMIN_TOKEN:-}
+    volumes:
+      - *multihost-tls-volume
+      - ${PARAMESH_CONFIG_FILE:?Set PARAMESH_CONFIG_FILE to the shared run config}:/run/paramesh/run.json:ro
+    ports:
+      - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:${PARAMESH_COORDINATOR_RPC_PORT:-50050}:50050'
+      - '${PARAMESH_PRIVATE_BIND_IP}:9101:9100'
+
+  shard-0:
+    command: [shard, --config, /run/paramesh/run.json, --index, '0', --bind, '0.0.0.0:50051']
+    environment:
+      <<: *multihost-environment
+      PARAMESH_ADMIN_TOKEN: ${PARAMESH_ADMIN_TOKEN:-}
+    volumes:
+      - *multihost-tls-volume
+      - ${PARAMESH_CONFIG_FILE:?Set PARAMESH_CONFIG_FILE to the shared run config}:/run/paramesh/run.json:ro
+    healthcheck:
+      test: [CMD, paramesh, check-shard, --address, '127.0.0.1:50051', --run-id, '${PARAMESH_RUN_ID:?Set the run id from the shared config}']
+    ports:
+      - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:${PARAMESH_SHARD_0_RPC_PORT:-50051}:50051'
+      - '${PARAMESH_PRIVATE_BIND_IP}:9102:9100'
+
+  shard-1:
+    command: [shard, --config, /run/paramesh/run.json, --index, '1', --bind, '0.0.0.0:50051']
+    environment:
+      <<: *multihost-environment
+      PARAMESH_ADMIN_TOKEN: ${PARAMESH_ADMIN_TOKEN:-}
+    volumes:
+      - *multihost-tls-volume
+      - ${PARAMESH_CONFIG_FILE:?Set PARAMESH_CONFIG_FILE to the shared run config}:/run/paramesh/run.json:ro
+    healthcheck:
+      test: [CMD, paramesh, check-shard, --address, '127.0.0.1:50051', --run-id, '${PARAMESH_RUN_ID:?Set the run id from the shared config}']
+    ports:
+      - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:${PARAMESH_SHARD_1_RPC_PORT:-50051}:50051'
+      - '${PARAMESH_PRIVATE_BIND_IP}:9103:9100'
+
+  worker-0:
+    environment: *multihost-environment
+    volumes:
+      - *multihost-tls-volume
+    command: [worker, --coordinator, '${PARAMESH_COORDINATOR_ENDPOINT:-coordinator:50050}', --id, worker-0, --steps, '${PARAMESH_STEPS:-20}', --step-delay, '${PARAMESH_STEP_DELAY:-0}']
+    depends_on: !reset []
+    ports:
+      - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:9104:9100'
+
+  worker-1:
+    environment: *multihost-environment
+    volumes:
+      - *multihost-tls-volume
+    command: [worker, --coordinator, '${PARAMESH_COORDINATOR_ENDPOINT:-coordinator:50050}', --id, worker-1, --steps, '${PARAMESH_STEPS:-20}', --step-delay, '${PARAMESH_STEP_DELAY:-0}']
+    depends_on: !reset []
+    ports:
+      - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:9105:9100'
+
+  dashboard:
+    environment: *multihost-environment
+    command: [dashboard, --config, /run/paramesh/run.json, --coordinator, '${PARAMESH_COORDINATOR_ENDPOINT:-coordinator:50050}', --bind, '0.0.0.0', --state-dir, /app/state]
+    volumes:
+      - *multihost-tls-volume
+      - ${PARAMESH_CONFIG_FILE:?Set PARAMESH_CONFIG_FILE to the shared run config}:/run/paramesh/run.json:ro
+    ports:
+      - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:9106:9100'
+
+  nats:
+    volumes:
+      - ${PARAMESH_NATS_TLS_DIR:?Set PARAMESH_NATS_TLS_DIR to the NATS server certificate directory}:/run/paramesh/nats-tls:ro
+    command: ['test -n "$$PARAMESH_NATS_TOKEN"; exec nats-server --auth "$$PARAMESH_NATS_TOKEN" --tls --tlscert /run/paramesh/nats-tls/nats.crt --tlskey /run/paramesh/nats-tls/nats.key -m 8222']
+    ports:
+      - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:4222:4222'
+
+  tempo:
+    ports:
+      - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:4318:4318'
+
+  prometheus:
+    volumes:
+      - ./deploy/multihost/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - ${PARAMESH_PROMETHEUS_TARGETS_DIR:-./deploy/multihost/prometheus-targets}:/etc/prometheus/targets:ro

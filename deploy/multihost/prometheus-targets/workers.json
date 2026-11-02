@@ -1,0 +1,1 @@
+[{"targets":["worker-0.private.example:9104"],"labels":{"component":"worker-0"}},{"targets":["worker-1.private.example:9105"],"labels":{"component":"worker-1"}}]

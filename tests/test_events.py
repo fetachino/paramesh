@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import secrets
+import ssl
 import subprocess
 import time
 import uuid
@@ -76,6 +77,33 @@ def test_lease_loss_and_recovery_events_have_stable_fields(monkeypatch, capsys):
         events.EventBus("test", capacity=0)
     bus.close()
     bus.close()
+
+
+def test_nats_tls_requires_tls_url_and_loads_configured_trust(monkeypatch, tmp_path):
+    class Context:
+        def __init__(self):
+            self.ca = None
+
+        def load_verify_locations(self, *, cafile):
+            self.ca = cafile
+
+        def load_cert_chain(self, certfile, keyfile):
+            self.identity = (certfile, keyfile)
+
+    context = Context()
+    monkeypatch.setattr(ssl, "create_default_context", lambda: context)
+    ca, certificate, key = (str(tmp_path / name) for name in ("ca.pem", "host.pem", "host.key"))
+    monkeypatch.setenv("PARAMESH_NATS_TLS_CA", ca)
+    monkeypatch.setenv("PARAMESH_NATS_TLS_CERT", certificate)
+    monkeypatch.setenv("PARAMESH_NATS_TLS_KEY", key)
+    assert events.nats_tls_options("tls://nats.private.example:4222") == {"tls": context}
+    assert context.ca == ca and context.identity == (certificate, key)
+    assert events.nats_tls_options("") == {}
+    with pytest.raises(ValueError, match="tls://"):
+        events.nats_tls_options("nats://nats.private.example:4222")
+    monkeypatch.delenv("PARAMESH_NATS_TLS_KEY")
+    with pytest.raises(ValueError, match="configured together"):
+        events.nats_tls_options("tls://nats.private.example:4222")
 
 
 def test_actual_authenticated_nats_delivery():

@@ -2,8 +2,10 @@
 
 import asyncio
 import json
+import os
 import queue
 import re
+import ssl
 import sys
 import threading
 import time
@@ -37,6 +39,33 @@ FIELDS = frozenset(
 )
 
 
+def nats_tls_options(url: str) -> dict[str, ssl.SSLContext]:
+    if not url:
+        return {}
+    if urlsplit(url).scheme != "tls":
+        if any(
+            os.environ.get(name)
+            for name in (
+                "PARAMESH_NATS_TLS_CA",
+                "PARAMESH_NATS_TLS_CERT",
+                "PARAMESH_NATS_TLS_KEY",
+            )
+        ):
+            raise ValueError("NATS TLS files require a tls:// endpoint")
+        return {}
+    context = ssl.create_default_context()
+    ca = os.environ.get("PARAMESH_NATS_TLS_CA")
+    certificate = os.environ.get("PARAMESH_NATS_TLS_CERT")
+    private_key = os.environ.get("PARAMESH_NATS_TLS_KEY")
+    if ca:
+        context.load_verify_locations(cafile=ca)
+    if bool(certificate) != bool(private_key):
+        raise ValueError("NATS TLS certificate and private key must be configured together")
+    if certificate and private_key:
+        context.load_cert_chain(certificate, private_key)
+    return {"tls": context}
+
+
 class EventBus:
     def __init__(self, service: str, url: str = "", token: str = "", capacity: int = 256) -> None:
         if not 1 <= capacity <= 4096:
@@ -55,6 +84,7 @@ class EventBus:
             raise ValueError("NATS requires an explicit endpoint and separate token")
         self.service = service
         self.url, self._token = url, token
+        self._tls_options = nats_tls_options(url)
         self.queue: queue.Queue[bytes] = queue.Queue(maxsize=capacity)
         self.stopped = threading.Event()
         self.connected = False
@@ -117,6 +147,7 @@ class EventBus:
                         client = await nats.connect(
                             self.url,
                             token=self._token,
+                            **self._tls_options,
                             connect_timeout=1,
                             allow_reconnect=False,
                             max_reconnect_attempts=0,

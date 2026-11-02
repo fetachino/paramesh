@@ -1,0 +1,68 @@
+services:
+  coordinator:
+    networks:
+      multihost:
+        ipv4_address: 10.254.240.10
+    ports: !reset []
+  shard-0:
+    networks:
+      multihost:
+        ipv4_address: 10.254.240.11
+    ports: !reset []
+  shard-1:
+    networks:
+      multihost:
+        ipv4_address: 10.254.240.12
+    ports: !reset []
+  worker-0:
+    networks:
+      multihost:
+        ipv4_address: 10.254.240.13
+    ports: !reset []
+  worker-1:
+    networks:
+      multihost:
+        ipv4_address: 10.254.240.14
+    ports: !reset []
+  dashboard:
+    networks:
+      multihost:
+        ipv4_address: 10.254.240.15
+    ports: !reset []
+  nats:
+    networks:
+      multihost:
+        ipv4_address: 10.254.240.16
+    ports: !reset []
+  tempo:
+    networks:
+      multihost:
+        ipv4_address: 10.254.240.17
+    ports: !reset []
+  prometheus:
+    networks:
+      multihost:
+        ipv4_address: 10.254.240.18
+    ports: !reset []
+  loki:
+    networks:
+      multihost:
+        ipv4_address: 10.254.240.19
+    ports: !reset []
+  grafana:
+    networks:
+      multihost:
+        ipv4_address: 10.254.240.20
+    ports: !reset []
+
+networks:
+  management:
+    internal: true
+  storage:
+    internal: true
+  multihost:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 10.254.240.0/24

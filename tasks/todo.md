@@ -23,12 +23,14 @@
 - [x] Build a focused operations dashboard over actual state and benchmark artifacts.
 - [x] Capture genuine dashboard, recovery, checkpoint, metrics, trace and CI evidence.
 - [x] Validate the same Compose definition locally and document Git-backed Coolify/server requirements.
+- [x] Prepare a separate-host Compose overlay and verify private IP addressing, RPC mTLS, NATS TLS, remote metric scraping, operations visibility, and coordinator/shard restart persistence on an isolated Docker bridge.
+  - Captured in `docs/evidence/multihost-local-simulation-2026-11-02/`; the Docker Desktop Linux simulation uses separate container IPs on one host and does not complete multi-host scaling.
 - [ ] Deploy through Coolify and verify public HTTPS once an authorized server is available.
 - [x] Lock transitive dependencies reproducibly for supported development/runtime platforms.
 - [x] Add controlled uncompressed benchmarks with raw JSON/CSV, hardware/source metadata and charts.
   - Captured: nine clean-source local trials, exact lock snapshot and verified raw artifact checksums.
 - [x] Add configurable larger-payload uncompressed benchmark trials with a synchronous numerical-reference gate.
-  - Captured: three clean-source 4-256-1 loopback trials, 6,148-byte gradients, raw RPC records and verified checksums; multi-host/network evidence remains open.
+  - Captured: three clean-source 4-256-1 loopback trials, 6,148-byte gradients, raw RPC records and verified checksums; controlled separate-host/network measurements remain open.
 - [x] Add Azure/Azurite checkpoint portability with actual partial-step RPC resume tests.
 - [x] Evaluate whether the first baseline justifies compression: defer for the tiny 196-byte gradient.
 - [ ] Revisit compression after larger-payload/network evidence, then justified infrastructure work.

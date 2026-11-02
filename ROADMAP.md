@@ -26,6 +26,7 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Measure local uncompressed RPC latency, byte counts, throughput and loss;
       preserve raw JSON/CSV, charts, hardware/configuration/source metadata.
 - [ ] Extend controlled measurements to multi-host scaling and repeated faults.
+- [x] Prepare and verify private host addressing, RPC mTLS, NATS TLS, remote metrics targets and persistent role restart on an isolated Docker bridge; this is a single-host simulation only.
 - [x] Add configurable larger-payload loopback measurements while retaining numerical-reference checks.
 - [ ] Add compression only when measured payload/network bottlenecks justify it.
 - [x] Add optional NATS lifecycle events without using it for gradient traffic.
@@ -56,10 +57,11 @@ of having deployed their managed equivalents.
 | NATS | Operational messaging |
 | OpenTofu / Traefik | Infrastructure as code / ingress |
 
-Oracle Cloud Always Free Ampere A1 is the planned Linux ARM64 Coolify target.
-The [local ARM64 validation](docs/arm64-validation.md) exercises the stack under
-emulation; native host and Coolify deployment checks remain open. No Oracle
-resource has been created.
+The hosted Linux target remains flexible: Oracle Cloud Always Free Ampere A1 if
+capacity returns, Azure if the student subscription and VM fit an approved no-charge
+allowance, or another genuinely free Linux VM. The [local ARM64 validation](docs/arm64-validation.md)
+exercises the stack under emulation; native host and Coolify deployment checks remain
+open. No cloud resource has been created.
 
 Dependency locking, the [controlled local baseline](docs/evidence/benchmarks/uncompressed-local-2026-11-02/README.md),
 [larger-payload loopback trial](docs/evidence/benchmarks/uncompressed-wide-sync-local-2026-11-02/README.md),

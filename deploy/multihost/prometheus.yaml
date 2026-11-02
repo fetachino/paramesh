@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 2s
+  evaluation_interval: 5s
+scrape_configs:
+  - job_name: dashboard
+    file_sd_configs:
+      - files: [/etc/prometheus/targets/dashboard.json]
+        refresh_interval: 15s
+  - job_name: coordinator
+    file_sd_configs:
+      - files: [/etc/prometheus/targets/coordinator.json]
+        refresh_interval: 15s
+  - job_name: shards
+    file_sd_configs:
+      - files: [/etc/prometheus/targets/shards.json]
+        refresh_interval: 15s
+  - job_name: workers
+    file_sd_configs:
+      - files: [/etc/prometheus/targets/workers.json]
+        refresh_interval: 15s

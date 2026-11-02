@@ -11,10 +11,12 @@ changes in Git; do not maintain a pasted, divergent stack in Coolify.
 
 ## Before deployment
 
-The planned free target is Oracle Cloud Always Free Ampere A1 (Linux ARM64),
-subject to available capacity and a native-host validation. No Oracle resource has
-been created. [Local ARM64 validation](arm64-validation.md) covers the image and
-Compose stack under emulation; it does not establish Coolify or Oracle host sizing.
+The hosted Linux target remains flexible: Oracle Cloud Always Free Ampere A1 if
+capacity returns, an Azure VM if the student subscription is approved and the VM
+fits its no-charge allowance, or another genuinely free Linux VM. No provider has
+been selected and no cloud resource has been created. [Local ARM64 validation](arm64-validation.md)
+covers the image and Compose stack under emulation; it does not establish a native
+host, provider quota, or Coolify deployment.
 Use a persistent disk and enough memory for five Python/PyTorch processes plus
 telemetry and Coolify. Establish actual host limits before a sizing claim.
 The build needs access to PyPI, the official PyTorch CPU index and image registries.
@@ -31,6 +33,10 @@ python scripts/verify_operations.py --isolated
 
 These are local Compose tests, not a substitute for checking Coolify's generated
 network/proxy configuration on the real destination.
+
+For a private multi-host Linux layout, see the [multi-host deployment guide](multi-host.md).
+Its segmented Docker verification is a local network simulation, not a separate-host
+deployment or scaling result.
 
 ## Configure the resource
 
