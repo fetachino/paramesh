@@ -107,7 +107,7 @@ def run_recovery_benchmarks(output: Path, repetitions: int = 3) -> dict[str, Any
         for axis, key, title in zip(
             axes,
             ("detection_seconds", "recovery_seconds_until_progress"),
-            ("Detection · seconds", "Termination to later progress · seconds"),
+            ("Detection : seconds", "Termination to later progress : seconds"),
             strict=True,
         ):
             for index, failure in enumerate(("worker", "shard")):
@@ -128,7 +128,7 @@ def run_recovery_benchmarks(output: Path, repetitions: int = 3) -> dict[str, Any
             axis.set_ylim(bottom=0)
             axis.set_title(title)
             axis.grid(axis="y", alpha=0.2)
-        figure.suptitle("ParamMesh · actual process recovery")
+        figure.suptitle("ParamMesh : actual process recovery")
         figure.text(
             0.5,
             0.02,
