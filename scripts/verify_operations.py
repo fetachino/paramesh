@@ -119,6 +119,10 @@ def create_multihost_simulation(directory: Path) -> dict[str, str]:
     nats_tls.mkdir()
     work = directory / "certificate-work"
     work.mkdir()
+    # Linux container UIDs differ from the host UID that creates these disposable mounts.
+    directory.chmod(0o711)
+    tls.chmod(0o711)
+    nats_tls.chmod(0o711)
     ca_key, ca_cert = work / "ca.key", work / "ca.pem"
     subprocess.run(
         [
@@ -175,6 +179,7 @@ def create_multihost_simulation(directory: Path) -> dict[str, str]:
             check=True,
             capture_output=True,
         )
+        key.chmod(0o644)
         subprocess.run(
             [
                 openssl,
@@ -197,6 +202,7 @@ def create_multihost_simulation(directory: Path) -> dict[str, str]:
             check=True,
             capture_output=True,
         )
+        cert.chmod(0o644)
     shutil.copyfile(ca_cert, tls / "ca.pem")
     assert {path.name for path in tls.iterdir()} == {"ca.pem", "rpc.crt", "rpc.key"}
     assert {path.name for path in nats_tls.iterdir()} == {"nats.crt", "nats.key"}
