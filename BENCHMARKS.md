@@ -110,13 +110,15 @@ calibrated away. This is a small-model protocol/storage-overhead experiment.
 | `manifest.json` | Configuration, host CPU/RAM/clock, lock hash, actual trial order and completion/failure status |
 | `overview.png` / `.svg` | Recorded trial dots, median and observed range; no confidence-interval claim |
 
-Use `--hidden-width 2048` to repeat the same seeded workload with a larger MLP and
+Use `--hidden-width 256` to repeat the same seeded workload with a larger MLP and
 measure substantially larger raw float32 gradient messages. The default width 8
 preserves the original tiny baseline. Width is recorded in the manifest and every
 trial; it changes the model computation and payload together, so larger-width
 throughput is not a pure transport measurement. Keep correctness/reference checks
 enabled and compare actual RPC payload bytes. This loopback benchmark does not model
-cross-host bandwidth or establish that compression will help.
+cross-host bandwidth or establish that compression will help. Large widths can
+destabilize this fixed-learning-rate workload; failed numerical checks invalidate
+the trial rather than producing performance evidence.
 
 Each worker records start/end with the same host's system-wide monotonic performance
 clock. The aggregate window spans the earliest measured start through the latest
