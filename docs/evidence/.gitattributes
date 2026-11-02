@@ -1,0 +1,2 @@
+# Preserve the captured Azure report's original bytes.
+azure-checkpoint.json -text whitespace=cr-at-eol

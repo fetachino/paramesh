@@ -8,8 +8,8 @@ replay protection and synchronization behavior.
 **Status: local training, recovery and operations stack verified.** Independent CPU workers and parameter shards
 survive tested process failures using durable local state. Synchronous recovery
 is checked against equivalent uninterrupted PyTorch SGD. Offline whole-run
-checkpoints support local and authenticated S3-compatible storage, including real
-SeaweedFS tests. A read-only operator dashboard uses actual RPC state, Prometheus,
+checkpoints support local, authenticated S3-compatible and Azure Blob storage, with
+actual SeaweedFS and Azurite tests. A read-only operator dashboard uses actual RPC state, Prometheus,
 NATS lifecycle history, Tempo traces and Loki logs. Public deployment is pending a server.
 
 [Architecture](ARCHITECTURE.md) · [Evidence and methodology](BENCHMARKS.md) ·
@@ -255,14 +255,14 @@ charts, see [the benchmark framework and measurement boundaries](BENCHMARKS.md#c
 Existing correctness screenshots and startup-inclusive durations remain separate.
 
 Compression and multi-machine verification remain pending. Process restart requires retained local volumes;
-offline whole-run recovery can use an exported local/S3 checkpoint. The system
+offline whole-run recovery can use an exported local/S3/Azure checkpoint. The system
 does not provide coordinator consensus or replicated live training state.
 The protocol is float32-only and the workload is fixed and CPU-only.
 
-See [checkpoint operator commands](docs/checkpoints.md) for private SeaweedFS,
+See [checkpoint operator commands](docs/checkpoints.md) for private SeaweedFS/Azurite verification,
 export, fresh-directory restore and fresh-volume installation. Checkpoints require
-stopping the full run and retain the original topology. Azure/Azurite, controlled
-benchmarks and self-hosted deployment follow in [ROADMAP.md](ROADMAP.md).
+stopping the full run and retain the original topology. Larger-payload/network
+benchmarks and authorized self-hosted deployment follow in [ROADMAP.md](ROADMAP.md).
 
 ## Additional documentation
 

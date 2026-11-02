@@ -87,6 +87,16 @@ development of the checkpoint milestone; its own manifest does not claim a clean
 source commit or production benchmark. The native RPC restore test independently
 resumes that partial cut and compares the final model with uninterrupted SGD.
 
+[Azure checkpoint restore](azure-checkpoint.json) was captured from clean source
+`ae2a445bcb348c3a85fdb87c6b9f60f9c12773a9` on November 2, 2026 UTC using the official
+SDK 12.31.1 and digest-pinned Azurite 3.37.0, API `2026-06-06`. The actual offline
+partial checkpoint has shard versions 1 and 0. After download/validation, real RPC
+training replays one journaled contribution and reaches global step 4 with maximum
+parameter error `1.19e-7` against uninterrupted SGD. Credentials are not included.
+This verifies emulator compatibility; no managed Azure durability, performance or
+deployment claim follows. [Operator documentation](../checkpoints.md#azure-blob-and-azurite)
+describes the full disposable-container contract suite and its limitations.
+
 ## Operations integration
 
 [Operations stack](operations-stack.json) records a separate fresh Compose project:

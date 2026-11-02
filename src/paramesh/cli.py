@@ -83,8 +83,11 @@ def main() -> None:
     checkpoint.add_argument("--id", required=True)
     checkpoint.add_argument("--state-dir", type=Path, required=True)
     checkpoint.add_argument("--store", type=Path, default=Path("checkpoints"))
-    checkpoint.add_argument("--s3-endpoint")
+    backend = checkpoint.add_mutually_exclusive_group()
+    backend.add_argument("--s3-endpoint")
+    backend.add_argument("--azure-endpoint")
     checkpoint.add_argument("--bucket")
+    checkpoint.add_argument("--container")
     dashboard = commands.add_parser("dashboard", help="Serve the read-only operator console")
     dashboard.add_argument("--config", type=Path, required=True)
     dashboard.add_argument("--coordinator", default="127.0.0.1:50050")
@@ -109,9 +112,13 @@ def main() -> None:
     )
     if args.command == "checkpoint":
         from paramesh.checkpoint import export_checkpoint, install_checkpoint, restore_checkpoint
-        from paramesh.storage import LocalStore, ObjectStore, S3Store
+        from paramesh.storage import AzureStore, LocalStore, ObjectStore, S3Store
 
         store: ObjectStore
+        if args.bucket and not args.s3_endpoint:
+            parser.error("--bucket requires --s3-endpoint")
+        if args.container and not args.azure_endpoint:
+            parser.error("--container requires --azure-endpoint")
         if args.s3_endpoint:
             store = S3Store(
                 args.s3_endpoint,
@@ -119,9 +126,14 @@ def main() -> None:
                 os.environ.get("PARAMESH_S3_ACCESS_KEY", ""),
                 os.environ.get("PARAMESH_S3_SECRET_KEY", ""),
             )
+        elif args.azure_endpoint:
+            store = AzureStore(
+                args.azure_endpoint,
+                args.container or "",
+                os.environ.get("PARAMESH_AZURE_ACCOUNT", ""),
+                os.environ.get("PARAMESH_AZURE_KEY", ""),
+            )
         else:
-            if args.bucket:
-                parser.error("--bucket requires --s3-endpoint")
             store = LocalStore(args.store)
         if args.action == "export":
             report = export_checkpoint(args.state_dir, store, args.id)

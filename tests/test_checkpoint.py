@@ -85,6 +85,10 @@ def test_portable_checkpoint_restores_partial_step_and_matches_uninterrupted_sgd
     restored = tmp_path / "restored"
     assert restore_checkpoint(store, "partial", restored) == manifest
     assert json.loads((restored / "run.json").read_text())["runId"] == settings.run_id
+    resume_restored(settings, restored)
+
+
+def resume_restored(settings, restored):
     initial, owners = parameters(), partition(parameters(), 2)
     with ExitStack() as stack:
         shards = []
@@ -110,10 +114,13 @@ def test_portable_checkpoint_restores_partial_step_and_matches_uninterrupted_sgd
         assert result["replayed_contributions"] == 1
         assert coordinator.status().global_step == 4
         expected = local_reference(1, 4, settings.learning_rate)
+        error = 0.0
         for shard in shards:
             assert shard.version == 4
             for name, value in shard.parameters.items():
                 np.testing.assert_allclose(value, expected[name], atol=1e-6, rtol=0)
+                error = max(error, float(np.max(np.abs(value - expected[name]))))
+        return error
 
 
 def test_live_missing_or_inconsistent_state_cannot_be_exported(tmp_path):
