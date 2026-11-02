@@ -20,7 +20,7 @@
 - [x] Capture genuine dashboard, recovery, checkpoint, metrics, trace and CI evidence.
 - [x] Validate the same Compose definition locally and document Git-backed Coolify/server requirements.
 - [ ] Deploy through Coolify and verify public HTTPS once an authorized server is available.
-- [ ] Lock transitive dependencies reproducibly for supported development/runtime platforms.
+- [x] Lock transitive dependencies reproducibly for supported development/runtime platforms.
 - [ ] Add controlled uncompressed benchmarks with raw JSON/CSV, hardware/source metadata and charts.
 - [ ] Add Azure/Azurite checkpoint portability.
 - [ ] Evaluate compression against measured baselines, then justified secrets/identity/infrastructure work.

@@ -48,10 +48,9 @@ and Linux GitHub Actions checks have been exercised.
 
 ```powershell
 python -m venv .venv
+python -m pip install uv==0.13.6
+uv sync --locked --all-extras --python 3.12
 .\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
-python -m pip install -e ".[dev,train,storage]"
 paramesh demo --mode sync --workers 2 --shards 2 --steps 20 --output artifacts/sync.json
 ```
 
@@ -265,6 +264,7 @@ benchmarks and self-hosted deployment follow in [ROADMAP.md](ROADMAP.md).
 
 - [Implementation plan](tasks/plan.md)
 - [Operations and signals](docs/operations.md)
+- [Dependency locking and updates](docs/dependencies.md)
 - [Git-backed Coolify deployment](docs/coolify.md)
 - [Architecture and consistency model](ARCHITECTURE.md)
 - [Correctness evidence and benchmark policy](BENCHMARKS.md)

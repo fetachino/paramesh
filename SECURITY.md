@@ -78,10 +78,13 @@ separate credentials and loopback-only access. NATS events and telemetry are bes
 effort, with bounded buffers; they are neither an audit log nor a recovery authority.
 No tensors, secrets or user datasets are recorded in lifecycle events or spans.
 
-Direct dependencies are version-pinned. The local environment was audited using
+Direct dependencies are version-pinned and `uv.lock` records the supported
+platforms' transitive package versions, sources and hashes. CI checks lock freshness
+and installs with `--locked`; the container installs the same runtime subset.
+The local environment was audited using
 pip-audit 2.10.1 against OSV after updating affected pins; the captured report is
 under `docs/evidence/`. This is a point-in-time package advisory check, not a proof
-of security. Reproducible transitive locking remains release work. An unavailable vulnerability
+of security. An unavailable vulnerability
 feed is not evidence of an absence of vulnerabilities. Generated protobuf code
 is checked for drift; application source is linted, type-checked and exercised
 with malformed-input, concurrent-retry and failure tests.
