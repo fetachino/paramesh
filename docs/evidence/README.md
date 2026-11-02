@@ -126,6 +126,10 @@ verified in tests and captured bytes are protected against Git line-ending conve
 These healthy single-host measurements are distinct from the historical correctness
 and deliberately paced recovery evidence above.
 
+[Larger-payload sync trials](benchmarks/uncompressed-wide-sync-local-2026-11-02/README.md)
+use the same two-worker/two-shard correctness path with 31.4x larger raw gradient
+payloads. They remain local loopback measurements and do not justify compression.
+
 ## Local readiness audit
 
 [Readiness record](release-readiness.json) links a fresh GitHub clone/new locked

@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE = ROOT / "docs/evidence/benchmarks/uncompressed-local-2026-11-02"
+WIDE = ROOT / "docs/evidence/benchmarks/uncompressed-wide-sync-local-2026-11-02"
 
 
 def test_recorded_baseline_bytes_counts_and_provenance_are_consistent():
@@ -49,3 +50,31 @@ def test_recorded_baseline_bytes_counts_and_provenance_are_consistent():
         assert math.isclose(row["examples_per_second"], 12800 / row["window_seconds"])
         if row["mode"] == "sync":
             assert raw["max_parameter_error"] < 1e-6
+
+
+def test_recorded_larger_payload_trials_preserve_real_rpc_and_reference_evidence():
+    for line in (WIDE / "SHA256SUMS").read_text().splitlines():
+        digest, name = line.split("  ", 1)
+        assert Path(name).name == name
+        assert hashlib.sha256((WIDE / name).read_bytes()).hexdigest() == digest
+    manifest = json.loads((WIDE / "manifest.json").read_text())
+    assert manifest["status"] == "complete"
+    assert manifest["configuration"]["hidden_width"] == 256
+    assert manifest["configuration"]["measured_steps"] == 50
+    assert len(manifest["trials"]) == 3
+    with (WIDE / "rpc.csv").open(newline="") as stream:
+        samples = list(csv.DictReader(stream))
+    assert len(samples) == 1832 and all(item["status"] == "OK" for item in samples)
+    for row in manifest["trials"]:
+        assert row["commit"] == "e08be5be8ec64d873093515179641fe54d78787d"
+        assert row["source_dirty"] is False
+        assert row["max_parameter_error"] < 1e-6
+        raw = json.loads((WIDE / f"trial-{row['trial']:03d}-sync.json").read_text())
+        assert raw["workload"]["parameter_bytes"] == 6148
+        assert all(len(worker["losses"]) == 50 for worker in raw["worker_results"])
+        observed = [item for item in samples if int(item["trial"]) == row["trial"]]
+        assert len(observed) == row["rpc_calls"]
+        assert (
+            sum(int(item["request_bytes"]) + int(item["response_bytes"]) for item in observed)
+            == row["protobuf_bytes"]
+        )

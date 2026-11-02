@@ -23,6 +23,8 @@
 - [x] Lock transitive dependencies reproducibly for supported development/runtime platforms.
 - [x] Add controlled uncompressed benchmarks with raw JSON/CSV, hardware/source metadata and charts.
   - Captured: nine clean-source local trials, exact lock snapshot and verified raw artifact checksums.
+- [x] Add configurable larger-payload uncompressed benchmark trials with a synchronous numerical-reference gate.
+  - Captured: three clean-source 4-256-1 loopback trials, 6,148-byte gradients, raw RPC records and verified checksums; multi-host/network evidence remains open.
 - [x] Add Azure/Azurite checkpoint portability with actual partial-step RPC resume tests.
 - [x] Evaluate whether the first baseline justifies compression: defer for the tiny 196-byte gradient.
 - [ ] Revisit compression after larger-payload/network evidence, then justified infrastructure work.

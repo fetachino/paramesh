@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "captured_at": "2026-11-02T17:45:29.436536+00:00",
+  "configuration": {
+    "modes": [
+      "sync"
+    ],
+    "repetitions": 3,
+    "warmup_steps": 5,
+    "measured_steps": 50,
+    "workers": 2,
+    "shards": 2,
+    "hidden_width": 256,
+    "compression": "none"
+  },
+  "hardware": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "machine": "AMD64",
+    "logical_cpu_count": 24,
+    "cpu_model": [
+      "13th Gen Intel(R) Core(TM) i7-13700F"
+    ],
+    "memory_bytes": 34055766016,
+    "clock": {
+      "implementation": "QueryPerformanceCounter()",
+      "monotonic": true,
+      "adjustable": false,
+      "resolution": 1e-07
+    },
+    "load_isolation": "uncontrolled workstation; background services may affect results"
+  },
+  "lock_sha256": "6652f85e4c56a8d80bc5849fa4bc1bf8cbd4d77760ca3c12b04caae2544ac741",
+  "trials": [
+    {
+      "trial": 0,
+      "repetition": 1,
+      "mode": "sync",
+      "commit": "e08be5be8ec64d873093515179641fe54d78787d",
+      "source_dirty": false,
+      "window_seconds": 0.7985475000023143,
+      "worker_steps_per_second": 125.22736593591512,
+      "examples_per_second": 4007.2757099492837,
+      "protobuf_bytes": 1282184,
+      "rpc_calls": 610,
+      "rpc_failures": 0,
+      "loss_after_warmup": 0.18335343897342682,
+      "final_loss": 0.0887966901063919,
+      "max_parameter_error": 1.1920928955078125e-07,
+      "shard_commit_deltas": "50,50",
+      "push_p95_seconds": 0.005118730002141092,
+      "push_mean_request_bytes": 3170.5,
+      "pull_p95_seconds": 0.0017072549919248553,
+      "pull_mean_request_bytes": 19.0
+    },
+    {
+      "trial": 1,
+      "repetition": 2,
+      "mode": "sync",
+      "commit": "e08be5be8ec64d873093515179641fe54d78787d",
+      "source_dirty": false,
+      "window_seconds": 0.7625923000014154,
+      "worker_steps_per_second": 131.13166760248484,
+      "examples_per_second": 4196.213363279515,
+      "protobuf_bytes": 1282184,
+      "rpc_calls": 610,
+      "rpc_failures": 0,
+      "loss_after_warmup": 0.18335343897342682,
+      "final_loss": 0.0887966901063919,
+      "max_parameter_error": 1.1920928955078125e-07,
+      "shard_commit_deltas": "50,50",
+      "push_p95_seconds": 0.0032838250066561142,
+      "push_mean_request_bytes": 3170.5,
+      "pull_p95_seconds": 0.0011643799945886709,
+      "pull_mean_request_bytes": 19.0
+    },
+    {
+      "trial": 2,
+      "repetition": 3,
+      "mode": "sync",
+      "commit": "e08be5be8ec64d873093515179641fe54d78787d",
+      "source_dirty": false,
+      "window_seconds": 1.3339016999962041,
+      "worker_steps_per_second": 74.96804299768459,
+      "examples_per_second": 2398.977375925907,
+      "protobuf_bytes": 1282377,
+      "rpc_calls": 612,
+      "rpc_failures": 0,
+      "loss_after_warmup": 0.18335343897342682,
+      "final_loss": 0.0887966901063919,
+      "max_parameter_error": 1.1920928955078125e-07,
+      "shard_commit_deltas": "50,50",
+      "push_p95_seconds": 0.008970134994160616,
+      "push_mean_request_bytes": 3170.5,
+      "pull_p95_seconds": 0.00396629000242683,
+      "pull_mean_request_bytes": 19.0
+    }
+  ],
+  "window": "warm processes, fresh measured session including channel setup, registration/fencing and final heartbeat"
+}

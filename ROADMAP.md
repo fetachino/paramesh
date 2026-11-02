@@ -59,7 +59,8 @@ The [local ARM64 validation](docs/arm64-validation.md) exercises the stack under
 emulation; native host and Coolify deployment checks remain open. No Oracle
 resource has been created.
 
-Dependency locking and the first [controlled local baseline](docs/evidence/benchmarks/uncompressed-local-2026-11-02/README.md)
+Dependency locking, the [controlled local baseline](docs/evidence/benchmarks/uncompressed-local-2026-11-02/README.md),
+[larger-payload loopback trial](docs/evidence/benchmarks/uncompressed-wide-sync-local-2026-11-02/README.md),
 and Azure/Azurite checkpoint portability are complete. The tiny baseline model
 does not establish a bandwidth bottleneck; larger-payload loopback measurements
 are available but do not substitute for controlled network measurements, so
