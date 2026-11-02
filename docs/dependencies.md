@@ -21,6 +21,10 @@ CI uses the pinned uv release, rejects stale locks, installs all test extras and
 audits that installed dependency graph. Docker uses a digest-pinned uv binary and
 installs only train/storage/operations extras from the same lock. Source changes
 reuse the cached dependency layer. No wheel mirror or cloud credentials are needed.
+The optional `benchmark` extra supplies Matplotlib and bounded RPC capture dependencies;
+it is included by `--all-extras` and excluded from the training image.
+CI also installs only train/benchmark extras into a separate environment and runs
+a tiny CLI contract check, so hidden dependencies on operations extras are caught.
 The Python base image remains the existing `python:3.12-slim`; this locks Python
 packages, not the underlying OS packages or bit-for-bit image output.
 

@@ -2,6 +2,7 @@
 
 import atexit
 import os
+import queue
 import threading
 import time
 from collections.abc import Callable
@@ -28,7 +29,13 @@ METHODS = frozenset(
 
 
 class Telemetry:
-    def __init__(self) -> None:
+    def __init__(self, *, capture_rpc_limit: int = 0) -> None:
+        if not 0 <= capture_rpc_limit <= 100000:
+            raise ValueError("Raw RPC sample limit must be between 0 and 100000")
+        self.rpc_samples: queue.Queue[dict[str, Any]] | None = (
+            queue.Queue(maxsize=capture_rpc_limit) if capture_rpc_limit else None
+        )
+        self.rpc_sample_drops = 0
         from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
 
         self.registry = CollectorRegistry()
@@ -269,18 +276,20 @@ def _size(message: Any) -> int:
     return len(message) if isinstance(message, bytes) else int(message.ByteSize())
 
 
-def _finish(direction: str, method: str, code: Any, started: float) -> None:
+def _finish(direction: str, method: str, code: Any, started: float) -> float:
+    elapsed = time.perf_counter() - started
     status = code.name if code is not None else "OK"
     add("rpc_in_flight", -1, direction=direction, method=method)
     observe(
         "rpc_duration_seconds",
-        time.perf_counter() - started,
+        elapsed,
         direction=direction,
         method=method,
         status=status,
     )
     if direction == "server" and method == "PushGradients" and status != "OK":
         add("rejected_updates", status=status)
+    return elapsed
 
 
 class ServerMetrics:
@@ -317,17 +326,32 @@ class ServerMetrics:
 class ClientMetrics(grpc.UnaryUnaryClientInterceptor):  # type: ignore[misc]
     def intercept_unary_unary(self, continuation: Any, details: Any, request: Any) -> Any:
         method, started = _method(details.method), time.perf_counter()
+        request_size, response_size = _size(request), 0
         add("rpc_in_flight", direction="client", method=method)
-        add("rpc_bytes", _size(request), direction="client", method=method, kind="request")
+        add("rpc_bytes", request_size, direction="client", method=method, kind="request")
         code = grpc.StatusCode.UNKNOWN
         try:
             call = continuation(details, request)
             response = call.result()
             code = call.code()
-            add("rpc_bytes", _size(response), direction="client", method=method, kind="response")
+            response_size = _size(response)
+            add("rpc_bytes", response_size, direction="client", method=method, kind="response")
             return call
         except grpc.RpcError as error:
             code = error.code()
             raise
         finally:
-            _finish("client", method, code, started)
+            elapsed = _finish("client", method, code, started)
+            if active is not None and active.rpc_samples is not None:
+                try:
+                    active.rpc_samples.put_nowait(
+                        {
+                            "method": method,
+                            "status": code.name,
+                            "duration_seconds": elapsed,
+                            "request_bytes": request_size,
+                            "response_bytes": response_size,
+                        }
+                    )
+                except queue.Full:
+                    active.rpc_sample_drops += 1

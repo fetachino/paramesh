@@ -20,6 +20,41 @@ from paramesh.worker import train_worker
 from paramesh.workload import local_reference, parameters
 
 
+def test_optional_raw_rpc_capture_is_bounded_and_contains_only_measurements(monkeypatch):
+    with pytest.raises(ValueError):
+        telemetry.Telemetry(capture_rpc_limit=100001)
+    signals = telemetry.Telemetry(capture_rpc_limit=1)
+    monkeypatch.setattr(telemetry, "active", signals)
+    security = RpcSecurity.ephemeral()
+    settings = config(worker_ids=["worker-0"])
+    server, port = shard_server(
+        ParameterShard(settings, parameters()), "127.0.0.1:0", security=security
+    )
+    server.start()
+    request = pb.PullRequest(run_id=settings.run_id)
+    try:
+        with open_channel(f"127.0.0.1:{port}", security) as channel:
+            client = rpc.ParameterShardStub(channel)
+            response = client.PullParameters(request, timeout=3)
+            client.PullParameters(request, timeout=3)
+        record = signals.rpc_samples.get_nowait()
+        assert record["method"] == "PullParameters" and record["status"] == "OK"
+        assert record["duration_seconds"] > 0
+        assert record["request_bytes"] == request.ByteSize()
+        assert record["response_bytes"] == response.ByteSize()
+        assert set(record) == {
+            "method",
+            "status",
+            "duration_seconds",
+            "request_bytes",
+            "response_bytes",
+        }
+        assert signals.rpc_samples.empty() and signals.rpc_sample_drops == 1
+    finally:
+        server.stop(0).wait()
+        signals.close()
+
+
 def test_real_grpc_training_exports_correlated_otlp_spans_and_scrapable_metrics(monkeypatch):
     batches = []
 
