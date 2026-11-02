@@ -50,6 +50,12 @@ never overwrites an existing file. `PARAMESH_RPC_TOKEN` is the data credential;
 updating the environment and recreating all services. Tokens are not stored in
 checkpoint metadata or worker journals.
 
+Azure checkpoints require an explicit endpoint/container and
+`PARAMESH_AZURE_ACCOUNT` / `PARAMESH_AZURE_KEY` shared-key credentials, supplied only
+to the maintenance process. Use HTTPS for remote endpoints. The adapter does not
+accept SAS URLs or use ambient profiles; managed identity/RBAC is not implemented.
+Azurite tests use random custom-account keys and disposable loopback-only containers.
+
 For native TLS, configure `PARAMESH_TLS_CA`, `PARAMESH_TLS_CERT` and
 `PARAMESH_TLS_KEY` as PEM-file paths. `PARAMESH_REQUIRE_CLIENT_CERT=true` enables
 mutual TLS on services. Operators must mount suitable certificates with matching

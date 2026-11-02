@@ -20,7 +20,7 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Authenticate internal RPC roles, fence old generations and test optional TLS/mTLS.
 - [x] Export whole-run checkpoints and validate offline restore, including partial steps.
 - [x] Add local and authenticated SeaweedFS S3 checkpoint storage with immutable publication.
-- [ ] Add Azure SDK/Azurite tests.
+- [x] Add Azure Blob checkpoint storage and actual authenticated Azurite/SDK restore tests.
 - [x] Measure local uncompressed RPC latency, byte counts, throughput and loss;
       preserve raw JSON/CSV, charts, hardware/configuration/source metadata.
 - [ ] Extend controlled measurements to larger payloads, multi-host scaling and repeated faults.
@@ -51,7 +51,7 @@ of having deployed their managed equivalents.
 | OpenTofu / Traefik | Infrastructure as code / ingress |
 
 Dependency locking and the first [controlled local baseline](docs/evidence/benchmarks/uncompressed-local-2026-11-02/README.md)
-are complete. Azure/Azurite checkpoint portability is next. The tiny baseline model
+and Azure/Azurite checkpoint portability are complete. The tiny baseline model
 does not establish a bandwidth bottleneck; compression remains deferred pending
 larger-payload/network measurements. Actual Coolify deployment is pending
 an available authorized server; no paid compute has been provisioned.

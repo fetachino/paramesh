@@ -1,5 +1,7 @@
 """Immutable checkpoint objects; a manifest is published only after its blobs."""
 
+import base64
+import binascii
 import os
 import re
 import tempfile
@@ -126,3 +128,67 @@ class S3Store:
             return payload
         finally:
             body.close()
+
+
+class AzureStore:
+    def __init__(self, endpoint: str, container: str, account: str, key: str) -> None:
+        parsed = urlsplit(endpoint)
+        try:
+            valid_key = len(base64.b64decode(key, validate=True)) >= 32
+        except (ValueError, binascii.Error):
+            valid_key = False
+        if (
+            parsed.scheme not in ("http", "https")
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.query
+            or parsed.fragment
+            or parsed.path not in ("", "/", f"/{account}", f"/{account}/")
+            or not re.fullmatch(r"[a-z0-9]{3,24}", account)
+            or not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,61}[a-z0-9]", container)
+            or "--" in container
+            or not valid_key
+        ):
+            raise ValueError("Explicit Azure endpoint, container, account and key are required")
+        from azure.core.credentials import AzureNamedKeyCredential
+        from azure.storage.blob import BlobServiceClient, LinearRetry
+
+        self.client = BlobServiceClient(
+            account_url=endpoint,
+            credential=AzureNamedKeyCredential(account, key),
+            # Match Azurite's supported API; never bypass its API-version checks.
+            api_version="2026-06-06",
+            retry_policy=LinearRetry(backoff=1, retry_total=2),
+            connection_timeout=3,
+            read_timeout=10,
+        )
+        self.container = container
+
+    def put(self, key: str, payload: bytes) -> None:
+        from azure.core.exceptions import ResourceExistsError
+
+        blob = self.client.get_blob_client(self.container, _key(key))
+        try:
+            blob.upload_blob(payload, overwrite=False)
+        except ResourceExistsError as error:
+            if self.get(key, len(payload)) != payload:
+                raise ValueError(
+                    "Checkpoint object already exists with different contents"
+                ) from error
+
+    def get(self, key: str, limit: int = MAX_STATE_BYTES) -> bytes:
+        if limit < 0:
+            raise ValueError("Checkpoint object exceeds size limit")
+        blob = self.client.get_blob_client(self.container, _key(key))
+        size = blob.get_blob_properties().size
+        if size > limit:
+            raise ValueError("Checkpoint object exceeds size limit")
+        if size == 0:
+            return b""
+        payload: bytes = blob.download_blob(
+            offset=0, length=limit + 1, max_concurrency=1, decompress=False
+        ).readall()
+        if len(payload) > limit:
+            raise ValueError("Checkpoint object exceeds size limit")
+        return payload

@@ -22,7 +22,7 @@ jobs:
       - run: python scripts/generate_proto.py --check
       - run: python scripts/generate_grafana.py
       - run: git diff --exit-code -- ops/grafana/dashboards/paramesh.json
-      - run: python -m pytest --cov --cov-report=term-missing --cov-report=xml
+      - run: python -m pytest --cov --cov-report=term-missing --cov-report=xml --basetemp artifacts/test-runs
       - name: Verify minimal benchmark extras
         env:
           UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/paramesh-benchmark
@@ -37,6 +37,11 @@ jobs:
         with:
           name: benchmark-dependency-contract-smoke
           path: artifacts/benchmark-extras
+      - uses: actions/upload-artifact@v4
+        with:
+          name: azure-checkpoint-evidence
+          path: artifacts/test-runs/test_azure_partial*/azure-verification.json
+          if-no-files-found: error
   container:
     runs-on: ubuntu-latest
     steps:
