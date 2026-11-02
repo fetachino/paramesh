@@ -1,0 +1,46 @@
+services:
+  dashboard:
+    image: paramesh:arm64-validation
+    platform: linux/arm64
+    healthcheck:
+      test: [CMD-SHELL, "bash -c ': > /dev/tcp/127.0.0.1/8080'"]
+      start_period: 300s
+  checkpoint:
+    image: paramesh:arm64-validation
+    platform: linux/arm64
+  coordinator:
+    image: paramesh:arm64-validation
+    platform: linux/arm64
+    healthcheck:
+      test: [CMD-SHELL, "bash -c ': > /dev/tcp/127.0.0.1/50050'"]
+      start_period: 300s
+  shard-0:
+    image: paramesh:arm64-validation
+    platform: linux/arm64
+    healthcheck:
+      test: [CMD-SHELL, "bash -c ': > /dev/tcp/127.0.0.1/50051'"]
+      start_period: 300s
+  shard-1:
+    image: paramesh:arm64-validation
+    platform: linux/arm64
+    healthcheck:
+      test: [CMD-SHELL, "bash -c ': > /dev/tcp/127.0.0.1/50051'"]
+      start_period: 300s
+  worker-0:
+    image: paramesh:arm64-validation
+    platform: linux/arm64
+  worker-1:
+    image: paramesh:arm64-validation
+    platform: linux/arm64
+  nats:
+    platform: linux/arm64
+  prometheus:
+    platform: linux/arm64
+  tempo:
+    platform: linux/arm64
+  loki:
+    platform: linux/arm64
+  grafana:
+    platform: linux/arm64
+  seaweedfs:
+    platform: linux/arm64

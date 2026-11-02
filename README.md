@@ -43,8 +43,9 @@ protocol underneath this project.
 
 ## Run the distributed demo
 
-Requires Python 3.12 on an x86-64 machine. Native Windows, local Linux containers
-and Linux GitHub Actions checks have been exercised.
+Requires Python 3.12 on Windows AMD64 or Linux x86-64/ARM64. Native Windows,
+local Linux x86-64 containers and an emulated Linux ARM64 Compose stack have
+been exercised; native ARM64 hardware remains to be checked.
 
 ```powershell
 python -m venv .venv

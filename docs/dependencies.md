@@ -1,8 +1,10 @@
 # Reproducible Python dependencies
 
 `pyproject.toml` declares direct requirements. `uv.lock` fixes transitive versions,
-package sources and artifact hashes for Python 3.12 on Windows AMD64 and Linux x86-64.
-Other Python versions, operating systems and architectures are not validated targets.
+package sources and artifact hashes for Python 3.12 on Windows AMD64 and Linux
+x86-64/ARM64. Linux ARM64 was built and exercised under local emulation; native
+ARM64 hardware remains to be checked. Other Python versions, operating systems
+and architectures are not validated targets.
 PyTorch uses an explicit official CPU index; other packages resolve from PyPI.
 The build backend is separately pinned in `build-system.requires`.
 

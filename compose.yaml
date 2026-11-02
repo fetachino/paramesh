@@ -140,7 +140,7 @@ services:
     profiles: [storage]
     entrypoint: [/bin/sh, -ec]
     command:
-      - 'test -n "$$AWS_ACCESS_KEY_ID"; test -n "$$AWS_SECRET_ACCESS_KEY"; exec weed mini -dir=/data -ip=seaweedfs -volume.max=1'
+      - 'test -n "$$AWS_ACCESS_KEY_ID"; test -n "$$AWS_SECRET_ACCESS_KEY"; exec weed mini -dir=/data -ip=seaweedfs -volume.max=2'
     environment:
       AWS_ACCESS_KEY_ID: ${PARAMESH_S3_ACCESS_KEY:-}
       AWS_SECRET_ACCESS_KEY: ${PARAMESH_S3_SECRET_KEY:-}
