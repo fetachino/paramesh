@@ -86,3 +86,23 @@ manifest publication and restored worker journal. This artifact was produced dur
 development of the checkpoint milestone; its own manifest does not claim a clean
 source commit or production benchmark. The native RPC restore test independently
 resumes that partial cut and compares the final model with uninterrupted SGD.
+
+## Operations integration
+
+[Operations stack](operations-stack.json) records a separate fresh Compose project:
+100 paced steps, actual Prometheus worker counters, Loki lifecycle records and an
+eight-span worker/shard Tempo trace. The verifier checks private backend/data-plane
+ports and removes only its own synthetic volumes. [Checkpoint rerun](compose-checkpoint-operations.json)
+repeats local/S3 export, fresh-volume install and zero-work resume with the operations
+code installed. Both reports honestly identify an uncommitted development tree.
+
+[Bounded-lag operations](bounded-operations-stack.json) records a separate fresh
+project with 1,000 completed worker iterations and 2,000 commits per shard. Its
+accepted-staleness history stayed within the configured bound of 2; the maximum
+sampled value was 1. This is a sampled operational observation, not an exhaustive
+protocol proof or a performance comparison. [Native verification](operations-verification.json)
+records 100 passing tests at 91.76% coverage and the package/static checks.
+
+[Screenshots](../images/README.md) were captured from real local browser surfaces.
+They show live or recorded evidence explicitly; no placeholder values or fabricated
+public deployment are included. CI checks the exact committed heads independently.

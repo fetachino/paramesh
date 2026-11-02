@@ -79,6 +79,13 @@ Uncommitted computation lost before journaling is not instrumented.
 
 ## Future performance work
 
+The operations milestone exposes real protobuf bytes, RPC duration histograms,
+worker steps/examples, pre-update loss and accepted staleness. Its deliberately
+paced synthetic dashboards are operational evidence, not comparative performance
+benchmarks. [The stack report](docs/evidence/operations-stack.json) verifies actual
+backend integration at 100 steps; it records its development source identity.
+Native worker/shard fault reports above remain the numerical correctness reference.
+
 Use fixed datasets and controlled model sizes, distinguish strong from weak
 scaling, separate startup from steady-state measurement, warm up, repeat runs and
 report distributions. Record CPU/RAM and dependency versions, configuration, source

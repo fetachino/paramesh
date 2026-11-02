@@ -21,13 +21,21 @@ def test_development_credentials_are_private_distinct_and_never_overwritten(tmp_
         "PARAMESH_ADMIN_TOKEN",
         "PARAMESH_S3_ACCESS_KEY",
         "PARAMESH_S3_SECRET_KEY",
+        "PARAMESH_NATS_TOKEN",
+        "PARAMESH_GRAFANA_PASSWORD",
+        "PARAMESH_DASHBOARD_PASSWORD",
     }
-    assert len(set(values.values())) == 4 and all(len(value) >= 43 for value in values.values())
+    assert len(set(values.values())) == 7 and all(len(value) >= 43 for value in values.values())
     assert all(value not in first.stdout for value in values.values())
     if os.name != "nt":
         assert target.stat().st_mode & 0o077 == 0
     subprocess.run([sys.executable, str(script)], check=True, capture_output=True)
     assert target.read_bytes() == original
+    subprocess.run([sys.executable, str(script), "--operations"], check=True, capture_output=True)
+    updated = dict(line.split("=", 1) for line in target.read_text().splitlines())
+    assert all(updated[name] == value for name, value in values.items())
+    assert updated["PARAMESH_NATS_URL"] == "nats://nats:4222"
+    assert updated["PARAMESH_TRACE_SAMPLE_RATIO"] == "1"
 
 
 def test_existing_credentials_without_final_newline_are_preserved_when_storage_is_added(tmp_path):

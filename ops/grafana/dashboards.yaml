@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: ParamMesh
+    orgId: 1
+    folder: ParamMesh
+    type: file
+    disableDeletion: true
+    editable: false
+    options:
+      path: /etc/paramesh/dashboards

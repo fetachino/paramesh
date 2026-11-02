@@ -1,0 +1,56 @@
+{
+  "captured_date": "2026-11-01",
+  "context": "Real browser captures; see docs/images/README.md for scope",
+  "images": [
+    {
+      "file": "benchmark-dashboard.png",
+      "sha256": "c53e5fc5426a60a26ef377066eff8b841d0b1d5d5d714e73b290ce68dae333ee",
+      "bytes": 94517
+    },
+    {
+      "file": "bounded-staleness.png",
+      "sha256": "c1af77c569ec9bae9508d2b56e5c7ff8194954611373523b59050521cdc12690",
+      "bytes": 98138
+    },
+    {
+      "file": "checkpoint-restore.png",
+      "sha256": "898928f6ac3d4ca63e67924c581db125152ec369e7f9adce44e8cbdf2cc4e68e",
+      "bytes": 149016
+    },
+    {
+      "file": "cluster-overview.png",
+      "sha256": "aa43d3b559999ba92fabc87ec10c7ef83e47b84bb5ec1706b55a4ddaee8c9704",
+      "bytes": 123192
+    },
+    {
+      "file": "cluster-topology.png",
+      "sha256": "96897e80fa3115d945f5058065ca17aa0971101c9004a407d8498daf0b6908a1",
+      "bytes": 26526
+    },
+    {
+      "file": "distributed-trace.png",
+      "sha256": "27a6d55f2d8eee6230d22e7f4ef89f563279b2ec2f78f82bb73b8b68f0b36ab6",
+      "bytes": 100328
+    },
+    {
+      "file": "distributed-training.png",
+      "sha256": "c11325c8a3295349ec68c1dec296b3fff4e2abd17dda8aae3392d0048a6bc110",
+      "bytes": 88113
+    },
+    {
+      "file": "github-actions.png",
+      "sha256": "22db985f058903afb8b323114fe0a1b5b2102d10067d8d16061ea4bb3902550b",
+      "bytes": 512538
+    },
+    {
+      "file": "grafana-overview.png",
+      "sha256": "fbb5b82c3e6254ba51bbf1d4ba2ed92b030bbb8decd8875c371189d24c330190",
+      "bytes": 95943
+    },
+    {
+      "file": "worker-recovery.png",
+      "sha256": "fd423d995d72ecdb3ef6bc3cc4ab75228d0780c23a86cdae8e679b4f9e97024c",
+      "bytes": 108472
+    }
+  ]
+}

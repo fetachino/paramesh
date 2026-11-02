@@ -222,3 +222,4 @@ __marimo__/
 # ParamMesh runtime output
 artifacts/
 /state/
+/.private/

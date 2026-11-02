@@ -1,0 +1,25 @@
+{
+  "source_commit": "f975e7bc7d41df4c3c3cc90c33451648ccc4ee4f",
+  "source_dirty": true,
+  "verified_at": "2026-11-01T23:13:22.691306+00:00",
+  "python": "3.12.10",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "tests": 100,
+  "failures": 0,
+  "errors": 0,
+  "coverage_percent": 91.76470588235294,
+  "coverage_gate_percent": 90,
+  "checks": [
+    "ruff check",
+    "ruff format --check",
+    "mypy",
+    "generated proto drift",
+    "node --check",
+    "sdist/wheel build",
+    "packaged web assets",
+    "OSV advisory audit",
+    "Origin regression mutation detected"
+  ],
+  "wheel_sha256": "a48c07e1b92df7e5e4e00b0244e7e88c9b0b78e06bb2d51ec984059fd956c023",
+  "scope": "Windows development tree; exact committed-head CI is recorded in PR reviews"
+}
