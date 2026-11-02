@@ -14,7 +14,8 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Complete local image build, authenticated container training and persistent recreation.
 - [x] Confirm passing remote quality/container jobs and a package advisory audit.
 - [x] Add reproducible transitive dependency locking for supported Windows/Linux Python 3.12 environments.
-- [ ] Define coordinated checkpoint epochs and a quiescence/fencing protocol.
+- [x] Define coordinated checkpoint epochs and a quiescence/fencing protocol in [ADR-0001](docs/decisions/0001-coordinated-checkpoint-epochs.md).
+- [ ] Implement online coordinated checkpoint epochs, durable shard fencing and restart-safe resume/abort.
 - [x] Persist local parameters, optimizer configuration, receipts, worker journals and run metadata.
 - [x] Automate killed-worker/rejoin and killed-shard/restart scenarios across processes.
 - [x] Authenticate internal RPC roles, fence old generations and test optional TLS/mTLS.
