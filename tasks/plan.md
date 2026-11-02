@@ -46,9 +46,10 @@ The coordinated live-checkpoint path is implemented in
 quiesce at durable step boundaries, shards persist fences, and the helper publishes
 validated snapshots. Tests cover two workers/two shards in all three training modes,
 restore/resume, auth boundaries, abort, immutable retry, a lost manifest response, and
-partial unfreeze recovery after coordinator/shard restart. Failure injection at remaining
-phases and active worker-process restart are still open; live claims are limited to the
-tested healthy-worker path.
+partial unfreeze recovery after coordinator/shard restart. Additional tests cover timeout
+and abort while REQUESTED, partial shard freeze, ABORTING/RESUMING restarts, and an active
+worker process re-registering from its durable journal after coordinator restart. Live
+claims remain limited to the tested fixed-membership healthy-worker path.
 
 These foundations and the local operations stack are now implemented. Genuine visual
 evidence and Git-backed Coolify instructions are committed with the deployment slice;

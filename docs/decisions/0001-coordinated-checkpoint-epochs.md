@@ -3,9 +3,10 @@
 ## Status
 
 Accepted. Authenticated live export, durable epoch fencing, and sync/async/bounded
-integration tests are implemented. Frozen-phase restart, uncertain manifest publication,
-and partial-unfreeze recovery are tested. Remaining phase failures and active worker
-process restart are open in [the roadmap](../../ROADMAP.md).
+integration tests are implemented. Fault injection covers requested timeouts, partial shard
+freeze, uncertain manifest publication, partial unfreeze, abort/resume restarts, and active
+worker-process restart from its durable journal. Coverage is summarized in the
+[roadmap](../../ROADMAP.md).
 
 ## Date
 
@@ -120,10 +121,11 @@ component receiving those credentials.
   complexity. A stuck epoch fails closed by pausing training rather than exporting
   an inconsistent checkpoint.
 - The existing offline checkpoint contract, CLI and partial-step restore behavior
-  remain supported and unchanged until online integration tests pass.
-- Live checkpoint claims are limited to the tested healthy-worker path. Process-restart
-  behavior and failure injection remain unverified; no coordinator consensus, uninterrupted
-  worker session continuity, or cloud durability guarantee is implied.
+  remain supported alongside online epoch checkpoints.
+- Live checkpoint claims are limited to the tested fixed-membership protocol and failure
+  matrix. Restarted coordinator sessions require worker processes to restart from their
+  durable journals. No coordinator consensus, uninterrupted old-session continuity, or
+  cloud durability guarantee is implied.
 
 ## Implementation acceptance
 
