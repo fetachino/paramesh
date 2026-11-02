@@ -1,0 +1,43 @@
+{
+  "checkpoint_id": "arm64-verified-2",
+  "format_version": 1,
+  "global_step": 10,
+  "optimizer": "sgd",
+  "records": [
+    {
+      "key": "blobs/d5338dc8f2ea51b941b43eeee4612253e7d7ed0e15598fe29451e88d8bc6eecf",
+      "role": "coordinator",
+      "sha256": "d5338dc8f2ea51b941b43eeee4612253e7d7ed0e15598fe29451e88d8bc6eecf",
+      "size": 417
+    },
+    {
+      "key": "blobs/8c2d9981b91fbece5f610d6dc725c25cdc328656ebe5f19206f54541992944cc",
+      "role": "shard-0",
+      "sha256": "8c2d9981b91fbece5f610d6dc725c25cdc328656ebe5f19206f54541992944cc",
+      "size": 264
+    },
+    {
+      "key": "blobs/3eba83f18c73e9c652dc08a590770a2e5a7e585c45e78b402d7ea89dd4a6b03c",
+      "role": "shard-1",
+      "sha256": "3eba83f18c73e9c652dc08a590770a2e5a7e585c45e78b402d7ea89dd4a6b03c",
+      "size": 458
+    },
+    {
+      "key": "blobs/6897b18845970dc25529e10df5da7fd878a1d0a6219e53f93f3d1d1e13c3a2a1",
+      "role": "worker-0",
+      "sha256": "6897b18845970dc25529e10df5da7fd878a1d0a6219e53f93f3d1d1e13c3a2a1",
+      "size": 57
+    },
+    {
+      "key": "blobs/b37acd0b4642702ef10513c4f10b00c90f40fa01153dddeff16e320b278dee7e",
+      "role": "worker-1",
+      "sha256": "b37acd0b4642702ef10513c4f10b00c90f40fa01153dddeff16e320b278dee7e",
+      "size": 57
+    }
+  ],
+  "run_id": "compose-demo",
+  "shard_versions": [
+    10,
+    10
+  ]
+}

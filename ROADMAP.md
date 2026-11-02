@@ -53,6 +53,11 @@ of having deployed their managed equivalents.
 | NATS | Operational messaging |
 | OpenTofu / Traefik | Infrastructure as code / ingress |
 
+Oracle Cloud Always Free Ampere A1 is the planned Linux ARM64 Coolify target.
+The [local ARM64 validation](docs/arm64-validation.md) exercises the stack under
+emulation; native host and Coolify deployment checks remain open. No Oracle
+resource has been created.
+
 Dependency locking and the first [controlled local baseline](docs/evidence/benchmarks/uncompressed-local-2026-11-02/README.md)
 and Azure/Azurite checkpoint portability are complete. The tiny baseline model
 does not establish a bandwidth bottleneck; compression remains deferred pending

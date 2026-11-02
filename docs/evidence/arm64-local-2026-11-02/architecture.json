@@ -1,0 +1,89 @@
+{
+  "docker_server": "linux/amd64",
+  "source_dirty": true,
+  "captured_at": "2026-11-02T09:53:16.7304092Z",
+  "source_commit": "34a906c70949f56d5d5a05d40ac81af3411b85ca",
+  "lock_sha256": "6652f85e4c56a8d80bc5849fa4bc1bf8cbd4d77760ca3c12b04caae2544ac741",
+  "schema_version": 1,
+  "services": [
+    {
+      "manifest": "sha256:c197bade551222fdc8a5df9d4093797a0dec1403c590a783fda7f929a7e30f82",
+      "platform": "linux/arm64",
+      "exit_code": 0,
+      "service": "checkpoint"
+    },
+    {
+      "manifest": "sha256:7e68a388de0806ed8d96f30cb7e927182a3d80d42920cb87d97d23311a7a1a77",
+      "platform": "linux/arm64",
+      "exit_code": 0,
+      "service": "seaweedfs"
+    },
+    {
+      "manifest": "sha256:c197bade551222fdc8a5df9d4093797a0dec1403c590a783fda7f929a7e30f82",
+      "platform": "linux/arm64",
+      "exit_code": 0,
+      "service": "worker-1"
+    },
+    {
+      "manifest": "sha256:c197bade551222fdc8a5df9d4093797a0dec1403c590a783fda7f929a7e30f82",
+      "platform": "linux/arm64",
+      "exit_code": 0,
+      "service": "worker-0"
+    },
+    {
+      "manifest": "sha256:c197bade551222fdc8a5df9d4093797a0dec1403c590a783fda7f929a7e30f82",
+      "platform": "linux/arm64",
+      "exit_code": 0,
+      "service": "dashboard"
+    },
+    {
+      "manifest": "sha256:c197bade551222fdc8a5df9d4093797a0dec1403c590a783fda7f929a7e30f82",
+      "platform": "linux/arm64",
+      "exit_code": 0,
+      "service": "coordinator"
+    },
+    {
+      "manifest": "sha256:c197bade551222fdc8a5df9d4093797a0dec1403c590a783fda7f929a7e30f82",
+      "platform": "linux/arm64",
+      "exit_code": 137,
+      "service": "shard-1"
+    },
+    {
+      "manifest": "sha256:c197bade551222fdc8a5df9d4093797a0dec1403c590a783fda7f929a7e30f82",
+      "platform": "linux/arm64",
+      "exit_code": 137,
+      "service": "shard-0"
+    },
+    {
+      "manifest": "sha256:752ae3365e3b09a84a241ef13948adf16c4c7f0e44401c5e1ad9eade876668a3",
+      "platform": "linux/arm64",
+      "exit_code": 0,
+      "service": "nats"
+    },
+    {
+      "manifest": "sha256:ef71057012c3135fce32cc227fb027d69b94b8d387f581242916f449199febc8",
+      "platform": "linux/arm64",
+      "exit_code": 0,
+      "service": "tempo"
+    },
+    {
+      "manifest": "sha256:1a779c5f714e795ac698b125fc265ae97292f792a91535fa29726073d03d5580",
+      "platform": "linux/arm64",
+      "exit_code": 0,
+      "service": "loki"
+    },
+    {
+      "manifest": "sha256:868b6ae6642ec09a71a1273d4c0eb952856c1f421137b33e26038e629ee3c208",
+      "platform": "linux/arm64",
+      "exit_code": 0,
+      "service": "grafana"
+    },
+    {
+      "manifest": "sha256:13020b7e520d56fef031135b91f5635888de441d6c4cfda3608bfbf6f4916dcb",
+      "platform": "linux/arm64",
+      "exit_code": 0,
+      "service": "prometheus"
+    }
+  ],
+  "execution": "QEMU emulation on Docker Desktop"
+}

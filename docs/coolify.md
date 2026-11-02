@@ -11,9 +11,12 @@ changes in Git; do not maintain a pasted, divergent stack in Coolify.
 
 ## Before deployment
 
-Use an existing authorized Linux x86-64 Docker host with persistent disk and enough
-memory for five Python/PyTorch processes plus telemetry. Capacity has only been
-tested locally; establish actual host limits before claiming a sizing recommendation.
+The planned free target is Oracle Cloud Always Free Ampere A1 (Linux ARM64),
+subject to available capacity and a native-host validation. No Oracle resource has
+been created. [Local ARM64 validation](arm64-validation.md) covers the image and
+Compose stack under emulation; it does not establish Coolify or Oracle host sizing.
+Use a persistent disk and enough memory for five Python/PyTorch processes plus
+telemetry and Coolify. Establish actual host limits before a sizing claim.
 The build needs access to PyPI, the official PyTorch CPU index and image registries.
 Never use the development machine's temporary wheel mirror in a hosted build.
 

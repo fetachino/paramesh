@@ -23,7 +23,7 @@ paramesh = "paramesh.cli:main"
 
 [tool.uv]
 required-version = "==0.13.6"
-environments = ["python_version == '3.12' and ((sys_platform == 'win32' and platform_machine == 'AMD64') or (sys_platform == 'linux' and platform_machine == 'x86_64'))"]
+environments = ["python_version == '3.12' and ((sys_platform == 'win32' and platform_machine == 'AMD64') or (sys_platform == 'linux' and platform_machine == 'x86_64') or (sys_platform == 'linux' and platform_machine == 'aarch64'))"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
