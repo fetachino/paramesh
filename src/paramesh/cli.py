@@ -86,10 +86,14 @@ def main() -> None:
     check = commands.add_parser("check-shard")
     check.add_argument("--address", required=True)
     check.add_argument("--run-id", required=True)
-    checkpoint = commands.add_parser("checkpoint", help="Export/restore an offline whole run")
-    checkpoint.add_argument("action", choices=["export", "restore", "install"])
+    checkpoint = commands.add_parser("checkpoint", help="Export/restore whole-run checkpoints")
+    checkpoint.add_argument(
+        "action", choices=["export", "restore", "install", "live-export", "live-abort"]
+    )
     checkpoint.add_argument("--id", required=True)
-    checkpoint.add_argument("--state-dir", type=Path, required=True)
+    checkpoint.add_argument("--state-dir", type=Path)
+    checkpoint.add_argument("--coordinator", default="127.0.0.1:50050")
+    checkpoint.add_argument("--timeout", type=float, default=120)
     checkpoint.add_argument("--store", type=Path, default=Path("checkpoints"))
     backend = checkpoint.add_mutually_exclusive_group()
     backend.add_argument("--s3-endpoint")
@@ -119,9 +123,26 @@ def main() -> None:
         else None
     )
     if args.command == "checkpoint":
-        from paramesh.checkpoint import export_checkpoint, install_checkpoint, restore_checkpoint
+        from paramesh.checkpoint import (
+            abort_online_checkpoint,
+            export_checkpoint,
+            export_online_checkpoint,
+            install_checkpoint,
+            restore_checkpoint,
+        )
         from paramesh.storage import AzureStore, LocalStore, ObjectStore, S3Store
 
+        if args.action == "live-abort":
+            abort_online_checkpoint(
+                args.coordinator,
+                args.id,
+                RpcSecurity.from_environment(),
+                timeout=args.timeout,
+            )
+            print(json.dumps({"checkpoint_id": args.id, "aborted": True}, indent=2))
+            return
+        if args.action != "live-export" and args.state_dir is None:
+            parser.error("Offline checkpoint actions require --state-dir")
         store: ObjectStore
         if args.bucket and not args.s3_endpoint:
             parser.error("--bucket requires --s3-endpoint")
@@ -143,11 +164,22 @@ def main() -> None:
             )
         else:
             store = LocalStore(args.store)
-        if args.action == "export":
+        if args.action == "live-export":
+            report = export_online_checkpoint(
+                args.coordinator,
+                store,
+                args.id,
+                RpcSecurity.from_environment(),
+                timeout=args.timeout,
+            )
+        elif args.action == "export":
+            assert args.state_dir is not None
             report = export_checkpoint(args.state_dir, store, args.id)
         elif args.action == "install":
+            assert args.state_dir is not None
             report = install_checkpoint(store, args.id, args.state_dir)
         else:
+            assert args.state_dir is not None
             report = restore_checkpoint(store, args.id, args.state_dir)
         print(json.dumps(report, indent=2))
     elif args.command in ("benchmark", "recovery-benchmark"):

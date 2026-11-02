@@ -18,12 +18,27 @@ class Aggregation(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     MEAN: _ClassVar[Aggregation]
     SUM: _ClassVar[Aggregation]
+
+class CheckpointPhase(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    CHECKPOINT_RUNNING: _ClassVar[CheckpointPhase]
+    CHECKPOINT_REQUESTED: _ClassVar[CheckpointPhase]
+    CHECKPOINT_FROZEN: _ClassVar[CheckpointPhase]
+    CHECKPOINT_COMMITTED: _ClassVar[CheckpointPhase]
+    CHECKPOINT_RESUMING: _ClassVar[CheckpointPhase]
+    CHECKPOINT_ABORTING: _ClassVar[CheckpointPhase]
 SYNC_MODE_UNSPECIFIED: SyncMode
 SYNCHRONOUS: SyncMode
 ASYNCHRONOUS: SyncMode
 BOUNDED_STALENESS: SyncMode
 MEAN: Aggregation
 SUM: Aggregation
+CHECKPOINT_RUNNING: CheckpointPhase
+CHECKPOINT_REQUESTED: CheckpointPhase
+CHECKPOINT_FROZEN: CheckpointPhase
+CHECKPOINT_COMMITTED: CheckpointPhase
+CHECKPOINT_RESUMING: CheckpointPhase
+CHECKPOINT_ABORTING: CheckpointPhase
 
 class Empty(_message.Message):
     __slots__ = ()
@@ -84,20 +99,28 @@ class HeartbeatRequest(_message.Message):
     def __init__(self, run_id: _Optional[str] = ..., worker_id: _Optional[str] = ..., session_id: _Optional[str] = ..., step: _Optional[int] = ..., parameter_version: _Optional[int] = ..., completed: bool = ...) -> None: ...
 
 class WorkerState(_message.Message):
-    __slots__ = ("worker_id", "health", "step", "parameter_version", "heartbeat_age_seconds", "generation")
+    __slots__ = ("worker_id", "health", "step", "parameter_version", "heartbeat_age_seconds", "generation", "checkpoint_epoch", "checkpoint_id", "checkpoint_phase", "checkpoint_committed")
     WORKER_ID_FIELD_NUMBER: _ClassVar[int]
     HEALTH_FIELD_NUMBER: _ClassVar[int]
     STEP_FIELD_NUMBER: _ClassVar[int]
     PARAMETER_VERSION_FIELD_NUMBER: _ClassVar[int]
     HEARTBEAT_AGE_SECONDS_FIELD_NUMBER: _ClassVar[int]
     GENERATION_FIELD_NUMBER: _ClassVar[int]
+    CHECKPOINT_EPOCH_FIELD_NUMBER: _ClassVar[int]
+    CHECKPOINT_ID_FIELD_NUMBER: _ClassVar[int]
+    CHECKPOINT_PHASE_FIELD_NUMBER: _ClassVar[int]
+    CHECKPOINT_COMMITTED_FIELD_NUMBER: _ClassVar[int]
     worker_id: str
     health: str
     step: int
     parameter_version: int
     heartbeat_age_seconds: float
     generation: int
-    def __init__(self, worker_id: _Optional[str] = ..., health: _Optional[str] = ..., step: _Optional[int] = ..., parameter_version: _Optional[int] = ..., heartbeat_age_seconds: _Optional[float] = ..., generation: _Optional[int] = ...) -> None: ...
+    checkpoint_epoch: int
+    checkpoint_id: str
+    checkpoint_phase: str
+    checkpoint_committed: bool
+    def __init__(self, worker_id: _Optional[str] = ..., health: _Optional[str] = ..., step: _Optional[int] = ..., parameter_version: _Optional[int] = ..., heartbeat_age_seconds: _Optional[float] = ..., generation: _Optional[int] = ..., checkpoint_epoch: _Optional[int] = ..., checkpoint_id: _Optional[str] = ..., checkpoint_phase: _Optional[str] = ..., checkpoint_committed: bool = ...) -> None: ...
 
 class RunStatus(_message.Message):
     __slots__ = ("config", "workers", "global_step")
@@ -176,7 +199,7 @@ class UpdateReceipt(_message.Message):
     def __init__(self, worker_id: _Optional[str] = ..., step: _Optional[int] = ..., digest: _Optional[bytes] = ..., version: _Optional[int] = ..., staleness: _Optional[int] = ...) -> None: ...
 
 class ShardSnapshot(_message.Message):
-    __slots__ = ("format_version", "config_fingerprint", "model_fingerprint", "optimizer", "version", "parameters", "receipts", "worker_generations")
+    __slots__ = ("format_version", "config_fingerprint", "model_fingerprint", "optimizer", "version", "parameters", "receipts", "worker_generations", "checkpoint_epoch", "checkpoint_frozen")
     class WorkerGenerationsEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -192,6 +215,8 @@ class ShardSnapshot(_message.Message):
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
     RECEIPTS_FIELD_NUMBER: _ClassVar[int]
     WORKER_GENERATIONS_FIELD_NUMBER: _ClassVar[int]
+    CHECKPOINT_EPOCH_FIELD_NUMBER: _ClassVar[int]
+    CHECKPOINT_FROZEN_FIELD_NUMBER: _ClassVar[int]
     format_version: int
     config_fingerprint: bytes
     model_fingerprint: bytes
@@ -200,7 +225,9 @@ class ShardSnapshot(_message.Message):
     parameters: _containers.RepeatedCompositeFieldContainer[Tensor]
     receipts: _containers.RepeatedCompositeFieldContainer[UpdateReceipt]
     worker_generations: _containers.ScalarMap[str, int]
-    def __init__(self, format_version: _Optional[int] = ..., config_fingerprint: _Optional[bytes] = ..., model_fingerprint: _Optional[bytes] = ..., optimizer: _Optional[str] = ..., version: _Optional[int] = ..., parameters: _Optional[_Iterable[_Union[Tensor, _Mapping]]] = ..., receipts: _Optional[_Iterable[_Union[UpdateReceipt, _Mapping]]] = ..., worker_generations: _Optional[_Mapping[str, int]] = ...) -> None: ...
+    checkpoint_epoch: int
+    checkpoint_frozen: bool
+    def __init__(self, format_version: _Optional[int] = ..., config_fingerprint: _Optional[bytes] = ..., model_fingerprint: _Optional[bytes] = ..., optimizer: _Optional[str] = ..., version: _Optional[int] = ..., parameters: _Optional[_Iterable[_Union[Tensor, _Mapping]]] = ..., receipts: _Optional[_Iterable[_Union[UpdateReceipt, _Mapping]]] = ..., worker_generations: _Optional[_Mapping[str, int]] = ..., checkpoint_epoch: _Optional[int] = ..., checkpoint_frozen: bool = ...) -> None: ...
 
 class FenceRequest(_message.Message):
     __slots__ = ("run_id", "worker_id", "generation")
@@ -253,3 +280,91 @@ class WorkerJournal(_message.Message):
     requests: _containers.RepeatedCompositeFieldContainer[GradientUpdate]
     loss: float
     def __init__(self, format_version: _Optional[int] = ..., config_fingerprint: _Optional[bytes] = ..., worker_id: _Optional[str] = ..., next_step: _Optional[int] = ..., requests: _Optional[_Iterable[_Union[GradientUpdate, _Mapping]]] = ..., loss: _Optional[float] = ...) -> None: ...
+
+class CheckpointRequest(_message.Message):
+    __slots__ = ("run_id", "checkpoint_id", "worker_id")
+    RUN_ID_FIELD_NUMBER: _ClassVar[int]
+    CHECKPOINT_ID_FIELD_NUMBER: _ClassVar[int]
+    WORKER_ID_FIELD_NUMBER: _ClassVar[int]
+    run_id: str
+    checkpoint_id: str
+    worker_id: str
+    def __init__(self, run_id: _Optional[str] = ..., checkpoint_id: _Optional[str] = ..., worker_id: _Optional[str] = ...) -> None: ...
+
+class CheckpointControl(_message.Message):
+    __slots__ = ("epoch", "checkpoint_id", "phase", "committed")
+    EPOCH_FIELD_NUMBER: _ClassVar[int]
+    CHECKPOINT_ID_FIELD_NUMBER: _ClassVar[int]
+    PHASE_FIELD_NUMBER: _ClassVar[int]
+    COMMITTED_FIELD_NUMBER: _ClassVar[int]
+    epoch: int
+    checkpoint_id: str
+    phase: CheckpointPhase
+    committed: bool
+    def __init__(self, epoch: _Optional[int] = ..., checkpoint_id: _Optional[str] = ..., phase: _Optional[_Union[CheckpointPhase, str]] = ..., committed: bool = ...) -> None: ...
+
+class CheckpointAck(_message.Message):
+    __slots__ = ("run_id", "worker_id", "session_id", "epoch", "step", "parameter_version", "worker_journal")
+    RUN_ID_FIELD_NUMBER: _ClassVar[int]
+    WORKER_ID_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
+    EPOCH_FIELD_NUMBER: _ClassVar[int]
+    STEP_FIELD_NUMBER: _ClassVar[int]
+    PARAMETER_VERSION_FIELD_NUMBER: _ClassVar[int]
+    WORKER_JOURNAL_FIELD_NUMBER: _ClassVar[int]
+    run_id: str
+    worker_id: str
+    session_id: str
+    epoch: int
+    step: int
+    parameter_version: int
+    worker_journal: bytes
+    def __init__(self, run_id: _Optional[str] = ..., worker_id: _Optional[str] = ..., session_id: _Optional[str] = ..., epoch: _Optional[int] = ..., step: _Optional[int] = ..., parameter_version: _Optional[int] = ..., worker_journal: _Optional[bytes] = ...) -> None: ...
+
+class CheckpointWorkerRecord(_message.Message):
+    __slots__ = ("worker_id", "generation", "step", "worker_journal")
+    WORKER_ID_FIELD_NUMBER: _ClassVar[int]
+    GENERATION_FIELD_NUMBER: _ClassVar[int]
+    STEP_FIELD_NUMBER: _ClassVar[int]
+    WORKER_JOURNAL_FIELD_NUMBER: _ClassVar[int]
+    worker_id: str
+    generation: int
+    step: int
+    worker_journal: bytes
+    def __init__(self, worker_id: _Optional[str] = ..., generation: _Optional[int] = ..., step: _Optional[int] = ..., worker_journal: _Optional[bytes] = ...) -> None: ...
+
+class CheckpointEpochStatus(_message.Message):
+    __slots__ = ("control", "all_workers_acknowledged", "workers", "committed")
+    CONTROL_FIELD_NUMBER: _ClassVar[int]
+    ALL_WORKERS_ACKNOWLEDGED_FIELD_NUMBER: _ClassVar[int]
+    WORKERS_FIELD_NUMBER: _ClassVar[int]
+    COMMITTED_FIELD_NUMBER: _ClassVar[int]
+    control: CheckpointControl
+    all_workers_acknowledged: bool
+    workers: _containers.RepeatedCompositeFieldContainer[CheckpointWorkerRecord]
+    committed: bool
+    def __init__(self, control: _Optional[_Union[CheckpointControl, _Mapping]] = ..., all_workers_acknowledged: bool = ..., workers: _Optional[_Iterable[_Union[CheckpointWorkerRecord, _Mapping]]] = ..., committed: bool = ...) -> None: ...
+
+class CheckpointPhaseRequest(_message.Message):
+    __slots__ = ("run_id", "epoch", "phase")
+    RUN_ID_FIELD_NUMBER: _ClassVar[int]
+    EPOCH_FIELD_NUMBER: _ClassVar[int]
+    PHASE_FIELD_NUMBER: _ClassVar[int]
+    run_id: str
+    epoch: int
+    phase: CheckpointPhase
+    def __init__(self, run_id: _Optional[str] = ..., epoch: _Optional[int] = ..., phase: _Optional[_Union[CheckpointPhase, str]] = ...) -> None: ...
+
+class CheckpointSnapshot(_message.Message):
+    __slots__ = ("snapshot",)
+    SNAPSHOT_FIELD_NUMBER: _ClassVar[int]
+    snapshot: bytes
+    def __init__(self, snapshot: _Optional[bytes] = ...) -> None: ...
+
+class ShardCheckpointRequest(_message.Message):
+    __slots__ = ("run_id", "epoch")
+    RUN_ID_FIELD_NUMBER: _ClassVar[int]
+    EPOCH_FIELD_NUMBER: _ClassVar[int]
+    run_id: str
+    epoch: int
+    def __init__(self, run_id: _Optional[str] = ..., epoch: _Optional[int] = ...) -> None: ...

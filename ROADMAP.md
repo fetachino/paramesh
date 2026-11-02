@@ -15,7 +15,8 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Confirm passing remote quality/container jobs and a package advisory audit.
 - [x] Add reproducible transitive dependency locking for supported Windows/Linux Python 3.12 environments.
 - [x] Define coordinated checkpoint epochs and a quiescence/fencing protocol in [ADR-0001](docs/decisions/0001-coordinated-checkpoint-epochs.md).
-- [ ] Implement online coordinated checkpoint epochs, durable shard fencing and restart-safe resume/abort.
+- [x] Implement authenticated online checkpoint epochs, durable shard fences, and sync/async/bounded live export with restore/resume.
+- [ ] Inject coordinator/helper restarts and failures at each checkpoint phase; verify worker restart and exact retry/abort behavior.
 - [x] Persist local parameters, optimizer configuration, receipts, worker journals and run metadata.
 - [x] Automate killed-worker/rejoin and killed-shard/restart scenarios across processes.
 - [x] Authenticate internal RPC roles, fence old generations and test optional TLS/mTLS.

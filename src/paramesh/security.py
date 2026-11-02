@@ -18,7 +18,16 @@ CHANNEL_OPTIONS = [
     ("grpc.max_receive_message_length", MAX_MESSAGE_BYTES),
     ("grpc.max_send_message_length", MAX_MESSAGE_BYTES),
 ]
-ADMIN_METHODS = {"/paramesh.v1.ParameterShard/FenceWorker"}
+ADMIN_METHODS = {
+    "/paramesh.v1.ParameterShard/FenceWorker",
+    "/paramesh.v1.ParameterShard/FreezeCheckpoint",
+    "/paramesh.v1.ParameterShard/UnfreezeCheckpoint",
+    "/paramesh.v1.ParameterShard/ExportCheckpointSnapshot",
+    "/paramesh.v1.Coordinator/BeginCheckpoint",
+    "/paramesh.v1.Coordinator/GetCheckpointStatus",
+    "/paramesh.v1.Coordinator/SetCheckpointPhase",
+    "/paramesh.v1.Coordinator/GetCheckpointSnapshot",
+}
 
 
 @dataclass(frozen=True)

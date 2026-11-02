@@ -261,8 +261,9 @@ does not provide coordinator consensus or replicated live training state.
 The protocol is float32-only and the workload is fixed and CPU-only.
 
 See [checkpoint operator commands](docs/checkpoints.md) for private SeaweedFS/Azurite verification,
-export, fresh-directory restore and fresh-volume installation. Checkpoints require
-stopping the full run and retain the original topology. Larger-payload/network
+offline export, coordinated live export, fresh-directory restore and fresh-volume installation.
+Live export quiesces active workers and fences all shards; offline export requires
+stopping the full run. Both retain the original topology. Larger-payload/network
 benchmarks and authorized self-hosted deployment follow in [ROADMAP.md](ROADMAP.md).
 
 ## Additional documentation

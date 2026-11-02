@@ -41,9 +41,13 @@ uncommitted contribution. Re-registration fences the previous worker incarnation
 This avoids pretending that independently saved live shards form an atomic global
 checkpoint. Checkpoint manifests must record each shard's actual version and progress;
 offline restore of a complete manifest is separate from ordinary process restart.
-The accepted design for moving beyond offline-only checkpoints is
-[ADR-0001](../docs/decisions/0001-coordinated-checkpoint-epochs.md); no online
-checkpoint behavior is implemented or claimed yet.
+The coordinated live-checkpoint path is implemented in
+[ADR-0001](../docs/decisions/0001-coordinated-checkpoint-epochs.md): active workers
+quiesce at durable step boundaries, shards persist fences, and the helper publishes
+validated snapshots. Tests cover two workers/two shards in all three training modes,
+restore/resume, auth boundaries, abort and immutable retry. Failure injection across
+coordinator/helper restart points and worker restart is still open; live claims are
+limited to the tested healthy-worker path.
 
 These foundations and the local operations stack are now implemented. Genuine visual
 evidence and Git-backed Coolify instructions are committed with the deployment slice;

@@ -2,8 +2,9 @@
 
 ## Status
 
-Accepted design; implementation pending. Until implementation and integration tests
-are complete, ParamMesh supports offline whole-run exports only.
+Accepted. Authenticated live export, durable epoch fencing, and sync/async/bounded
+integration tests are implemented. Process-restart and injected-failure coverage across
+every phase remains open in [the roadmap](../../ROADMAP.md).
 
 ## Date
 
@@ -119,8 +120,9 @@ component receiving those credentials.
   an inconsistent checkpoint.
 - The existing offline checkpoint contract, CLI and partial-step restore behavior
   remain supported and unchanged until online integration tests pass.
-- No live checkpoint, uninterrupted resume, or cloud object-store guarantee should
-  be claimed before crash/restart, auth, retry and all-mode tests pass.
+- Live checkpoint claims are limited to the tested healthy-worker path. Process-restart
+  behavior and failure injection remain unverified; no coordinator consensus, uninterrupted
+  worker session continuity, or cloud durability guarantee is implied.
 
 ## Implementation acceptance
 
