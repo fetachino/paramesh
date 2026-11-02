@@ -16,7 +16,7 @@ import pytest
 from test_checkpoint import partial_run, resume_restored
 
 from paramesh.checkpoint import export_checkpoint, restore_checkpoint
-from paramesh.storage import AzureStore
+from paramesh.storage import AzureBlobCheckpointStore, AzureStore
 
 IMAGE = (
     "mcr.microsoft.com/azure-storage/azurite:3.37.0@sha256:"
@@ -70,7 +70,9 @@ def azure_store(azure_credential):
         binding = subprocess.check_output(
             ["docker", "port", name, "10000"], text=True, timeout=10
         ).strip()
-        store = AzureStore(f"http://{binding}/{account}", "paramesh-checkpoints", account, key)
+        store = AzureBlobCheckpointStore(
+            f"http://{binding}/{account}", "paramesh-checkpoints", account, key
+        )
         deadline = time.monotonic() + 60
         while True:
             try:
@@ -177,7 +179,7 @@ def test_azure_immutable_bounded_authenticated_objects(azure_store):
         azure_store.get(key, -1)
     with pytest.raises(ValueError, match="object key"):
         azure_store.put("../escape", b"bad")
-    wrong_store = AzureStore(
+    wrong_store = AzureBlobCheckpointStore(
         azure_store.client.url,
         azure_store.container,
         "parameshdemo",
@@ -244,4 +246,8 @@ def test_azure_requires_explicit_valid_endpoint_and_credentials(endpoint, contai
     if key == "valid":
         key = base64.b64encode(bytes(64)).decode()
     with pytest.raises(ValueError, match="Explicit Azure"):
-        AzureStore(endpoint, container, account, key)
+        AzureBlobCheckpointStore(endpoint, container, account, key)
+
+
+def test_azure_store_name_remains_a_compatibility_alias():
+    assert AzureStore is AzureBlobCheckpointStore

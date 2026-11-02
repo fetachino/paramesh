@@ -109,8 +109,9 @@ Sources: [SeaweedFS mini](https://github.com/seaweedfs/seaweedfs/wiki/Quick-Star
 
 ## Azure Blob and Azurite
 
-The same offline manifest/blob format supports Azure Blob through the official
-`azure-storage-blob==12.31.1` SDK in the locked `storage` extra. Supply an explicit
+The same offline manifest/blob format supports Azure Blob through
+`AzureBlobCheckpointStore` and the official `azure-storage-blob==12.31.1` SDK in the
+locked `storage` extra. `AzureStore` remains a compatibility alias. Supply an explicit
 account endpoint, existing container, account name and base64 shared account key.
 The adapter never creates accounts/containers or falls through to ambient Azure
 profiles. SAS URLs, managed identity and Entra ID authentication are not implemented.

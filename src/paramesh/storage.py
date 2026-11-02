@@ -130,7 +130,7 @@ class S3Store:
             body.close()
 
 
-class AzureStore:
+class AzureBlobCheckpointStore:
     def __init__(self, endpoint: str, container: str, account: str, key: str) -> None:
         parsed = urlsplit(endpoint)
         try:
@@ -192,3 +192,6 @@ class AzureStore:
         if len(payload) > limit:
             raise ValueError("Checkpoint object exceeds size limit")
         return payload
+
+
+AzureStore = AzureBlobCheckpointStore
