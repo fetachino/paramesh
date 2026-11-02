@@ -31,6 +31,7 @@ jobs:
         run: |
           uv sync --locked --extra train --extra benchmark
           "$UV_PROJECT_ENVIRONMENT/bin/python" -m paramesh.cli benchmark --output artifacts/benchmark-extras --modes sync --workers 1 --shards 1 --repetitions 1 --warmup-steps 1 --steps 2
+          "$UV_PROJECT_ENVIRONMENT/bin/python" -m paramesh.cli recovery-benchmark --output artifacts/recovery-extras --repetitions 1
       - run: python -m build
       - run: python scripts/create_dev_env.py
       - run: docker compose config --quiet
@@ -38,7 +39,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: benchmark-dependency-contract-smoke
-          path: artifacts/benchmark-extras
+          path: |
+            artifacts/benchmark-extras
+            artifacts/recovery-extras
       - uses: actions/upload-artifact@v4
         with:
           name: azure-checkpoint-evidence

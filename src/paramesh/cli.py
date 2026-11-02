@@ -57,6 +57,11 @@ def main() -> None:
     benchmark.add_argument("--steps", type=int, default=200, help="Measured steps per worker")
     benchmark.add_argument("--workers", type=int, default=2)
     benchmark.add_argument("--shards", type=int, default=2)
+    recovery_benchmark = commands.add_parser(
+        "recovery-benchmark", help="Repeat real worker/shard termination and verified recovery"
+    )
+    recovery_benchmark.add_argument("--output", type=Path, required=True)
+    recovery_benchmark.add_argument("--repetitions", type=int, default=3)
     for name in ("coordinator", "shard"):
         service = commands.add_parser(name)
         service.add_argument("--config", type=Path, required=True)
@@ -107,7 +112,7 @@ def main() -> None:
         telemetry.start(role)
     security = (
         RpcSecurity.from_environment()
-        if args.command not in ("demo", "checkpoint", "benchmark")
+        if args.command not in ("demo", "checkpoint", "benchmark", "recovery-benchmark")
         else None
     )
     if args.command == "checkpoint":
@@ -142,12 +147,15 @@ def main() -> None:
         else:
             report = restore_checkpoint(store, args.id, args.state_dir)
         print(json.dumps(report, indent=2))
-    elif args.command == "benchmark":
+    elif args.command in ("benchmark", "recovery-benchmark"):
         from paramesh.benchmarks import run_benchmarks
+        from paramesh.recovery_benchmarks import run_recovery_benchmarks
 
         print(
             json.dumps(
-                run_benchmarks(
+                run_recovery_benchmarks(args.output, repetitions=args.repetitions)
+                if args.command == "recovery-benchmark"
+                else run_benchmarks(
                     args.output,
                     modes=tuple(args.modes),
                     repetitions=args.repetitions,

@@ -139,6 +139,25 @@ support the timing and chart implementation.
 
 ## Remaining performance work
 
+### Repeated local fault trials
+
+`paramesh recovery-benchmark --output artifacts/recovery-trials --repetitions 3`
+repeats the existing real 20-step synchronous worker-kill and shard-kill scenarios
+in fresh processes and durable state. It alternates fault order, retains each raw
+JSON run, writes a manifest with hardware/lock/provenance and `trials.csv`, and plots
+individual observations with median and observed range. It refuses an existing output
+directory and keeps completed reports if a later trial fails. Every recorded success
+requires both shards at version 20, completed workers, a positive detection-to-progress
+interval and maximum error below `1e-6` against uninterrupted local SGD.
+
+The worker detection observation is the coordinator's 3-second unavailable lease;
+the shard observation is a failed 0.5-second RPC probe. They are different detection
+mechanisms, so compare each to its own behavior. The run includes a deliberate
+0.1-second per-step delay and process replacement/import time. Termination-to-progress
+is not full job recovery or an SLA. The harness does not instrument uncommitted
+computation lost before journaling; it cannot claim zero lost work. CI's single
+repetition checks the CLI and dependencies, not a statistical baseline.
+
 The [recorded local uncompressed baseline](docs/evidence/benchmarks/uncompressed-local-2026-11-02/README.md)
 preserves nine clean-source trials, the exact dependency lock, raw RPC observations,
 checksums and generated charts. Median warm-process rates were 4,119 / 4,562 / 4,999
