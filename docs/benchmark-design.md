@@ -29,6 +29,10 @@ Acceptance: controlled warm-up exclusion, exact measured example counts, real RP
 sizes/statuses, synchronous reference error below 1e-6, bounded sample storage, raw
 artifact/chart consistency, and unchanged correctness/fault/Compose checks. Use
 three repetitions initially; no fabricated speedups or compression justification.
+The benchmark's optional `--hidden-width` retains the same data, process topology,
+optimizer and telemetry while increasing model and gradient size. Since compute
+also grows with width, report it as a larger-payload loopback experiment, not an
+isolated transport or multi-host network test.
 
 The separate `recovery-benchmark` command reuses the actual process-kill demo, not
 synthetic status injection. Its deliberately paced scenario measures detection and

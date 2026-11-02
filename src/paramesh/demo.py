@@ -48,6 +48,7 @@ def _serve(
     address: str = "127.0.0.1:0",
     fast_leases: bool = False,
     security: RpcSecurity | None = None,
+    hidden_width: int = 8,
 ) -> None:
     server = None
     storage = None
@@ -67,7 +68,7 @@ def _serve(
         else:
             from paramesh.workload import parameters
 
-            values = parameters()
+            values = parameters(hidden_width)
             ownership = partition(values, len(config.shard_endpoints))
             shard = ParameterShard(
                 config, {k: v for k, v in values.items() if ownership[k] == index}, state=storage
@@ -98,6 +99,7 @@ def _train(
     step_delay: float = 0,
     security: RpcSecurity | None = None,
     warmup_steps: int = 0,
+    hidden_width: int = 8,
 ) -> None:
     from paramesh import telemetry
     from paramesh.worker import train_worker
@@ -108,7 +110,14 @@ def _train(
     try:
         if warmup_steps:
             warmup_started = time.perf_counter()
-            train_worker(address, worker_id, warmup_steps, state=storage, security=security)
+            train_worker(
+                address,
+                worker_id,
+                warmup_steps,
+                state=storage,
+                security=security,
+                hidden_width=hidden_width,
+            )
             warmup_elapsed = time.perf_counter() - warmup_started
             pipe.send({"phase": "warmup_complete"})
             if not pipe.poll(120) or pipe.recv() != "measure":
@@ -117,7 +126,13 @@ def _train(
             telemetry.active = signals
         started = time.perf_counter()
         result = train_worker(
-            address, worker_id, steps, state=storage, step_delay=step_delay, security=security
+            address,
+            worker_id,
+            steps,
+            state=storage,
+            step_delay=step_delay,
+            security=security,
+            hidden_width=hidden_width,
         )
         ended = time.perf_counter()
         if signals is not None:
@@ -181,8 +196,16 @@ def run_demo(
     output: Path | None = None,
     failure: str | None = None,
     warmup_steps: int = 0,
+    hidden_width: int = 8,
 ) -> dict[str, Any]:
-    if mode not in MODES or steps < 1 or not 1 <= workers <= 8 or not 1 <= shards <= 4:
+    if (
+        mode not in MODES
+        or steps < 1
+        or not 1 <= workers <= 8
+        or not 1 <= shards <= 4
+        or type(hidden_width) is not int
+        or not 1 <= hidden_width <= 32768
+    ):
         raise ValueError("Use sync/async/bounded, positive steps, 1..8 workers and 1..4 shards")
     if failure not in (None, "worker", "shard") or (failure and (mode != "sync" or steps < 15)):
         raise ValueError("Failure evidence currently requires sync mode and at least 15 steps")
@@ -233,6 +256,7 @@ def run_demo(
                 shard_configuration,
                 index,
                 state_path=directory / f"shard-{index}.sqlite",
+                hidden_width=hidden_width,
             )
             endpoints.append(_receive(pipe)["address"])
         config.shard_endpoints[:] = endpoints
@@ -257,6 +281,7 @@ def run_demo(
                 state_path=directory / f"{name}.sqlite",
                 step_delay=0.1 if failure else 0,
                 warmup_steps=warmup_steps,
+                hidden_width=hidden_width,
             )
             for name in config.worker_ids
         ]
@@ -312,6 +337,7 @@ def run_demo(
                         steps,
                         state_path=directory / "worker-0.sqlite",
                         step_delay=0.1,
+                        hidden_width=hidden_width,
                     )
                     expected_dead.discard("worker-0")
                     wait_for(
@@ -380,9 +406,13 @@ def run_demo(
         final = decode_many(tensor for snapshot in snapshots for tensor in snapshot.tensors)
         with open_channel(address, security) as channel:
             state = rpc.CoordinatorStub(channel).GetStatus(pb.Empty(), timeout=5)
-    initial = parameters()
-    reference = local_reference(workers, steps, config.learning_rate) if mode == "sync" else None
-    evaluation = model()
+    initial = parameters(hidden_width)
+    reference = (
+        local_reference(workers, steps, config.learning_rate, hidden_width)
+        if mode == "sync"
+        else None
+    )
+    evaluation = model(hidden_width)
     batches = [dataset(index) for index in range(workers)]
     inputs = torch.cat([batch[0] for batch in batches])
     targets = torch.cat([batch[1] for batch in batches])
@@ -442,7 +472,8 @@ def run_demo(
             "captured_at": datetime.now(UTC).isoformat(),
         },
         "workload": {
-            "model": "MLP 4-8-1, tanh",
+            "model": f"MLP 4-{hidden_width}-1, tanh",
+            "hidden_width": hidden_width,
             "dataset": "synthetic regression",
             "samples_per_worker": 32,
             "model_seed": 7,

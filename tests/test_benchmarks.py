@@ -23,6 +23,27 @@ def test_warm_process_measurement_excludes_warmup_and_preserves_numerical_refere
         assert all(item["request_bytes"] > 0 for item in pushes)
 
 
+def test_larger_model_payload_preserves_reference_and_is_reported(tmp_path):
+    report = run_demo(
+        steps=3,
+        warmup_steps=1,
+        workers=2,
+        shards=2,
+        hidden_width=256,
+        output=tmp_path / "large-model.json",
+    )
+    assert report["workload"]["hidden_width"] == 256
+    assert report["workload"]["parameter_bytes"] == (6 * 256 + 1) * 4
+    assert report["max_parameter_error"] < 1e-6
+    for worker in report["worker_results"]:
+        pushes = [
+            item
+            for item in worker["measurement"]["rpc_samples"]
+            if item["method"] == "PushGradients"
+        ]
+        assert sum(item["request_bytes"] for item in pushes) > 6 * 256 * 4
+
+
 def test_framework_rotates_trials_and_exports_consistent_raw_artifacts(tmp_path, monkeypatch):
     from paramesh import benchmarks
 
@@ -79,6 +100,7 @@ def test_framework_rotates_trials_and_exports_consistent_raw_artifacts(tmp_path,
     )
     assert order == ["sync", "async", "async", "sync"]
     assert report["status"] == "complete" and len(report["trials"]) == 4
+    assert report["configuration"]["hidden_width"] == 8
     assert all(row["examples_per_second"] == 64 for row in report["trials"])
     assert len(list(csv.DictReader((destination / "rpc.csv").open()))) == 16
     assert len(list(csv.DictReader((destination / "trials.csv").open()))) == 4
@@ -89,6 +111,8 @@ def test_framework_rotates_trials_and_exports_consistent_raw_artifacts(tmp_path,
         benchmarks.run_benchmarks(destination)
     with pytest.raises(ValueError):
         benchmarks.run_benchmarks(tmp_path / "bad", measured_steps=0)
+    with pytest.raises(ValueError):
+        benchmarks.run_benchmarks(tmp_path / "bad-width", hidden_width=32769)
     raw = json.loads((destination / "trial-000-sync.json").read_text())
     raw["worker_results"][0]["measurement"]["end"] = 10.0
     with pytest.raises(ValueError, match="measurement window"):

@@ -23,7 +23,8 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Add Azure Blob checkpoint storage and actual authenticated Azurite/SDK restore tests.
 - [x] Measure local uncompressed RPC latency, byte counts, throughput and loss;
       preserve raw JSON/CSV, charts, hardware/configuration/source metadata.
-- [ ] Extend controlled measurements to larger payloads, multi-host scaling and repeated faults.
+- [ ] Extend controlled measurements to multi-host scaling and repeated faults.
+- [x] Add configurable larger-payload loopback measurements while retaining numerical-reference checks.
 - [ ] Add compression only when measured payload/network bottlenecks justify it.
 - [x] Add optional NATS lifecycle events without using it for gradient traffic.
 - [x] Instrument Prometheus metrics, OpenTelemetry context propagation and structured lifecycle logs.
@@ -60,6 +61,7 @@ resource has been created.
 
 Dependency locking and the first [controlled local baseline](docs/evidence/benchmarks/uncompressed-local-2026-11-02/README.md)
 and Azure/Azurite checkpoint portability are complete. The tiny baseline model
-does not establish a bandwidth bottleneck; compression remains deferred pending
-larger-payload/network measurements. Actual Coolify deployment is pending
+does not establish a bandwidth bottleneck; larger-payload loopback measurements
+are available but do not substitute for controlled network measurements, so
+compression remains deferred. Actual Coolify deployment is pending
 an available authorized server; no paid compute has been provisioned.
