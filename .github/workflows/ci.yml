@@ -22,7 +22,9 @@ jobs:
       - run: python scripts/generate_proto.py --check
       - run: python scripts/generate_grafana.py
       - run: git diff --exit-code -- ops/grafana/dashboards/paramesh.json
-      - run: python -m pytest --cov --cov-report=term-missing --cov-report=xml --basetemp artifacts/test-runs
+      - run: |
+          mkdir -p artifacts
+          python -m pytest --cov --cov-report=term-missing --cov-report=xml --basetemp artifacts/test-runs
       - name: Verify minimal benchmark extras
         env:
           UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/paramesh-benchmark

@@ -139,6 +139,7 @@ by Azurite 3.37.0, without disabling API checks.
 
 ```powershell
 uv sync --locked --all-extras --python 3.12
+New-Item -ItemType Directory -Force artifacts | Out-Null
 python -m pytest tests/test_azure.py -q --basetemp artifacts/azure-check
 ```
 
