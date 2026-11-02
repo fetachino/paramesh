@@ -26,6 +26,10 @@
 - [x] Add Azure/Azurite checkpoint portability with actual partial-step RPC resume tests.
 - [x] Evaluate whether the first baseline justifies compression: defer for the tiny 196-byte gradient.
 - [ ] Revisit compression after larger-payload/network evidence, then justified infrastructure work.
+- [x] Audit fresh-clone locked setup, packages, tests, documentation and preserved evidence.
+  - Verified: 117 tests, 92.00% coverage; zero known OSV advisories across 86 packages.
+  - Fixed: deterministic LF output from the Grafana generator on Windows.
+- [ ] Verify actual hosted HTTPS, isolation and rollback on an authorized deployment target.
 
 Each completed slice requires tests, lint/type checks, synchronized documentation,
 a coherent commit and a push. No paid provisioning or unverified deployment claims.
