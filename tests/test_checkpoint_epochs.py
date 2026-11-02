@@ -288,7 +288,7 @@ def test_live_checkpoint_abort_unfreezes_shards_and_releases_workers(tmp_path):
         shard_store.close()
 
 
-def test_frozen_checkpoint_retries_after_store_failure_and_service_restart(tmp_path):
+def test_checkpoint_retries_uncertain_publish_and_partial_unfreeze_after_restart(tmp_path):
     settings = config(shard_endpoints=["pending", "pending"])
     security = RpcSecurity.ephemeral()
     from paramesh.tensors import partition
@@ -364,10 +364,10 @@ def test_frozen_checkpoint_retries_after_store_failure_and_service_restart(tmp_p
             failed = False
 
             def put(self, key, payload):
+                store.put(key, payload)
                 if key.startswith("manifests/") and not self.failed:
                     self.failed = True
-                    raise OSError("injected manifest publication failure")
-                store.put(key, payload)
+                    raise OSError("injected lost manifest response")
 
             def get(self, key, limit=128 * 1024 * 1024):
                 return store.get(key, limit)
@@ -377,24 +377,41 @@ def test_frozen_checkpoint_retries_after_store_failure_and_service_restart(tmp_p
         assert coordinator.checkpoint_status().control.phase == pb.CHECKPOINT_FROZEN
         assert all(shard.checkpoint_frozen for shard in shards)
 
-        coordinator_host.stop(0).wait()
-        coordinator_store.close()
-        coordinator_store = StateDB(tmp_path / "coordinator.sqlite")
-        coordinator = Coordinator(settings, state=coordinator_store)
-        coordinator_host, _ = coordinator_server(coordinator, address, security=security)
-        coordinator_host.start()
-        for index, shard_host in enumerate(shard_hosts):
-            shard_host.stop(0).wait()
-            shard_stores[index].close()
-            shard_stores[index] = StateDB(tmp_path / f"shard-{index}.sqlite")
-            shard = ParameterShard(
-                settings,
-                {name: value for name, value in initial.items() if owners[name] == index},
-                state=shard_stores[index],
-            )
-            shard_hosts[index], _ = shard_server(shard, addresses[index], security=security)
-            shard_hosts[index].start()
-            shards[index] = shard
+        def restart_services():
+            nonlocal coordinator, coordinator_host, coordinator_store
+            coordinator_host.stop(0).wait()
+            coordinator_store.close()
+            coordinator_store = StateDB(tmp_path / "coordinator.sqlite")
+            coordinator = Coordinator(settings, state=coordinator_store)
+            coordinator_host, _ = coordinator_server(coordinator, address, security=security)
+            coordinator_host.start()
+            for index, shard_host in enumerate(shard_hosts):
+                shard_host.stop(0).wait()
+                shard_stores[index].close()
+                shard_stores[index] = StateDB(tmp_path / f"shard-{index}.sqlite")
+                shards[index] = ParameterShard(
+                    settings,
+                    {name: value for name, value in initial.items() if owners[name] == index},
+                    state=shard_stores[index],
+                )
+                shard_hosts[index], _ = shard_server(
+                    shards[index], addresses[index], security=security
+                )
+                shard_hosts[index].start()
+
+        restart_services()
+
+        def reject_one_unfreeze(run_id, epoch):
+            raise RuntimeError("injected partial unfreeze failure")
+
+        shards[1].unfreeze_checkpoint = reject_one_unfreeze
+        with pytest.raises(grpc.RpcError) as error:
+            export_online_checkpoint(address, store, "restart-epoch", security)
+        assert error.value.code() == grpc.StatusCode.FAILED_PRECONDITION
+        assert coordinator.checkpoint_status().control.phase == pb.CHECKPOINT_COMMITTED
+        assert not shards[0].checkpoint_frozen and shards[1].checkpoint_frozen
+
+        restart_services()
 
         manifest = export_online_checkpoint(address, store, "restart-epoch", security)
         assert manifest["checkpoint_id"] == "restart-epoch"

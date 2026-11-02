@@ -45,9 +45,10 @@ The coordinated live-checkpoint path is implemented in
 [ADR-0001](../docs/decisions/0001-coordinated-checkpoint-epochs.md): active workers
 quiesce at durable step boundaries, shards persist fences, and the helper publishes
 validated snapshots. Tests cover two workers/two shards in all three training modes,
-restore/resume, auth boundaries, abort and immutable retry. Failure injection across
-coordinator/helper restart points and worker restart is still open; live claims are
-limited to the tested healthy-worker path.
+restore/resume, auth boundaries, abort, immutable retry, a lost manifest response, and
+partial unfreeze recovery after coordinator/shard restart. Failure injection at remaining
+phases and active worker-process restart are still open; live claims are limited to the
+tested healthy-worker path.
 
 These foundations and the local operations stack are now implemented. Genuine visual
 evidence and Git-backed Coolify instructions are committed with the deployment slice;
