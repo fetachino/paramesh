@@ -246,7 +246,7 @@ src/paramesh/rpc/        Generated Python bindings and message type stubs
 tests/                  Unit, network integration and independent-process tests
 examples/               Local and container run configurations
 tasks/                  Implementation plan
-docs/                   Interview notes and genuine run evidence
+docs/                   Technical designs, operator guides and genuine run evidence
 ```
 
 ## Current limitations and next work
@@ -269,5 +269,3 @@ benchmarks and self-hosted deployment follow in [ROADMAP.md](ROADMAP.md).
 - [Architecture and consistency model](ARCHITECTURE.md)
 - [Correctness evidence and benchmark policy](BENCHMARKS.md)
 - [Security model](SECURITY.md)
-- [Interview guide](docs/interview-guide.md)
-- [Resume notes](docs/resume-notes.md)

@@ -33,7 +33,7 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [ ] Add OpenBao and Keycloak only after core recovery and the trust model are tested.
 - [ ] Validate OpenTofu/self-hosted deployment, then Coolify and k3s on available free compute.
 - [ ] Audit documentation claims, clean-clone setup, storage/failure tests and visual evidence
-      before a portfolio release. No `v1.0.0` tag is justified yet.
+      before a release. No `v1.0.0` tag is justified yet.
 
 ## Intended cloud portability
 
@@ -49,6 +49,7 @@ of having deployed their managed equivalents.
 | NATS | Operational messaging |
 | OpenTofu / Traefik | Infrastructure as code / ingress |
 
-The next independent priorities are Azure/Azurite portability and controlled
-uncompressed performance/failure baselines. Actual Coolify deployment is pending
+The next priorities are reproducible dependency locking, controlled uncompressed
+performance/failure baselines, then Azure/Azurite portability. Compression follows
+only when baseline measurements justify it. Actual Coolify deployment is pending
 an available authorized server; no paid compute has been provisioned.

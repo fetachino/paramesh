@@ -88,5 +88,5 @@ with malformed-input, concurrent-retry and failure tests.
 
 Do not put credentials, private datasets or sensitive paths in configuration,
 training output, screenshots, benchmark reports or issue bodies. Use synthetic
-data for portfolio evidence. Public security reports should omit exploitable
+data for reproducible evidence. Public security reports should omit exploitable
 credentials or private data.
