@@ -21,7 +21,7 @@
     "worker_recovered"
   ],
   "trace": {
-    "trace_id": "0ab6de1f62c066bb051df55c85ceb755",
+    "trace_id": "3d2b0ab5374ce7abf0de28b41675c4da",
     "services": [
       "shard-0",
       "shard-1",
@@ -61,14 +61,14 @@
     100,
     100
   ],
-  "image_id": "sha256:422ed57cc221e9b57bace785dbabf2e67e6e6823a14f0f4dcffbc0c204205b27",
+  "image_id": "sha256:df5a565c84542b38a7f1c3786439d842f3279e160bbc5a4b3fa49ffb4e6bc3a9",
   "private_ports_verified": true,
   "all_host_ports_private": true,
   "environment": {
-    "commit": "cd34924a937caf8819be03140c43eae1c3fd9bf0",
+    "commit": "a72637671fcd16b2d9709a7ac68799742e60cd43",
     "dirty": false,
     "docker_platform": "linux/x86_64",
-    "verified_at": "2026-11-02T23:01:44.101175+00:00",
-    "project": "paramesh-ops-013a3820fe"
+    "verified_at": "2026-11-02T23:14:52.417577+00:00",
+    "project": "paramesh-ops-fb8ceda01f"
   }
 }
