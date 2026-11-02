@@ -44,8 +44,9 @@ offline restore of a complete manifest is separate from ordinary process restart
 
 These foundations and the local operations stack are now implemented. Genuine visual
 evidence and Git-backed Coolify instructions are committed with the deployment slice;
-public verification is pending an authorized server. Azure/Azurite and controlled
-performance/failure measurements remain the next independent work.
+public verification is pending an authorized server. Dependency locking and the
+first controlled uncompressed local baseline are complete. Azure/Azurite is next;
+larger-payload/network and repeated-fault measurements remain separate future work.
 
 Dependencies: verified containers → durable shard/worker/coordinator state → fencing
 and authenticated RPCs → killed-process tests → checkpoint stores → events/telemetry
