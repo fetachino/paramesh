@@ -3,8 +3,9 @@
 ## Status
 
 Accepted. Authenticated live export, durable epoch fencing, and sync/async/bounded
-integration tests are implemented. Process-restart and injected-failure coverage across
-every phase remains open in [the roadmap](../../ROADMAP.md).
+integration tests are implemented. Frozen-phase restart, uncertain manifest publication,
+and partial-unfreeze recovery are tested. Remaining phase failures and active worker
+process restart are open in [the roadmap](../../ROADMAP.md).
 
 ## Date
 

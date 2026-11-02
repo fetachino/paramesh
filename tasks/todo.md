@@ -17,7 +17,8 @@
 - [x] Define coordinated online checkpoint epoch, quiescence and fencing semantics in ADR-0001.
 - [x] Implement authenticated online checkpoint epochs for live sync/async/bounded runs.
   - Verify: two-worker/two-shard export, restore, resume, auth boundaries and synchronous numerical-reference comparison.
-- [ ] Inject coordinator/helper restarts and failures across each phase; verify worker restart and exact retry/abort behavior.
+- [x] Inject a lost manifest response and partial shard unfreeze; restart coordinator/shards and complete immutable retry/resume.
+- [ ] Inject failures in remaining phases and verify active worker-process restart and exact retry/abort behavior.
 - [x] Add optional NATS lifecycle events; training continues while NATS is unavailable.
 - [x] Add Prometheus metrics and distributed tracing with real observability services.
 - [x] Build a focused operations dashboard over actual state and benchmark artifacts.
