@@ -55,10 +55,13 @@ jobs:
       - run: docker compose build
       - run: python scripts/verify_compose.py
       - run: python scripts/verify_operations.py --isolated
+      - run: python scripts/verify_operations.py --multihost-simulation --output artifacts/multihost-simulation.json
       - uses: actions/upload-artifact@v4
         with:
           name: container-evidence
-          path: artifacts/*verification.json
+          path: |
+            artifacts/*verification.json
+            artifacts/multihost-simulation.json
       - uses: actions/upload-artifact@v4
         with:
           name: operations-evidence

@@ -55,8 +55,11 @@ These foundations and the local operations stack are now implemented. Genuine vi
 evidence and Git-backed Coolify instructions are committed with the deployment slice;
 public verification is pending an authorized server. Dependency locking and the
 first controlled uncompressed local baseline are complete. Azure/Azurite now reuses
-the immutable checkpoint contract and verifies partial-step RPC resume. Larger-payload/
-network and repeated-fault measurements remain separate future work.
+the immutable checkpoint contract and verifies partial-step RPC resume. The host-based
+Compose overlay now supports private endpoints, RPC mTLS, NATS TLS, remote Prometheus
+targets, and per-host persistent volumes; its local segmented-network verification is
+not a separate-host run. Larger-payload/network and repeated-fault measurements remain
+separate future work.
 
 Dependencies: verified containers → durable shard/worker/coordinator state → fencing
 and authenticated RPCs → killed-process tests → checkpoint stores → events/telemetry

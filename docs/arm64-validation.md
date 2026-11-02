@@ -1,8 +1,9 @@
 # Linux ARM64 deployment gate
 
-Oracle Cloud Always Free Ampere A1 is the planned Coolify host. This page records
-local Linux ARM64 validation only. No Oracle account, VM, Coolify resource or
-public endpoint was created.
+Oracle Cloud Always Free Ampere A1 remains one candidate for native Linux ARM64
+deployment if capacity returns. The final Linux VM target is provider-flexible;
+this page records local ARM64 validation only. No cloud account, VM, Coolify
+resource or public endpoint was created.
 
 ## Local test on 2026-11-02
 
@@ -50,10 +51,11 @@ hold exclusive locks. The test restored into a temporary directory, not the
 retained service volumes.
 
 This is a functional smoke test, not a benchmark or a host sizing result. QEMU
-startup was much slower than the ordinary health-check grace period. Native A1
-performance, sustained memory/disk use with Coolify, public HTTPS routing,
-persistence after host restart and rollback still require checks on an authorized
-server before deployment can be called complete. The image was built from the
+startup was much slower than the ordinary health-check grace period. If A1 is
+selected, its native ARM64 performance and sustained memory/disk use with Coolify
+remain untested. The selected host's public HTTPS routing, persistence after host
+restart and rollback still require checks on an authorized server before deployment
+can be called complete. The image was built from the
 working tree while ARM64 lock and validation changes were uncommitted; the
 evidence records that dirty source state and the exact lock hash.
 The isolated test containers were stopped after capture; their named volumes

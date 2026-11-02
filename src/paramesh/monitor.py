@@ -17,7 +17,7 @@ from urllib.request import Request, urlopen
 import grpc
 from google.protobuf.json_format import MessageToDict
 
-from paramesh import telemetry
+from paramesh import events, telemetry
 from paramesh.operations import EventLog
 from paramesh.rpc import training_pb2 as pb
 from paramesh.rpc import training_pb2_grpc as rpc
@@ -83,6 +83,7 @@ def _fetch(endpoint: str, path: str, payload: dict[str, Any] | None = None) -> b
 class EventSink:
     def __init__(self, log: EventLog, url: str, token: str, loki: str) -> None:
         self.log, self.url, self._token = log, url, token
+        self._tls_options = events.nats_tls_options(url)
         self.loki = _endpoint(loki)
         self.stopped = threading.Event()
         self.connected = False
@@ -138,6 +139,7 @@ class EventSink:
                 client = await nats.connect(
                     self.url,
                     token=self._token,
+                    **self._tls_options,
                     connect_timeout=1,
                     allow_reconnect=False,
                     max_reconnect_attempts=0,

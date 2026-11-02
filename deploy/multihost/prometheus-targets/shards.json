@@ -1,0 +1,1 @@
+[{"targets":["shard-0.private.example:9102"],"labels":{"component":"shard-0"}},{"targets":["shard-1.private.example:9103"],"labels":{"component":"shard-1"}}]
