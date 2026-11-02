@@ -198,10 +198,17 @@ python scripts/create_dev_env.py --operations
 docker compose --profile operations up --build -d
 ```
 
+On a fresh clone, `python scripts/create_dev_env.py --operations` creates that
+clone's own Git-ignored `.env`, with distinct development credentials and local
+operations defaults. No shared passwords or secrets are stored in the repository.
+Run the generator before starting the operations profile. Rerunning it preserves
+existing values and adds only missing settings.
+
 Open [the operator dashboard](http://127.0.0.1:8080) or
-[Grafana](http://127.0.0.1:3000). Both use username `operator`; their distinct
-passwords are in the local ignored `.env` file. The generator preserves existing
-values: increase `PARAMESH_STEPS` if a retained run already reached its target.
+[Grafana](http://127.0.0.1:3000). Both use username `operator`, with separate
+generated passwords in this clone's `.env` (`PARAMESH_DASHBOARD_PASSWORD` and
+`PARAMESH_GRAFANA_PASSWORD`). Increase `PARAMESH_STEPS` if a retained run already
+reached its target.
 Only these two UI ports are published, on loopback. Training, messaging, storage
 and telemetry ingestion/query ports stay private.
 

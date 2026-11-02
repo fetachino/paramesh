@@ -11,10 +11,16 @@ docker compose exec coordinator paramesh status --coordinator coordinator:50050
 python scripts/verify_operations.py
 ```
 
+On a fresh clone, run `python scripts/create_dev_env.py --operations` before
+starting the operations profile. It creates that clone's own Git-ignored `.env`
+with distinct development credentials and local operations defaults; the
+repository contains no shared passwords or secrets. Rerunning the generator
+preserves existing values and adds only missing settings.
+
 Open `http://127.0.0.1:8080` for ParamMesh and `http://127.0.0.1:3000` for Grafana.
-Username is `operator`; read the respective `PARAMESH_DASHBOARD_PASSWORD` and
-`PARAMESH_GRAFANA_PASSWORD` in your ignored `.env` locally. Never paste them into
-reports or URLs. Generated credentials are distinct; existing values are preserved.
+Both use username `operator`; read their separate generated passwords from this
+clone's `.env`: `PARAMESH_DASHBOARD_PASSWORD` and `PARAMESH_GRAFANA_PASSWORD`.
+Never paste them into reports or URLs.
 The operations flag supplies a 1,000-step target and 0.05s deliberate pacing only
 when those settings are absent. Increase the target to continue retained training.
 Pacing is outside the training-step trace and step-duration histogram.
