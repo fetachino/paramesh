@@ -1,13 +1,11 @@
 # Whole-run checkpoints
 
 Continuous recovery uses the most recent local SQLite commit. A portable checkpoint
-is a separate **offline whole-run cut**: coordinator metadata, every shard's data-only
-protobuf snapshot, and every worker's write-ahead journal. Stop all training services
-before export. Exclusive OS leases reject live databases; no hot global snapshot is
-claimed. A worker interrupted between shard commits can resume its original requests.
-An accepted design for online coordinated checkpoint epochs is recorded in
-[ADR-0001](decisions/0001-coordinated-checkpoint-epochs.md); it is not implemented,
-so the commands below still require a fully stopped run.
+contains coordinator metadata, every shard's data-only protobuf snapshot, and every
+worker's write-ahead journal. Offline export requires all training services stopped;
+the coordinated live export described below safely quiesces active workers and fences
+every shard. A worker interrupted between shard commits can resume its original requests.
+The protocol is defined in [ADR-0001](decisions/0001-coordinated-checkpoint-epochs.md).
 
 The manifest records the durable completed-step lower watermark, actual per-shard
 versions, fixed membership, SGD configuration and content-addressed SHA-256 blobs.
@@ -156,9 +154,56 @@ resumes through real coordinator/shard RPCs, replays one journaled contribution 
 matches uninterrupted SGD below `1e-6`; its report remains in the test artifact directory.
 
 This is emulator compatibility evidence, not a managed Azure deployment, durability
-SLA or cloud performance measurement. Online coordinated checkpointing and topology
-remapping remain unimplemented.
+SLA or cloud performance measurement. Live checkpointing and restore support the fixed
+configured membership and original topology; topology remapping is not implemented.
 
 Sources: [Azurite 3.37.0 and supported API](https://github.com/Azure/Azurite/blob/v3.37.0/README.md),
 [SDK 12.31.1 changelog](https://github.com/Azure/azure-sdk-for-python/blob/azure-storage-blob_12.31.1/sdk/storage/azure-storage-blob/CHANGELOG.md),
 [official BlobClient implementation and contracts](https://github.com/Azure/azure-sdk-for-python/blob/azure-storage-blob_12.31.1/sdk/storage/azure-storage-blob/azure/storage/blob/_blob_client.py).
+
+## Coordinated live export
+
+`live-export` requests a monotonic checkpoint epoch from the coordinator. Each active
+worker finishes its current optimizer update, durably completes its journal, acknowledges
+that step, and waits. The coordinator records acknowledgments before freezing all shards;
+each shard durably fences updates before its snapshot is read. The helper validates the
+complete cut, publishes immutable blobs followed by the manifest, then unfreezes shards
+and releases workers. The manifest can be restored using the offline restore/install
+commands above.
+
+Workers must be registered, active and healthy when the request begins. A completed or
+unavailable worker prevents a new live epoch. In Compose, use a sufficiently large
+`PARAMESH_STEPS` value if training should still be active at checkpoint time. Generate
+the normal `.env` first so the one-shot helper receives the data and administrative
+RPC tokens. Local publication:
+
+```powershell
+docker compose --profile maintenance run --rm --no-deps checkpoint checkpoint live-export --id live-20 --coordinator coordinator:50050 --store /checkpoints
+```
+
+For S3-compatible or Azure Blob publication, pass the same explicit endpoint and target
+options used by offline export. The helper has the existing `checkpoints` volume mounted;
+S3 credentials are passed only to this helper by Compose. For Azure, pass
+`-e PARAMESH_AZURE_ACCOUNT -e PARAMESH_AZURE_KEY` to `docker compose run` so those
+credentials are available only to the helper.
+
+If export fails before commit, workers remain paused to keep the cut consistent. Retry
+`live-export` with the same ID after fixing the failed service or storage operation, or
+explicitly release the epoch with:
+
+```powershell
+docker compose --profile maintenance run --rm --no-deps checkpoint checkpoint live-abort --id live-20 --coordinator coordinator:50050
+```
+
+Abort is rejected after a manifest is committed; rerun `live-export` with that ID to
+finish shard unfreeze and worker release. A failed export can leave unreferenced immutable
+blobs, as with offline publication. Preserve all role state volumes while retrying or
+aborting. The helper uses authenticated RPC and the configured object store; it does not
+read or replace live state volumes.
+
+Coordinator restart retains the checkpoint phase and acknowledgments; shard restart
+retains its epoch fence. Resume a frozen/committed epoch by retrying the same export ID,
+or abort an uncommitted epoch. Coordinator restart invalidates existing worker sessions,
+so restart the workers after the coordinator returns to `RUNNING`; they recover from their
+durable worker journals. Injected failure testing across all restart points is still open
+in [the roadmap](../ROADMAP.md).

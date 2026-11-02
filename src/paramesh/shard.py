@@ -46,6 +46,8 @@ class ParameterShard:
         self.barrier_deadline = 0.0
         self.state = state
         self.worker_generations = {name: 0 for name in config.worker_ids}
+        self.checkpoint_epoch = 0
+        self.checkpoint_frozen = False
         self.config_fingerprint = hashlib.sha256(
             config.SerializeToString(deterministic=True)
         ).digest()
@@ -67,6 +69,8 @@ class ParameterShard:
         receipts: dict[str, Receipt],
         version: int,
         generations: dict[str, int] | None = None,
+        checkpoint_epoch: int | None = None,
+        checkpoint_frozen: bool | None = None,
     ) -> pb.ShardSnapshot:
         return pb.ShardSnapshot(
             format_version=1,
@@ -86,6 +90,12 @@ class ParameterShard:
                 for name, value in sorted(receipts.items())
             ],
             worker_generations=self.worker_generations if generations is None else generations,
+            checkpoint_epoch=(
+                self.checkpoint_epoch if checkpoint_epoch is None else checkpoint_epoch
+            ),
+            checkpoint_frozen=(
+                self.checkpoint_frozen if checkpoint_frozen is None else checkpoint_frozen
+            ),
         )
 
     def _save(
@@ -94,13 +104,20 @@ class ParameterShard:
         receipts: dict[str, Receipt],
         version: int,
         generations: dict[str, int] | None = None,
+        checkpoint_epoch: int | None = None,
+        checkpoint_frozen: bool | None = None,
     ) -> None:
         if self.state is not None:
             self.state.put(
                 "shard",
-                self._snapshot(parameters, receipts, version, generations).SerializeToString(
-                    deterministic=True
-                ),
+                self._snapshot(
+                    parameters,
+                    receipts,
+                    version,
+                    generations,
+                    checkpoint_epoch,
+                    checkpoint_frozen,
+                ).SerializeToString(deterministic=True),
             )
 
     def _restore(self, payload: bytes) -> None:
@@ -135,6 +152,8 @@ class ParameterShard:
         self.receipts = receipts
         self.version = snapshot.version
         self.worker_generations = dict(snapshot.worker_generations)
+        self.checkpoint_epoch = snapshot.checkpoint_epoch
+        self.checkpoint_frozen = snapshot.checkpoint_frozen
 
     def pull(self, run_id: str) -> pb.Parameters:
         if run_id != self.config.run_id:
@@ -171,6 +190,53 @@ class ParameterShard:
             self._save(self.parameters, self.receipts, self.version, proposed)
             self.worker_generations = proposed
             self._abort_barrier()
+
+    def freeze_checkpoint(self, run_id: str, epoch: int) -> None:
+        if run_id != self.config.run_id or epoch < 1:
+            raise ValueError("Checkpoint run or epoch is invalid")
+        with self.condition:
+            if epoch == self.checkpoint_epoch and self.checkpoint_frozen:
+                return
+            if epoch <= self.checkpoint_epoch:
+                raise ValueError("Checkpoint epoch must advance monotonically")
+            if self.pending:
+                raise TimeoutError("Cannot freeze a shard with pending synchronous contributions")
+            self._save(
+                self.parameters,
+                self.receipts,
+                self.version,
+                checkpoint_epoch=epoch,
+                checkpoint_frozen=True,
+            )
+            self.checkpoint_epoch = epoch
+            self.checkpoint_frozen = True
+
+    def unfreeze_checkpoint(self, run_id: str, epoch: int) -> None:
+        if run_id != self.config.run_id:
+            raise ValueError("Wrong run ID")
+        with self.condition:
+            if epoch < self.checkpoint_epoch:
+                raise ValueError("Checkpoint epoch does not match the active fence")
+            if not self.checkpoint_frozen:
+                return
+            if epoch != self.checkpoint_epoch:
+                raise ValueError("Checkpoint epoch does not match the active fence")
+            self._save(
+                self.parameters,
+                self.receipts,
+                self.version,
+                checkpoint_frozen=False,
+            )
+            self.checkpoint_frozen = False
+
+    def export_checkpoint_snapshot(self, run_id: str, epoch: int) -> pb.CheckpointSnapshot:
+        if run_id != self.config.run_id:
+            raise ValueError("Wrong run ID")
+        with self.condition:
+            if self.checkpoint_epoch != epoch or not self.checkpoint_frozen:
+                raise RuntimeError("Shard is not frozen for this checkpoint epoch")
+            snapshot = self._snapshot(self.parameters, self.receipts, self.version)
+            return pb.CheckpointSnapshot(snapshot=snapshot.SerializeToString(deterministic=True))
 
     def _validate(self, request: pb.GradientUpdate) -> dict[str, FloatArray]:
         if request.run_id != self.config.run_id:
@@ -223,6 +289,8 @@ class ParameterShard:
         semantic.ClearField("generation")
         digest = hashlib.sha256(semantic.SerializeToString(deterministic=True)).digest()
         with self.condition:
+            if self.checkpoint_frozen:
+                raise PermissionError("Shard is frozen for a checkpoint epoch")
             if request.generation != self.worker_generations[request.worker_id]:
                 raise PermissionError("Worker generation is fenced; re-register before updating")
             previous = self.receipts.get(request.worker_id)

@@ -53,6 +53,10 @@ message WorkerState {
   uint64 parameter_version = 4;
   double heartbeat_age_seconds = 5;
   uint64 generation = 6;
+  uint64 checkpoint_epoch = 7;
+  string checkpoint_id = 8;
+  string checkpoint_phase = 9;
+  bool checkpoint_committed = 10;
 }
 
 message RunStatus {
@@ -108,6 +112,8 @@ message ShardSnapshot {
   repeated Tensor parameters = 6;
   repeated UpdateReceipt receipts = 7;
   map<string, uint64> worker_generations = 8;
+  uint64 checkpoint_epoch = 9;
+  bool checkpoint_frozen = 10;
 }
 
 message FenceRequest {
@@ -132,10 +138,77 @@ message WorkerJournal {
   double loss = 6;
 }
 
+enum CheckpointPhase {
+  CHECKPOINT_RUNNING = 0;
+  CHECKPOINT_REQUESTED = 1;
+  CHECKPOINT_FROZEN = 2;
+  CHECKPOINT_COMMITTED = 3;
+  CHECKPOINT_RESUMING = 4;
+  CHECKPOINT_ABORTING = 5;
+}
+
+message CheckpointRequest {
+  string run_id = 1;
+  string checkpoint_id = 2;
+  string worker_id = 3;
+}
+
+message CheckpointControl {
+  uint64 epoch = 1;
+  string checkpoint_id = 2;
+  CheckpointPhase phase = 3;
+  bool committed = 4;
+}
+
+message CheckpointAck {
+  string run_id = 1;
+  string worker_id = 2;
+  string session_id = 3;
+  uint64 epoch = 4;
+  uint64 step = 5;
+  uint64 parameter_version = 6;
+  bytes worker_journal = 7;
+}
+
+message CheckpointWorkerRecord {
+  string worker_id = 1;
+  uint64 generation = 2;
+  uint64 step = 3;
+  bytes worker_journal = 4;
+}
+
+message CheckpointEpochStatus {
+  CheckpointControl control = 1;
+  bool all_workers_acknowledged = 2;
+  repeated CheckpointWorkerRecord workers = 3;
+  bool committed = 4;
+}
+
+message CheckpointPhaseRequest {
+  string run_id = 1;
+  uint64 epoch = 2;
+  CheckpointPhase phase = 3;
+}
+
+message CheckpointSnapshot {
+  bytes snapshot = 1;
+}
+
+message ShardCheckpointRequest {
+  string run_id = 1;
+  uint64 epoch = 2;
+}
+
 service Coordinator {
   rpc RegisterWorker(RegisterWorkerRequest) returns (WorkerSession);
   rpc Heartbeat(HeartbeatRequest) returns (WorkerState);
   rpc GetStatus(Empty) returns (RunStatus);
+  rpc BeginCheckpoint(CheckpointRequest) returns (CheckpointEpochStatus);
+  rpc GetCheckpointStatus(CheckpointRequest) returns (CheckpointEpochStatus);
+  rpc AcknowledgeCheckpoint(CheckpointAck) returns (CheckpointEpochStatus);
+  rpc GetCheckpointControl(CheckpointRequest) returns (CheckpointControl);
+  rpc SetCheckpointPhase(CheckpointPhaseRequest) returns (CheckpointEpochStatus);
+  rpc GetCheckpointSnapshot(CheckpointRequest) returns (CheckpointSnapshot);
 }
 
 service ParameterShard {
@@ -143,4 +216,7 @@ service ParameterShard {
   rpc PushGradients(GradientUpdate) returns (UpdateResult);
   rpc GetProgress(PullRequest) returns (ShardProgress);
   rpc FenceWorker(FenceRequest) returns (Empty);
+  rpc FreezeCheckpoint(ShardCheckpointRequest) returns (Empty);
+  rpc UnfreezeCheckpoint(ShardCheckpointRequest) returns (Empty);
+  rpc ExportCheckpointSnapshot(ShardCheckpointRequest) returns (CheckpointSnapshot);
 }

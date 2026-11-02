@@ -55,8 +55,10 @@ def train_worker(
     torch.set_num_threads(1)
     network = model(hidden_width)
     progress = [0, 0]
+    checkpoint_epoch = [0]
     progress_lock = threading.Lock()
     stopped = threading.Event()
+    checkpoint_requested = threading.Event()
     heartbeat_errors: list[Exception] = []
     with ExitStack() as stack:
         channel = stack.enter_context(open_channel(address, security))
@@ -85,7 +87,8 @@ def train_worker(
                 while not stopped.is_set():
                     with progress_lock:
                         step, version = progress
-                    coordinator.Heartbeat(
+                    state = _rpc(
+                        coordinator.Heartbeat,
                         pb.HeartbeatRequest(
                             run_id=config.run_id,
                             worker_id=worker_id,
@@ -93,8 +96,12 @@ def train_worker(
                             step=step,
                             parameter_version=version,
                         ),
-                        timeout=timeout,
+                        timeout,
                     )
+                    if state.checkpoint_phase == "CHECKPOINT_REQUESTED":
+                        with progress_lock:
+                            checkpoint_epoch[0] = state.checkpoint_epoch
+                        checkpoint_requested.set()
                     stopped.wait(1)
             except Exception as error:
                 heartbeat_errors.append(error)
@@ -104,6 +111,37 @@ def train_worker(
         losses: list[float] = []
         refreshes = 0
         replayed = 0
+
+        def wait_for_checkpoint() -> None:
+            if not checkpoint_requested.is_set():
+                return
+            with progress_lock:
+                step, version = progress
+                epoch = checkpoint_epoch[0]
+            _rpc(
+                coordinator.AcknowledgeCheckpoint,
+                pb.CheckpointAck(
+                    run_id=config.run_id,
+                    worker_id=worker_id,
+                    session_id=session.session_id,
+                    epoch=epoch,
+                    step=step,
+                    parameter_version=version,
+                    worker_journal=journal.record.SerializeToString(deterministic=True),
+                ),
+                timeout,
+            )
+            request = pb.CheckpointRequest(run_id=config.run_id, worker_id=worker_id)
+            while not stopped.is_set():
+                control = _rpc(coordinator.GetCheckpointControl, request, timeout)
+                if control.phase == pb.CHECKPOINT_RUNNING:
+                    checkpoint_requested.clear()
+                    return
+                if heartbeat_errors:
+                    raise RuntimeError("Coordinator heartbeat failed") from heartbeat_errors[0]
+                stopped.wait(0.1)
+            raise RuntimeError("Worker stopped while waiting for checkpoint release")
+
         try:
             for step in range(resumed_from, steps):
                 with telemetry.span(
@@ -216,13 +254,15 @@ def train_worker(
                     else:
                         raise RuntimeError("Staleness refresh limit exceeded; run did not complete")
                 stopped.wait(step_delay)
+                wait_for_checkpoint()
             if heartbeat_errors:
                 raise RuntimeError("Coordinator heartbeat failed") from heartbeat_errors[0]
             stopped.set()
             thread.join(timeout=timeout + 1)
             if heartbeat_errors:
                 raise RuntimeError("Coordinator heartbeat failed") from heartbeat_errors[0]
-            coordinator.Heartbeat(
+            _rpc(
+                coordinator.Heartbeat,
                 pb.HeartbeatRequest(
                     run_id=config.run_id,
                     worker_id=worker_id,
@@ -231,7 +271,7 @@ def train_worker(
                     parameter_version=progress[1],
                     completed=True,
                 ),
-                timeout=timeout,
+                timeout,
             )
             return {
                 "worker_id": worker_id,

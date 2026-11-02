@@ -29,11 +29,18 @@ def _call[T](context: Any, operation: Callable[[], T]) -> T:
         context.abort(grpc.StatusCode.PERMISSION_DENIED, str(error))
     except TimeoutError as error:
         context.abort(grpc.StatusCode.DEADLINE_EXCEEDED, str(error))
+    except RuntimeError as error:
+        context.abort(grpc.StatusCode.FAILED_PRECONDITION, str(error))
     except grpc.RpcError:
         context.abort(grpc.StatusCode.UNAVAILABLE, "A dependent service is unavailable")
     except (OSError, sqlite3.Error):
         context.abort(grpc.StatusCode.INTERNAL, "Durable state is unavailable")
     raise AssertionError("gRPC abort must not return")
+
+
+def _run_id(actual: str, expected: str) -> None:
+    if actual != expected:
+        raise ValueError("Wrong run ID")
 
 
 class CoordinatorService:
@@ -50,6 +57,44 @@ class CoordinatorService:
 
     def GetStatus(self, request: pb.Empty, context: Any) -> pb.RunStatus:
         return self.coordinator.status()
+
+    def BeginCheckpoint(
+        self, request: pb.CheckpointRequest, context: Any
+    ) -> pb.CheckpointEpochStatus:
+        _call(context, lambda: _run_id(request.run_id, self.coordinator.config.run_id))
+        return _call(context, lambda: self.coordinator.begin_checkpoint(request.checkpoint_id))
+
+    def GetCheckpointStatus(
+        self, request: pb.CheckpointRequest, context: Any
+    ) -> pb.CheckpointEpochStatus:
+        _call(context, lambda: _run_id(request.run_id, self.coordinator.config.run_id))
+        return self.coordinator.checkpoint_status()
+
+    def AcknowledgeCheckpoint(
+        self, request: pb.CheckpointAck, context: Any
+    ) -> pb.CheckpointEpochStatus:
+        return _call(context, lambda: self.coordinator.acknowledge_checkpoint(request))
+
+    def GetCheckpointControl(
+        self, request: pb.CheckpointRequest, context: Any
+    ) -> pb.CheckpointControl:
+        _call(context, lambda: _run_id(request.run_id, self.coordinator.config.run_id))
+        return _call(context, lambda: self.coordinator.checkpoint_control(request.worker_id))
+
+    def SetCheckpointPhase(
+        self, request: pb.CheckpointPhaseRequest, context: Any
+    ) -> pb.CheckpointEpochStatus:
+        _call(context, lambda: _run_id(request.run_id, self.coordinator.config.run_id))
+        return _call(
+            context,
+            lambda: self.coordinator.set_checkpoint_phase(request.epoch, request.phase),
+        )
+
+    def GetCheckpointSnapshot(
+        self, request: pb.CheckpointRequest, context: Any
+    ) -> pb.CheckpointSnapshot:
+        _call(context, lambda: _run_id(request.run_id, self.coordinator.config.run_id))
+        return _call(context, lambda: self.coordinator.checkpoint_snapshot(request.checkpoint_id))
 
 
 class ShardService:
@@ -70,6 +115,22 @@ class ShardService:
             context, lambda: self.shard.fence(request.run_id, request.worker_id, request.generation)
         )
         return pb.Empty()
+
+    def FreezeCheckpoint(self, request: pb.ShardCheckpointRequest, context: Any) -> pb.Empty:
+        _call(context, lambda: self.shard.freeze_checkpoint(request.run_id, request.epoch))
+        return pb.Empty()
+
+    def UnfreezeCheckpoint(self, request: pb.ShardCheckpointRequest, context: Any) -> pb.Empty:
+        _call(context, lambda: self.shard.unfreeze_checkpoint(request.run_id, request.epoch))
+        return pb.Empty()
+
+    def ExportCheckpointSnapshot(
+        self, request: pb.ShardCheckpointRequest, context: Any
+    ) -> pb.CheckpointSnapshot:
+        return _call(
+            context,
+            lambda: self.shard.export_checkpoint_snapshot(request.run_id, request.epoch),
+        )
 
 
 def managed_coordinator(

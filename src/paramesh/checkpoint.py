@@ -2,13 +2,14 @@
 
 import hashlib
 import json
+import math
 import os
 import re
 import tempfile
 import time
 from contextlib import ExitStack
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from google.protobuf.json_format import MessageToJson
 
@@ -18,6 +19,8 @@ from paramesh.coordinator import Coordinator
 from paramesh.events import emit
 from paramesh.journal import Journal
 from paramesh.rpc import training_pb2 as pb
+from paramesh.rpc import training_pb2_grpc as rpc
+from paramesh.security import RpcSecurity, open_channel
 from paramesh.shard import ParameterShard
 from paramesh.state import StateDB
 from paramesh.storage import ObjectStore
@@ -108,7 +111,7 @@ def _validate(records: dict[str, bytes], root: Path) -> dict[str, Any]:
 
 def export_checkpoint(root: Path, store: ObjectStore, checkpoint_id: str) -> dict[str, Any]:
     started = time.perf_counter()
-    key = _manifest_key(checkpoint_id)
+    _manifest_key(checkpoint_id)
     records: dict[str, bytes] = {}
     with ExitStack() as stack:
         path = root / "coordinator" / "coordinator.sqlite"
@@ -136,6 +139,17 @@ def export_checkpoint(root: Path, store: ObjectStore, checkpoint_id: str) -> dic
             raise ValueError("Checkpoint bundle exceeds size limit")
         with tempfile.TemporaryDirectory() as temporary:
             summary = _validate(records, Path(temporary))
+    return _publish_checkpoint(records, store, checkpoint_id, summary, started)
+
+
+def _publish_checkpoint(
+    records: dict[str, bytes],
+    store: ObjectStore,
+    checkpoint_id: str,
+    summary: dict[str, Any],
+    started: float,
+) -> dict[str, Any]:
+    key = _manifest_key(checkpoint_id)
     entries = []
     for role, payload in sorted(records.items()):
         digest = hashlib.sha256(payload).hexdigest()
@@ -154,6 +168,168 @@ def export_checkpoint(root: Path, store: ObjectStore, checkpoint_id: str) -> dic
         duration_seconds=time.perf_counter() - started,
     )
     return manifest
+
+
+def export_online_checkpoint(
+    coordinator_address: str,
+    store: ObjectStore,
+    checkpoint_id: str,
+    security: RpcSecurity,
+    *,
+    timeout: float = 120,
+) -> dict[str, Any]:
+    """Quiesce the configured workers, freeze shards and publish one live cut."""
+    if (
+        not math.isfinite(timeout)
+        or timeout <= 0
+        or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", checkpoint_id)
+    ):
+        raise ValueError("Checkpoint ID and timeout are invalid")
+    started = time.perf_counter()
+    with open_channel(coordinator_address, security, admin=True) as channel:
+        coordinator = rpc.CoordinatorStub(channel)
+        run = coordinator.GetStatus(pb.Empty(), timeout=timeout)
+        request = pb.CheckpointRequest(run_id=run.config.run_id, checkpoint_id=checkpoint_id)
+        status = coordinator.BeginCheckpoint(request, timeout=timeout)
+        if status.control.checkpoint_id != checkpoint_id:
+            raise ValueError("Checkpoint coordinator reserved a different ID")
+        if status.committed and status.control.phase == pb.CHECKPOINT_RUNNING:
+            return cast(
+                dict[str, Any], json.loads(store.get(_manifest_key(checkpoint_id), 64 * 1024))
+            )
+        if status.control.phase in (pb.CHECKPOINT_ABORTING, pb.CHECKPOINT_RUNNING):
+            raise RuntimeError("Checkpoint epoch is aborted or cannot be resumed; use a new ID")
+        deadline = time.monotonic() + timeout
+        while (
+            status.control.phase == pb.CHECKPOINT_REQUESTED and not status.all_workers_acknowledged
+        ):
+            if time.monotonic() >= deadline:
+                raise TimeoutError("Workers did not reach the checkpoint safe point before timeout")
+            time.sleep(0.05)
+            status = coordinator.GetCheckpointStatus(request, timeout=timeout)
+        if status.control.phase == pb.CHECKPOINT_REQUESTED:
+            for address in run.config.shard_endpoints:
+                with open_channel(address, security, admin=True) as shard_channel:
+                    rpc.ParameterShardStub(shard_channel).FreezeCheckpoint(
+                        pb.ShardCheckpointRequest(
+                            run_id=run.config.run_id, epoch=status.control.epoch
+                        ),
+                        timeout=timeout,
+                    )
+            status = coordinator.SetCheckpointPhase(
+                pb.CheckpointPhaseRequest(
+                    run_id=run.config.run_id,
+                    epoch=status.control.epoch,
+                    phase=pb.CHECKPOINT_FROZEN,
+                ),
+                timeout=timeout,
+            )
+        if status.control.phase == pb.CHECKPOINT_FROZEN:
+            records: dict[str, bytes] = {}
+            frozen = coordinator.GetCheckpointSnapshot(request, timeout=timeout)
+            saved = json.loads(frozen.snapshot)
+            saved["checkpoint"]["phase"] = pb.CHECKPOINT_RUNNING
+            saved["checkpoint"]["committed"] = True
+            records["coordinator"] = json.dumps(saved, allow_nan=False).encode()
+            for worker in status.workers:
+                records[worker.worker_id] = worker.worker_journal
+            for index, address in enumerate(run.config.shard_endpoints):
+                with open_channel(address, security, admin=True) as shard_channel:
+                    snapshot = rpc.ParameterShardStub(shard_channel).ExportCheckpointSnapshot(
+                        pb.ShardCheckpointRequest(
+                            run_id=run.config.run_id, epoch=status.control.epoch
+                        ),
+                        timeout=timeout,
+                    )
+                shard_record = pb.ShardSnapshot.FromString(snapshot.snapshot)
+                shard_record.checkpoint_frozen = False
+                records[f"shard-{index}"] = shard_record.SerializeToString(deterministic=True)
+            if sum(map(len, records.values())) > MAX_BUNDLE_BYTES:
+                raise ValueError("Checkpoint bundle exceeds size limit")
+            with tempfile.TemporaryDirectory() as temporary:
+                summary = _validate(records, Path(temporary))
+            _publish_checkpoint(records, store, checkpoint_id, summary, started)
+            status = coordinator.SetCheckpointPhase(
+                pb.CheckpointPhaseRequest(
+                    run_id=run.config.run_id,
+                    epoch=status.control.epoch,
+                    phase=pb.CHECKPOINT_COMMITTED,
+                ),
+                timeout=timeout,
+            )
+        if status.control.phase in (pb.CHECKPOINT_COMMITTED, pb.CHECKPOINT_RESUMING):
+            for address in run.config.shard_endpoints:
+                with open_channel(address, security, admin=True) as shard_channel:
+                    rpc.ParameterShardStub(shard_channel).UnfreezeCheckpoint(
+                        pb.ShardCheckpointRequest(
+                            run_id=run.config.run_id, epoch=status.control.epoch
+                        ),
+                        timeout=timeout,
+                    )
+            if status.control.phase == pb.CHECKPOINT_COMMITTED:
+                status = coordinator.SetCheckpointPhase(
+                    pb.CheckpointPhaseRequest(
+                        run_id=run.config.run_id,
+                        epoch=status.control.epoch,
+                        phase=pb.CHECKPOINT_RESUMING,
+                    ),
+                    timeout=timeout,
+                )
+            coordinator.SetCheckpointPhase(
+                pb.CheckpointPhaseRequest(
+                    run_id=run.config.run_id,
+                    epoch=status.control.epoch,
+                    phase=pb.CHECKPOINT_RUNNING,
+                ),
+                timeout=timeout,
+            )
+        return cast(dict[str, Any], json.loads(store.get(_manifest_key(checkpoint_id), 64 * 1024)))
+
+
+def abort_online_checkpoint(
+    coordinator_address: str,
+    checkpoint_id: str,
+    security: RpcSecurity,
+    *,
+    timeout: float = 120,
+) -> None:
+    """Release a failed pre-commit epoch only after every shard confirms unfreeze."""
+    with open_channel(coordinator_address, security, admin=True) as channel:
+        coordinator = rpc.CoordinatorStub(channel)
+        run = coordinator.GetStatus(pb.Empty(), timeout=timeout)
+        request = pb.CheckpointRequest(run_id=run.config.run_id, checkpoint_id=checkpoint_id)
+        status = coordinator.GetCheckpointStatus(request, timeout=timeout)
+        if status.control.checkpoint_id != checkpoint_id or status.control.epoch == 0:
+            raise ValueError("Checkpoint ID does not identify an active or completed epoch")
+        if status.committed:
+            if status.control.phase == pb.CHECKPOINT_RUNNING:
+                return
+            raise ValueError("A committed checkpoint must be resumed, not aborted")
+        if status.control.phase == pb.CHECKPOINT_RUNNING:
+            return
+        if status.control.phase != pb.CHECKPOINT_ABORTING:
+            status = coordinator.SetCheckpointPhase(
+                pb.CheckpointPhaseRequest(
+                    run_id=run.config.run_id,
+                    epoch=status.control.epoch,
+                    phase=pb.CHECKPOINT_ABORTING,
+                ),
+                timeout=timeout,
+            )
+        for address in run.config.shard_endpoints:
+            with open_channel(address, security, admin=True) as shard_channel:
+                rpc.ParameterShardStub(shard_channel).UnfreezeCheckpoint(
+                    pb.ShardCheckpointRequest(run_id=run.config.run_id, epoch=status.control.epoch),
+                    timeout=timeout,
+                )
+        coordinator.SetCheckpointPhase(
+            pb.CheckpointPhaseRequest(
+                run_id=run.config.run_id,
+                epoch=status.control.epoch,
+                phase=pb.CHECKPOINT_RUNNING,
+            ),
+            timeout=timeout,
+        )
 
 
 def _read(store: ObjectStore, checkpoint_id: str) -> tuple[dict[str, Any], dict[str, bytes]]:

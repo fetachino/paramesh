@@ -49,6 +49,36 @@ class CoordinatorStub(object):
                 request_serializer=paramesh_dot_rpc_dot_training__pb2.Empty.SerializeToString,
                 response_deserializer=paramesh_dot_rpc_dot_training__pb2.RunStatus.FromString,
                 _registered_method=True)
+        self.BeginCheckpoint = channel.unary_unary(
+                '/paramesh.v1.Coordinator/BeginCheckpoint',
+                request_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.SerializeToString,
+                response_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.FromString,
+                _registered_method=True)
+        self.GetCheckpointStatus = channel.unary_unary(
+                '/paramesh.v1.Coordinator/GetCheckpointStatus',
+                request_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.SerializeToString,
+                response_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.FromString,
+                _registered_method=True)
+        self.AcknowledgeCheckpoint = channel.unary_unary(
+                '/paramesh.v1.Coordinator/AcknowledgeCheckpoint',
+                request_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointAck.SerializeToString,
+                response_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.FromString,
+                _registered_method=True)
+        self.GetCheckpointControl = channel.unary_unary(
+                '/paramesh.v1.Coordinator/GetCheckpointControl',
+                request_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.SerializeToString,
+                response_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointControl.FromString,
+                _registered_method=True)
+        self.SetCheckpointPhase = channel.unary_unary(
+                '/paramesh.v1.Coordinator/SetCheckpointPhase',
+                request_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointPhaseRequest.SerializeToString,
+                response_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.FromString,
+                _registered_method=True)
+        self.GetCheckpointSnapshot = channel.unary_unary(
+                '/paramesh.v1.Coordinator/GetCheckpointSnapshot',
+                request_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.SerializeToString,
+                response_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointSnapshot.FromString,
+                _registered_method=True)
 
 
 class CoordinatorServicer(object):
@@ -72,6 +102,42 @@ class CoordinatorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def BeginCheckpoint(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetCheckpointStatus(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AcknowledgeCheckpoint(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetCheckpointControl(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetCheckpointPhase(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetCheckpointSnapshot(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_CoordinatorServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -89,6 +155,36 @@ def add_CoordinatorServicer_to_server(servicer, server):
                     servicer.GetStatus,
                     request_deserializer=paramesh_dot_rpc_dot_training__pb2.Empty.FromString,
                     response_serializer=paramesh_dot_rpc_dot_training__pb2.RunStatus.SerializeToString,
+            ),
+            'BeginCheckpoint': grpc.unary_unary_rpc_method_handler(
+                    servicer.BeginCheckpoint,
+                    request_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.FromString,
+                    response_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.SerializeToString,
+            ),
+            'GetCheckpointStatus': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetCheckpointStatus,
+                    request_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.FromString,
+                    response_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.SerializeToString,
+            ),
+            'AcknowledgeCheckpoint': grpc.unary_unary_rpc_method_handler(
+                    servicer.AcknowledgeCheckpoint,
+                    request_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointAck.FromString,
+                    response_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.SerializeToString,
+            ),
+            'GetCheckpointControl': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetCheckpointControl,
+                    request_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.FromString,
+                    response_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointControl.SerializeToString,
+            ),
+            'SetCheckpointPhase': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetCheckpointPhase,
+                    request_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointPhaseRequest.FromString,
+                    response_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.SerializeToString,
+            ),
+            'GetCheckpointSnapshot': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetCheckpointSnapshot,
+                    request_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.FromString,
+                    response_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointSnapshot.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -182,6 +278,168 @@ class Coordinator(object):
             metadata,
             _registered_method=True)
 
+    @staticmethod
+    def BeginCheckpoint(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/paramesh.v1.Coordinator/BeginCheckpoint',
+            paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.SerializeToString,
+            paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetCheckpointStatus(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/paramesh.v1.Coordinator/GetCheckpointStatus',
+            paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.SerializeToString,
+            paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AcknowledgeCheckpoint(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/paramesh.v1.Coordinator/AcknowledgeCheckpoint',
+            paramesh_dot_rpc_dot_training__pb2.CheckpointAck.SerializeToString,
+            paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetCheckpointControl(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/paramesh.v1.Coordinator/GetCheckpointControl',
+            paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.SerializeToString,
+            paramesh_dot_rpc_dot_training__pb2.CheckpointControl.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetCheckpointPhase(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/paramesh.v1.Coordinator/SetCheckpointPhase',
+            paramesh_dot_rpc_dot_training__pb2.CheckpointPhaseRequest.SerializeToString,
+            paramesh_dot_rpc_dot_training__pb2.CheckpointEpochStatus.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetCheckpointSnapshot(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/paramesh.v1.Coordinator/GetCheckpointSnapshot',
+            paramesh_dot_rpc_dot_training__pb2.CheckpointRequest.SerializeToString,
+            paramesh_dot_rpc_dot_training__pb2.CheckpointSnapshot.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
 
 class ParameterShardStub(object):
     """Missing associated documentation comment in .proto file."""
@@ -212,6 +470,21 @@ class ParameterShardStub(object):
                 request_serializer=paramesh_dot_rpc_dot_training__pb2.FenceRequest.SerializeToString,
                 response_deserializer=paramesh_dot_rpc_dot_training__pb2.Empty.FromString,
                 _registered_method=True)
+        self.FreezeCheckpoint = channel.unary_unary(
+                '/paramesh.v1.ParameterShard/FreezeCheckpoint',
+                request_serializer=paramesh_dot_rpc_dot_training__pb2.ShardCheckpointRequest.SerializeToString,
+                response_deserializer=paramesh_dot_rpc_dot_training__pb2.Empty.FromString,
+                _registered_method=True)
+        self.UnfreezeCheckpoint = channel.unary_unary(
+                '/paramesh.v1.ParameterShard/UnfreezeCheckpoint',
+                request_serializer=paramesh_dot_rpc_dot_training__pb2.ShardCheckpointRequest.SerializeToString,
+                response_deserializer=paramesh_dot_rpc_dot_training__pb2.Empty.FromString,
+                _registered_method=True)
+        self.ExportCheckpointSnapshot = channel.unary_unary(
+                '/paramesh.v1.ParameterShard/ExportCheckpointSnapshot',
+                request_serializer=paramesh_dot_rpc_dot_training__pb2.ShardCheckpointRequest.SerializeToString,
+                response_deserializer=paramesh_dot_rpc_dot_training__pb2.CheckpointSnapshot.FromString,
+                _registered_method=True)
 
 
 class ParameterShardServicer(object):
@@ -241,6 +514,24 @@ class ParameterShardServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def FreezeCheckpoint(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UnfreezeCheckpoint(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ExportCheckpointSnapshot(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ParameterShardServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -263,6 +554,21 @@ def add_ParameterShardServicer_to_server(servicer, server):
                     servicer.FenceWorker,
                     request_deserializer=paramesh_dot_rpc_dot_training__pb2.FenceRequest.FromString,
                     response_serializer=paramesh_dot_rpc_dot_training__pb2.Empty.SerializeToString,
+            ),
+            'FreezeCheckpoint': grpc.unary_unary_rpc_method_handler(
+                    servicer.FreezeCheckpoint,
+                    request_deserializer=paramesh_dot_rpc_dot_training__pb2.ShardCheckpointRequest.FromString,
+                    response_serializer=paramesh_dot_rpc_dot_training__pb2.Empty.SerializeToString,
+            ),
+            'UnfreezeCheckpoint': grpc.unary_unary_rpc_method_handler(
+                    servicer.UnfreezeCheckpoint,
+                    request_deserializer=paramesh_dot_rpc_dot_training__pb2.ShardCheckpointRequest.FromString,
+                    response_serializer=paramesh_dot_rpc_dot_training__pb2.Empty.SerializeToString,
+            ),
+            'ExportCheckpointSnapshot': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExportCheckpointSnapshot,
+                    request_deserializer=paramesh_dot_rpc_dot_training__pb2.ShardCheckpointRequest.FromString,
+                    response_serializer=paramesh_dot_rpc_dot_training__pb2.CheckpointSnapshot.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -373,6 +679,87 @@ class ParameterShard(object):
             '/paramesh.v1.ParameterShard/FenceWorker',
             paramesh_dot_rpc_dot_training__pb2.FenceRequest.SerializeToString,
             paramesh_dot_rpc_dot_training__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def FreezeCheckpoint(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/paramesh.v1.ParameterShard/FreezeCheckpoint',
+            paramesh_dot_rpc_dot_training__pb2.ShardCheckpointRequest.SerializeToString,
+            paramesh_dot_rpc_dot_training__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UnfreezeCheckpoint(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/paramesh.v1.ParameterShard/UnfreezeCheckpoint',
+            paramesh_dot_rpc_dot_training__pb2.ShardCheckpointRequest.SerializeToString,
+            paramesh_dot_rpc_dot_training__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ExportCheckpointSnapshot(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/paramesh.v1.ParameterShard/ExportCheckpointSnapshot',
+            paramesh_dot_rpc_dot_training__pb2.ShardCheckpointRequest.SerializeToString,
+            paramesh_dot_rpc_dot_training__pb2.CheckpointSnapshot.FromString,
             options,
             channel_credentials,
             insecure,
