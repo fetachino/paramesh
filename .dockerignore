@@ -1,4 +1,5 @@
 .git
+.private
 .venv
 artifacts
 dist

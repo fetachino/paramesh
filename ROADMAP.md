@@ -13,7 +13,7 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Separate-container Compose definition and syntax validation.
 - [x] Complete local image build, authenticated container training and persistent recreation.
 - [x] Confirm passing remote quality/container jobs and a package advisory audit.
-- [ ] Add reproducible transitive dependency locking.
+- [x] Add reproducible transitive dependency locking for supported Windows/Linux Python 3.12 environments.
 - [ ] Define coordinated checkpoint epochs and a quiescence/fencing protocol.
 - [x] Persist local parameters, optimizer configuration, receipts, worker journals and run metadata.
 - [x] Automate killed-worker/rejoin and killed-shard/restart scenarios across processes.

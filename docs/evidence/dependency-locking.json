@@ -1,0 +1,68 @@
+{
+  "verified_at": "2026-11-02T02:59:07.110978+00:00",
+  "source_commit": "e8a6ce66826e269777c0f68a4345c11ffa2057e3",
+  "source_dirty": true,
+  "uv_version": "0.13.6",
+  "locked_packages": 74,
+  "lock_sha256": "3ae5d6865ac0b624644ff64ea90e4f9f97e5be64a3b1688eff7d2ad769691df0",
+  "native_tests": 100,
+  "native_coverage_percent": 91.71355498721228,
+  "checks": [
+    "fresh isolated Windows installation",
+    "lock drift rejection",
+    "offline freshness check",
+    "lint/format/types/protocol",
+    "sdist/wheel build",
+    "OSV audit clean",
+    "locked Linux image build",
+    "Compose training/security/local-S3 recovery",
+    "isolated operations stack"
+  ],
+  "operations": {
+    "run_id": "compose-demo",
+    "mode": "SYNCHRONOUS",
+    "global_step": "100",
+    "shard_versions": [
+      100,
+      100
+    ],
+    "max_observed_accepted_staleness": 0.0,
+    "healthy_scrapes": [
+      "coordinator",
+      "dashboard",
+      "shard-0",
+      "shard-1"
+    ],
+    "worker_counter_series": 2,
+    "loki_records_checked": 4,
+    "event_names": [
+      "training_completed",
+      "training_started",
+      "worker_joined"
+    ],
+    "trace": {
+      "trace_id": "09baf7809d080013ad00d9bcddf340ce",
+      "services": [
+        "shard-0",
+        "shard-1",
+        "worker-1"
+      ],
+      "spans": 8
+    },
+    "dashboard_authenticated": true,
+    "backends": {
+      "prometheus": true,
+      "tempo": true,
+      "loki": true
+    },
+    "image_id": "sha256:52d2aa5d31bd91022b17d189c57e80900e5ea6b5081aa7748f3e78b2afd662b7",
+    "private_ports_verified": true,
+    "environment": {
+      "commit": "e8a6ce66826e269777c0f68a4345c11ffa2057e3",
+      "dirty": true,
+      "verified_at": "2026-11-02T02:58:45.761870+00:00",
+      "project": "paramesh-ops-3dbed0061d"
+    }
+  },
+  "scope": "Python3.12 WindowsAMD64 and Linuxx86_64; not OS-image reproducibility"
+}
