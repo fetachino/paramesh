@@ -21,9 +21,11 @@
 - [x] Validate the same Compose definition locally and document Git-backed Coolify/server requirements.
 - [ ] Deploy through Coolify and verify public HTTPS once an authorized server is available.
 - [x] Lock transitive dependencies reproducibly for supported development/runtime platforms.
-- [ ] Add controlled uncompressed benchmarks with raw JSON/CSV, hardware/source metadata and charts.
+- [x] Add controlled uncompressed benchmarks with raw JSON/CSV, hardware/source metadata and charts.
+  - Captured: nine clean-source local trials, exact lock snapshot and verified raw artifact checksums.
 - [ ] Add Azure/Azurite checkpoint portability.
-- [ ] Evaluate compression against measured baselines, then justified secrets/identity/infrastructure work.
+- [x] Evaluate whether the first baseline justifies compression: defer for the tiny 196-byte gradient.
+- [ ] Revisit compression after larger-payload/network evidence, then justified infrastructure work.
 
 Each completed slice requires tests, lint/type checks, synchronized documentation,
 a coherent commit and a push. No paid provisioning or unverified deployment claims.

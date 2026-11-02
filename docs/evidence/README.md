@@ -51,7 +51,7 @@ quality and container jobs; the original baseline files above remain historical.
 The genuine [CI screenshot](../images/github-actions.png) captures successful
 quality and container jobs for `f92103a`, Actions run `41349354085`. It is an actual
 browser screenshot, converted losslessly from the browser's JPEG to PNG; no status
-text or results were altered. Dashboard/observability screenshots remain pending.
+text or results were altered. Later dashboard/observability captures are indexed below.
 
 ## Local container verification
 
@@ -106,3 +106,12 @@ records 100 passing tests at 91.76% coverage and the package/static checks.
 [Screenshots](../images/README.md) were captured from real local browser surfaces.
 They show live or recorded evidence explicitly; no placeholder values or fabricated
 public deployment are included. CI checks the exact committed heads independently.
+
+## Uncompressed performance baseline
+
+[Nine local trials](benchmarks/uncompressed-local-2026-11-02/README.md), captured on
+November 2, 2026 UTC, preserve clean-source provenance, host CPU/RAM, exact lock,
+21,730 raw client RPC observations, JSON/CSV and generated charts. Checksums are
+verified in tests and captured bytes are protected against Git line-ending conversion.
+These healthy single-host measurements are distinct from the historical correctness
+and deliberately paced recovery evidence above.

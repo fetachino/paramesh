@@ -139,6 +139,14 @@ support the timing and chart implementation.
 
 ## Remaining performance work
 
+The [recorded local uncompressed baseline](docs/evidence/benchmarks/uncompressed-local-2026-11-02/README.md)
+preserves nine clean-source trials, the exact dependency lock, raw RPC observations,
+checksums and generated charts. Median warm-process rates were 4,119 / 4,562 / 4,999
+processed examples/s for sync / async / bounded respectively. Different update
+budgets prevent treating those rates as equal-quality speedups. The 196-byte model
+gradient provides no evidence of a network-bandwidth bottleneck, so this dataset
+does not justify adding compression.
+
 The operations milestone exposes real protobuf bytes, RPC duration histograms,
 worker steps/examples, pre-update loss and accepted staleness. Its deliberately
 paced synthetic dashboards are operational evidence, not comparative performance
