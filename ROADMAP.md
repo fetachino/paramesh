@@ -21,9 +21,10 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Export whole-run checkpoints and validate offline restore, including partial steps.
 - [x] Add local and authenticated SeaweedFS S3 checkpoint storage with immutable publication.
 - [ ] Add Azure SDK/Azurite tests.
-- [ ] Measure RPC latency, byte counts, throughput, convergence and failure recovery;
-      export JSON/CSV and record hardware/configuration/source metadata.
-- [ ] Add compression only after the uncompressed baseline is measured.
+- [x] Measure local uncompressed RPC latency, byte counts, throughput and loss;
+      preserve raw JSON/CSV, charts, hardware/configuration/source metadata.
+- [ ] Extend controlled measurements to larger payloads, multi-host scaling and repeated faults.
+- [ ] Add compression only when measured payload/network bottlenecks justify it.
 - [x] Add optional NATS lifecycle events without using it for gradient traffic.
 - [x] Instrument Prometheus metrics, OpenTelemetry context propagation and structured lifecycle logs.
 - [x] Exercise Grafana, Tempo and Loki against real training runs.
@@ -49,7 +50,8 @@ of having deployed their managed equivalents.
 | NATS | Operational messaging |
 | OpenTofu / Traefik | Infrastructure as code / ingress |
 
-The next priorities are reproducible dependency locking, controlled uncompressed
-performance/failure baselines, then Azure/Azurite portability. Compression follows
-only when baseline measurements justify it. Actual Coolify deployment is pending
+Dependency locking and the first [controlled local baseline](docs/evidence/benchmarks/uncompressed-local-2026-11-02/README.md)
+are complete. Azure/Azurite checkpoint portability is next. The tiny baseline model
+does not establish a bandwidth bottleneck; compression remains deferred pending
+larger-payload/network measurements. Actual Coolify deployment is pending
 an available authorized server; no paid compute has been provisioned.
