@@ -130,7 +130,7 @@ def main() -> None:
             install_checkpoint,
             restore_checkpoint,
         )
-        from paramesh.storage import AzureStore, LocalStore, ObjectStore, S3Store
+        from paramesh.storage import AzureBlobCheckpointStore, LocalStore, ObjectStore, S3Store
 
         if args.action == "live-abort":
             abort_online_checkpoint(
@@ -156,7 +156,7 @@ def main() -> None:
                 os.environ.get("PARAMESH_S3_SECRET_KEY", ""),
             )
         elif args.azure_endpoint:
-            store = AzureStore(
+            store = AzureBlobCheckpointStore(
                 args.azure_endpoint,
                 args.container or "",
                 os.environ.get("PARAMESH_AZURE_ACCOUNT", ""),
