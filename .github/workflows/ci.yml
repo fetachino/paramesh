@@ -23,10 +23,20 @@ jobs:
       - run: python scripts/generate_grafana.py
       - run: git diff --exit-code -- ops/grafana/dashboards/paramesh.json
       - run: python -m pytest --cov --cov-report=term-missing --cov-report=xml
+      - name: Verify minimal benchmark extras
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/paramesh-benchmark
+        run: |
+          uv sync --locked --extra train --extra benchmark
+          "$UV_PROJECT_ENVIRONMENT/bin/python" -m paramesh.cli benchmark --output artifacts/benchmark-extras --modes sync --workers 1 --shards 1 --repetitions 1 --warmup-steps 1 --steps 2
       - run: python -m build
       - run: python scripts/create_dev_env.py
       - run: docker compose config --quiet
       - run: python -m pip_audit --vulnerability-service osv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-dependency-contract-smoke
+          path: artifacts/benchmark-extras
   container:
     runs-on: ubuntu-latest
     steps:
