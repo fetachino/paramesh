@@ -1,0 +1,74 @@
+{
+  "run_id": "multihost-local-simulation",
+  "mode": "SYNCHRONOUS",
+  "global_step": "100",
+  "shard_versions": [
+    100,
+    100
+  ],
+  "max_observed_accepted_staleness": 0.0,
+  "healthy_scrapes": [
+    "coordinator",
+    "dashboard",
+    "shard-0",
+    "shard-1"
+  ],
+  "worker_counter_series": 2,
+  "loki_records_checked": 4,
+  "event_names": [
+    "training_completed",
+    "training_started",
+    "worker_recovered"
+  ],
+  "trace": {
+    "trace_id": "0ab6de1f62c066bb051df55c85ceb755",
+    "services": [
+      "shard-0",
+      "shard-1",
+      "worker-1"
+    ],
+    "spans": 8
+  },
+  "dashboard_authenticated": true,
+  "backends": {
+    "prometheus": true,
+    "tempo": true,
+    "loki": true
+  },
+  "production_overlay_model_verified": true,
+  "private_host_bindings_verified": true,
+  "role_restart_state_preserved": true,
+  "network_simulation": {
+    "type": "one Docker Desktop Linux engine with an internal user-defined bridge",
+    "addresses": {
+      "coordinator": "10.254.240.10",
+      "shard-0": "10.254.240.11",
+      "shard-1": "10.254.240.12",
+      "worker-0": "10.254.240.13",
+      "worker-1": "10.254.240.14",
+      "dashboard": "10.254.240.15",
+      "nats": "10.254.240.16",
+      "tempo": "10.254.240.17"
+    },
+    "separate_hosts": false,
+    "rpc_mtls": true,
+    "nats_tls_and_token_auth": true,
+    "prometheus_targets_by_private_ip": true,
+    "otlp_uses_plain_http_on_the_internal_network": true
+  },
+  "global_step_after_role_restart": "100",
+  "shard_versions_after_role_restart": [
+    100,
+    100
+  ],
+  "image_id": "sha256:422ed57cc221e9b57bace785dbabf2e67e6e6823a14f0f4dcffbc0c204205b27",
+  "private_ports_verified": true,
+  "all_host_ports_private": true,
+  "environment": {
+    "commit": "cd34924a937caf8819be03140c43eae1c3fd9bf0",
+    "dirty": false,
+    "docker_platform": "linux/x86_64",
+    "verified_at": "2026-11-02T23:01:44.101175+00:00",
+    "project": "paramesh-ops-013a3820fe"
+  }
+}
