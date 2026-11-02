@@ -120,3 +120,50 @@ def test_actual_supported_host_inventory_is_recorded():
     assert inventory["logical_cpu_count"] > 0
     assert inventory["memory_bytes"] > 0 and inventory["cpu_model"]
     assert inventory["clock"]["monotonic"]
+
+
+def test_recovery_benchmark_keeps_raw_trials_and_rejects_false_recovery(tmp_path, monkeypatch):
+    from paramesh import recovery_benchmarks as benchmarks
+
+    order = []
+
+    def trial(**options):
+        failure = options["failure"]
+        order.append(failure)
+        raw = {
+            "failure": {
+                "terminated_component": f"{failure}-0",
+                "worker_step_before_failure": 7,
+                "detection_seconds": 1.0,
+                "recovery_seconds_until_progress": 2.0,
+            },
+            "shard_versions": [20, 20],
+            "worker_health": {"worker-0": "completed", "worker-1": "completed"},
+            "max_parameter_error": 1e-7,
+            "final_loss": 0.1,
+            "environment": {"commit": "unit-fixture", "source_dirty": True},
+        }
+        options["output"].write_text(json.dumps(raw))
+        return raw
+
+    monkeypatch.setattr(benchmarks, "run_demo", trial)
+    output = tmp_path / "recovery"
+    report = benchmarks.run_recovery_benchmarks(output, repetitions=2)
+    assert report["status"] == "complete"
+    assert order == ["worker", "shard", "shard", "worker"]
+    assert len(report["trials"]) == 4
+    assert (output / "overview.png").is_file() and (output / "trials.csv").is_file()
+    with pytest.raises(FileExistsError):
+        benchmarks.run_recovery_benchmarks(output)
+
+    def false_recovery(**options):
+        raw = trial(**options)
+        raw["max_parameter_error"] = 1e-3
+        return raw
+
+    monkeypatch.setattr(benchmarks, "run_demo", false_recovery)
+    with pytest.raises(ValueError, match="did not fully recover"):
+        benchmarks.run_recovery_benchmarks(tmp_path / "invalid", repetitions=1)
+    failed = json.loads((tmp_path / "invalid" / "manifest.json").read_text())
+    assert failed["status"] == "failed" and failed["failure_type"] == "ValueError"
+    assert (tmp_path / "invalid" / "trial-000-worker.json").exists()
