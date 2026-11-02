@@ -17,6 +17,15 @@ fits its no-charge allowance, or another genuinely free Linux VM. No provider ha
 been selected and no cloud resource has been created. [Local ARM64 validation](arm64-validation.md)
 covers the image and Compose stack under emulation; it does not establish a native
 host, provider quota, or Coolify deployment.
+
+Before creating a host, verify the selected account and region still qualify for
+the required no-charge allowance and have capacity for the chosen VM. Check the
+full expected bill, including its boot and persistent disks, public IPv4, network
+egress, snapshots, and any DNS or storage service the deployment would use.
+Credits or promotional balance do not establish a $0 ongoing cost. Do not
+proceed if a required resource is billable, a paid upgrade is required, or its
+cost cannot be confirmed as zero.
+
 Use a persistent disk and enough memory for five Python/PyTorch processes plus
 telemetry and Coolify. Establish actual host limits before a sizing claim.
 The build needs access to PyPI, the official PyTorch CPU index and image registries.
