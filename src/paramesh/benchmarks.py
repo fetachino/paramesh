@@ -180,8 +180,9 @@ def run_benchmarks(
     measured_steps: int = 200,
     workers: int = 2,
     shards: int = 2,
+    hidden_width: int = 8,
 ) -> dict[str, Any]:
-    counts = (repetitions, warmup_steps, measured_steps, workers, shards)
+    counts = (repetitions, warmup_steps, measured_steps, workers, shards, hidden_width)
     if (
         any(type(value) is not int for value in counts)
         or not 1 <= repetitions <= 30
@@ -189,6 +190,7 @@ def run_benchmarks(
         or not 1 <= measured_steps <= 5000
         or not 1 <= workers <= 8
         or not 1 <= shards <= 4
+        or not 1 <= hidden_width <= 32768
         or not modes
         or len(set(modes)) != len(modes)
         or any(mode not in MODES for mode in modes)
@@ -208,6 +210,7 @@ def run_benchmarks(
             "measured_steps": measured_steps,
             "workers": workers,
             "shards": shards,
+            "hidden_width": hidden_width,
             "compression": "none",
         },
         "hardware": hardware(),
@@ -249,6 +252,7 @@ def run_benchmarks(
                         warmup_steps=warmup_steps,
                         workers=workers,
                         shards=shards,
+                        hidden_width=hidden_width,
                         output=output / f"trial-{index:03d}-{mode}.json",
                     )
                     row = {

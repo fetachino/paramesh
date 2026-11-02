@@ -7,13 +7,18 @@ from torch import nn
 from paramesh.tensors import FloatArray
 
 
-def model() -> nn.Sequential:
+def model(hidden_width: int = 8) -> nn.Sequential:
+    if type(hidden_width) is not int or not 1 <= hidden_width <= 32768:
+        raise ValueError("Hidden width must be an integer in 1..32768")
     torch.manual_seed(7)
-    return nn.Sequential(nn.Linear(4, 8), nn.Tanh(), nn.Linear(8, 1))
+    return nn.Sequential(nn.Linear(4, hidden_width), nn.Tanh(), nn.Linear(hidden_width, 1))
 
 
-def parameters() -> dict[str, FloatArray]:
-    return {name: value.detach().numpy().copy() for name, value in model().named_parameters()}
+def parameters(hidden_width: int = 8) -> dict[str, FloatArray]:
+    return {
+        name: value.detach().numpy().copy()
+        for name, value in model(hidden_width).named_parameters()
+    }
 
 
 def load_parameters(network: nn.Module, values: dict[str, FloatArray]) -> None:
@@ -37,8 +42,10 @@ def dataset(worker_index: int) -> tuple[torch.Tensor, torch.Tensor]:
     return inputs, targets
 
 
-def local_reference(workers: int, steps: int, learning_rate: float) -> dict[str, FloatArray]:
-    reference = model()
+def local_reference(
+    workers: int, steps: int, learning_rate: float, hidden_width: int = 8
+) -> dict[str, FloatArray]:
+    reference = model(hidden_width)
     optimizer = torch.optim.SGD(reference.parameters(), lr=learning_rate)
     batches = [dataset(index) for index in range(workers)]
     inputs = torch.cat([batch[0] for batch in batches])

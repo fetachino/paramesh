@@ -1,0 +1,4 @@
+# Preserve captured bytes so checksums survive Windows/Linux checkouts.
+*.json -text whitespace=cr-at-eol
+*.csv -text whitespace=cr-at-eol
+*.svg -text -whitespace

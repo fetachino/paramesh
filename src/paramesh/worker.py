@@ -46,13 +46,14 @@ def train_worker(
     state: StateDB | None = None,
     step_delay: float = 0,
     security: RpcSecurity | None = None,
+    hidden_width: int = 8,
 ) -> dict[str, Any]:
     if steps < 1 or not math.isfinite(timeout) or timeout <= 0:
         raise ValueError("steps and timeout must be positive")
     if not math.isfinite(step_delay) or step_delay < 0:
         raise ValueError("step_delay must be finite and nonnegative")
     torch.set_num_threads(1)
-    network = model()
+    network = model(hidden_width)
     progress = [0, 0]
     progress_lock = threading.Lock()
     stopped = threading.Event()

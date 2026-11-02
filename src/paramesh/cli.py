@@ -57,6 +57,9 @@ def main() -> None:
     benchmark.add_argument("--steps", type=int, default=200, help="Measured steps per worker")
     benchmark.add_argument("--workers", type=int, default=2)
     benchmark.add_argument("--shards", type=int, default=2)
+    benchmark.add_argument(
+        "--hidden-width", type=int, default=8, help="MLP width controlling gradient payload size"
+    )
     recovery_benchmark = commands.add_parser(
         "recovery-benchmark", help="Repeat real worker/shard termination and verified recovery"
     )
@@ -163,6 +166,7 @@ def main() -> None:
                     measured_steps=args.steps,
                     workers=args.workers,
                     shards=args.shards,
+                    hidden_width=args.hidden_width,
                 ),
                 indent=2,
             )
