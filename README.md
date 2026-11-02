@@ -250,6 +250,10 @@ docs/                   Technical designs, operator guides and genuine run evide
 
 ## Current limitations and next work
 
+For repeated uncompressed measurements with warm-up, raw JSON/CSV and standalone
+charts, see [the benchmark framework and measurement boundaries](BENCHMARKS.md#controlled-uncompressed-framework).
+Existing correctness screenshots and startup-inclusive durations remain separate.
+
 Compression and multi-machine verification remain pending. Process restart requires retained local volumes;
 offline whole-run recovery can use an exported local/S3 checkpoint. The system
 does not provide coordinator consensus or replicated live training state.

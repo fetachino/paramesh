@@ -1,0 +1,31 @@
+{
+  "verified_at": "2026-11-02T03:41:39.278439+00:00",
+  "source_commit": "dd0e1e958650600401d07e4fee56b2cac58b66bb",
+  "source_dirty": true,
+  "native_tests": 104,
+  "native_coverage_percent": 91.90968955785513,
+  "checks": [
+    "warm-up barrier and synchronous numerical reference",
+    "bounded raw RPC sizes/statuses and overflow detection",
+    "trial rotation and JSON/CSV/chart consistency",
+    "failed numerical-result artifact preservation",
+    "actual host CPU/RAM/clock inventory",
+    "minimal train+benchmark extras installation and actual CLI run",
+    "all-three-mode development smoke",
+    "lint/format/types/protocol/package checks",
+    "OSV advisory audit"
+  ],
+  "smoke": {
+    "modes": [
+      "sync",
+      "async",
+      "bounded"
+    ],
+    "warmup_steps": 2,
+    "measured_steps_per_worker": 4,
+    "workers": 2,
+    "shards": 2,
+    "max_sync_parameter_error": 5.960464477539063e-08
+  },
+  "scope": "Development verification only; these tiny smoke runs are not a controlled performance baseline."
+}

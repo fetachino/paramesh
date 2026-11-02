@@ -3,6 +3,7 @@
 import json
 import multiprocessing as mp
 import platform
+import queue
 import subprocess
 import tempfile
 import time
@@ -15,6 +16,7 @@ from typing import Any, Protocol
 
 import grpc
 import numpy as np
+from google.protobuf.json_format import MessageToDict
 
 from paramesh.rpc import training_pb2 as pb
 from paramesh.rpc import training_pb2_grpc as rpc
@@ -95,20 +97,53 @@ def _train(
     state_path: Path | None = None,
     step_delay: float = 0,
     security: RpcSecurity | None = None,
+    warmup_steps: int = 0,
 ) -> None:
+    from paramesh import telemetry
     from paramesh.worker import train_worker
 
     storage = StateDB(state_path) if state_path is not None else None
+    signals = None
+    warmup_elapsed = 0.0
     try:
-        pipe.send(
-            train_worker(
-                address, worker_id, steps, state=storage, step_delay=step_delay, security=security
-            )
+        if warmup_steps:
+            warmup_started = time.perf_counter()
+            train_worker(address, worker_id, warmup_steps, state=storage, security=security)
+            warmup_elapsed = time.perf_counter() - warmup_started
+            pipe.send({"phase": "warmup_complete"})
+            if not pipe.poll(120) or pipe.recv() != "measure":
+                raise RuntimeError("Measurement start was not authorized by the harness")
+            signals = telemetry.Telemetry(capture_rpc_limit=100000)
+            telemetry.active = signals
+        started = time.perf_counter()
+        result = train_worker(
+            address, worker_id, steps, state=storage, step_delay=step_delay, security=security
         )
+        ended = time.perf_counter()
+        if signals is not None:
+            samples = []
+            assert signals.rpc_samples is not None
+            while True:
+                try:
+                    samples.append(signals.rpc_samples.get_nowait())
+                except queue.Empty:
+                    break
+            if signals.rpc_sample_drops:
+                raise RuntimeError("Raw RPC capture overflowed; benchmark is incomplete")
+            result["measurement"] = {
+                "start": started,
+                "end": ended,
+                "sample_drops": signals.rpc_sample_drops,
+                "warmup_session_seconds": warmup_elapsed,
+                "rpc_samples": samples,
+            }
+        pipe.send(result)
     except Exception as error:
         pipe.send({"error": f"{type(error).__name__}: {error}"})
         raise
     finally:
+        if signals is not None:
+            signals.close()
         if storage is not None:
             storage.close()
         pipe.close()
@@ -145,11 +180,16 @@ def run_demo(
     shards: int = 2,
     output: Path | None = None,
     failure: str | None = None,
+    warmup_steps: int = 0,
 ) -> dict[str, Any]:
     if mode not in MODES or steps < 1 or not 1 <= workers <= 8 or not 1 <= shards <= 4:
         raise ValueError("Use sync/async/bounded, positive steps, 1..8 workers and 1..4 shards")
     if failure not in (None, "worker", "shard") or (failure and (mode != "sync" or steps < 15)):
         raise ValueError("Failure evidence currently requires sync mode and at least 15 steps")
+    if not 0 <= warmup_steps < steps or (warmup_steps and failure):
+        raise ValueError(
+            "Warm-up must precede measured steps and cannot combine with fault evidence"
+        )
     import torch
 
     from paramesh.workload import dataset, load_parameters, local_reference, model, parameters
@@ -167,6 +207,7 @@ def run_demo(
     context = mp.get_context("spawn")
     security = RpcSecurity.ephemeral()
     failure_report: dict[str, Any] | None = None
+    warmup_snapshots = []
     with ExitStack() as stack:
         directory = Path(stack.enter_context(tempfile.TemporaryDirectory(prefix="paramesh-")))
         processes: dict[str, BaseProcess] = {}
@@ -215,6 +256,7 @@ def run_demo(
                 steps,
                 state_path=directory / f"{name}.sqlite",
                 step_delay=0.1 if failure else 0,
+                warmup_steps=warmup_steps,
             )
             for name in config.worker_ids
         ]
@@ -312,6 +354,19 @@ def run_demo(
                     "recovery_seconds_until_progress": time.monotonic() - killed_at,
                     "uncommitted_computation_lost": "not instrumented",
                 }
+        if warmup_steps:
+            for pipe in worker_pipes:
+                if _receive(pipe).get("phase") != "warmup_complete":
+                    raise RuntimeError("Worker did not complete the warm-up boundary")
+            for endpoint in endpoints:
+                with open_channel(endpoint, security) as channel:
+                    warmup_snapshots.append(
+                        rpc.ParameterShardStub(channel).PullParameters(
+                            pb.PullRequest(run_id=config.run_id), timeout=5
+                        )
+                    )
+            for pipe in worker_pipes:
+                pipe.send("measure")
         results = [_receive(pipe) for pipe in worker_pipes]
         elapsed = time.perf_counter() - started
         snapshots = []
@@ -355,6 +410,9 @@ def run_demo(
     report: dict[str, Any] = {
         "schema_version": 1,
         "run_id": config.run_id,
+        "configuration": MessageToDict(
+            config, preserving_proto_field_name=True, always_print_fields_with_no_presence=True
+        ),
         "mode": mode,
         "steps_per_worker": steps,
         "worker_count": workers,
@@ -394,8 +452,18 @@ def run_demo(
             "optimizer": "SGD",
             "device": "cpu",
             "torch_threads": 1,
+            "parameter_bytes": sum(value.nbytes for value in initial.values()),
+            "transport_dtype": "float32",
         },
     }
+    if warmup_steps:
+        report["warmup"] = {
+            "steps_per_worker": warmup_steps,
+            "shard_versions": [snapshot.version for snapshot in warmup_snapshots],
+            "loss": loss(
+                decode_many(tensor for snapshot in warmup_snapshots for tensor in snapshot.tensors)
+            ),
+        }
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

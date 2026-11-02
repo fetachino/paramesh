@@ -42,6 +42,21 @@ def main() -> None:
     demo.add_argument("--steps", type=int, default=20)
     demo.add_argument("--output", type=Path, default=Path("artifacts/demo.json"))
     demo.add_argument("--failure", choices=["worker", "shard"], default=None)
+    benchmark = commands.add_parser(
+        "benchmark", help="Measure repeated uncompressed warm-process runs"
+    )
+    benchmark.add_argument("--output", type=Path, required=True)
+    benchmark.add_argument(
+        "--modes",
+        nargs="+",
+        choices=["sync", "async", "bounded"],
+        default=["sync", "async", "bounded"],
+    )
+    benchmark.add_argument("--repetitions", type=int, default=3)
+    benchmark.add_argument("--warmup-steps", type=int, default=20)
+    benchmark.add_argument("--steps", type=int, default=200, help="Measured steps per worker")
+    benchmark.add_argument("--workers", type=int, default=2)
+    benchmark.add_argument("--shards", type=int, default=2)
     for name in ("coordinator", "shard"):
         service = commands.add_parser(name)
         service.add_argument("--config", type=Path, required=True)
@@ -88,7 +103,9 @@ def main() -> None:
             role = f"shard-{args.index}"
         telemetry.start(role)
     security = (
-        RpcSecurity.from_environment() if args.command not in ("demo", "checkpoint") else None
+        RpcSecurity.from_environment()
+        if args.command not in ("demo", "checkpoint", "benchmark")
+        else None
     )
     if args.command == "checkpoint":
         from paramesh.checkpoint import export_checkpoint, install_checkpoint, restore_checkpoint
@@ -113,6 +130,23 @@ def main() -> None:
         else:
             report = restore_checkpoint(store, args.id, args.state_dir)
         print(json.dumps(report, indent=2))
+    elif args.command == "benchmark":
+        from paramesh.benchmarks import run_benchmarks
+
+        print(
+            json.dumps(
+                run_benchmarks(
+                    args.output,
+                    modes=tuple(args.modes),
+                    repetitions=args.repetitions,
+                    warmup_steps=args.warmup_steps,
+                    measured_steps=args.steps,
+                    workers=args.workers,
+                    shards=args.shards,
+                ),
+                indent=2,
+            )
+        )
     elif args.command == "demo":
         from paramesh.demo import run_demo
 

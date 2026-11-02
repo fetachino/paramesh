@@ -1,6 +1,6 @@
 # Correctness evidence and benchmark methodology
 
-The current harness is a CPU correctness demo, not a performance benchmark.
+The `demo` command is a CPU correctness run, not a performance benchmark.
 It runs real training in independent processes and exports a JSON report:
 
 ```powershell
@@ -77,7 +77,67 @@ not replay an in-flight contribution. A separate checkpoint/RPC integration test
 forces partial delivery and verifies one replay without duplicate application.
 Uncommitted computation lost before journaling is not instrumented.
 
-## Future performance work
+## Controlled uncompressed framework
+
+```powershell
+uv sync --locked --all-extras --python 3.12
+.\.venv\Scripts\Activate.ps1
+paramesh benchmark --output artifacts/baseline --warmup-steps 20 --steps 200 --repetitions 3
+```
+
+Use a fresh output directory: existing results are never overwritten. Each trial
+creates separate authenticated coordinator/shard/worker processes and fresh durable
+state. Workers finish warm-up, wait until every peer is ready, then begin a measured
+session in the same already imported processes. The session includes channel setup,
+replacement registration/fencing and final heartbeat. Its throughput is explicitly
+**warm-process session throughput**, not pure steady-state compute throughput.
+The original startup-inclusive demo duration remains separate.
+
+Modes run sequentially with their order rotated between repetitions. The workload
+remains the seeded CPU 4→8→1 MLP and repeated 32-example batch per worker, with one
+Torch thread per process, float32 transport, durable SQLite commits and no deliberate
+step delay. Bounded mode uses the existing shard-local lag limit of 1; the complete
+RunConfig and warm-up session durations are preserved in each raw trial.
+Trace/network exporters are disabled; bounded client RPC recording is
+enabled consistently across modes. Instrumentation overhead is included and not
+calibrated away. This is a small-model protocol/storage-overhead experiment.
+
+| Artifact | Meaning |
+| --- | --- |
+| `trial-NNN-mode.json` | Complete actual trial, losses, versions, provenance and raw client RPC samples |
+| `rpc.csv` | One observed client attempt: method/status, elapsed seconds and protobuf request/response bytes |
+| `trials.csv` | Measured window, processed examples, latency percentiles, payload totals, loss and shard-commit deltas |
+| `manifest.json` | Configuration, host CPU/RAM/clock, lock hash, actual trial order and completion/failure status |
+| `overview.png` / `.svg` | Recorded trial dots, median and observed range; no confidence-interval claim |
+
+Each worker records start/end with the same host's system-wide monotonic performance
+clock. The aggregate window spans the earliest measured start through the latest
+end, excluding result serialization and model evaluation. Processed examples equal
+the verified measured worker iterations times batch size; they are not unique data.
+Client latency includes the interceptor/application path and server waits, including
+synchronous barriers and durable commits. P95 uses the successful observed calls in
+each trial; failures remain in the raw CSV and payload totals. Bytes exclude HTTP/2,
+TLS and NIC overhead. Captured records contain sizes/statuses, never tensor values
+or authentication metadata. Capture overflow fails the benchmark result.
+
+Equal worker iterations cause different SGD commit counts in sync versus async or
+bounded mode. Compare convergence and update budgets alongside throughput; do not
+turn a mode's rate into a claim of equal-quality training speedup. Three repetitions
+describe observed variability and do not establish statistical significance.
+
+The host is an ordinary workstation with background applications and the retained
+operations stack running. CPU/memory/clock metadata make that context inspectable,
+but do not establish resource isolation or multi-machine network performance.
+Completed trial artifacts survive a later failure/interruption; a completed run's
+numerical-failure diagnostics are written before validation raises. A mid-trial
+termination may yield only failure status, rather than a complete raw result.
+Only successful complete output may support a measurement claim. CI's small test runs verify framework behavior,
+not a performance baseline. [The design contract](docs/benchmark-design.md) records
+the boundaries; [Python clock semantics](https://docs.python.org/3.12/library/time.html)
+and [Matplotlib export](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.savefig.html)
+support the timing and chart implementation.
+
+## Remaining performance work
 
 The operations milestone exposes real protobuf bytes, RPC duration histograms,
 worker steps/examples, pre-update loss and accepted staleness. Its deliberately
@@ -86,10 +146,7 @@ benchmarks. [The stack report](docs/evidence/operations-stack.json) verifies act
 backend integration at 100 steps; it records its development source identity.
 Native worker/shard fault reports above remain the numerical correctness reference.
 
-Use fixed datasets and controlled model sizes, distinguish strong from weak
-scaling, separate startup from steady-state measurement, warm up, repeat runs and
-report distributions. Record CPU/RAM and dependency versions, configuration, source
-identity, worker/shard topology, examples processed, bytes and per-RPC latency.
-Compare sync/async/bounded modes with convergence as well as throughput. Persist
-raw JSON/CSV before generating charts. Failure timings require real process
-termination and verified restoration, not simulated status values.
+Broader model/payload sizes, resource isolation, strong/weak scaling, multi-host
+network conditions and compression experiments require separate controlled runs.
+Compression must be justified by measured payload/bottleneck evidence. Failure
+timings require real termination and verified restoration, not simulated statuses.
