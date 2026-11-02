@@ -14,6 +14,8 @@
   - Verify: completed training and synchronous numerical-reference comparison after recovery.
 - [x] Export/restore complete offline checkpoint manifests through local and S3-compatible stores.
   - Verify: checksums, failed/incomplete publication, local restore and actual SeaweedFS operations.
+- [x] Define coordinated online checkpoint epoch, quiescence and fencing semantics in ADR-0001.
+- [ ] Implement and fault-test online epochs; current checkpoint commands remain offline-only.
 - [x] Add optional NATS lifecycle events; training continues while NATS is unavailable.
 - [x] Add Prometheus metrics and distributed tracing with real observability services.
 - [x] Build a focused operations dashboard over actual state and benchmark artifacts.

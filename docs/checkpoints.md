@@ -5,6 +5,9 @@ is a separate **offline whole-run cut**: coordinator metadata, every shard's dat
 protobuf snapshot, and every worker's write-ahead journal. Stop all training services
 before export. Exclusive OS leases reject live databases; no hot global snapshot is
 claimed. A worker interrupted between shard commits can resume its original requests.
+An accepted design for online coordinated checkpoint epochs is recorded in
+[ADR-0001](decisions/0001-coordinated-checkpoint-epochs.md); it is not implemented,
+so the commands below still require a fully stopped run.
 
 The manifest records the durable completed-step lower watermark, actual per-shard
 versions, fixed membership, SGD configuration and content-addressed SHA-256 blobs.

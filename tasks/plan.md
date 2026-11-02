@@ -41,6 +41,9 @@ uncommitted contribution. Re-registration fences the previous worker incarnation
 This avoids pretending that independently saved live shards form an atomic global
 checkpoint. Checkpoint manifests must record each shard's actual version and progress;
 offline restore of a complete manifest is separate from ordinary process restart.
+The accepted design for moving beyond offline-only checkpoints is
+[ADR-0001](../docs/decisions/0001-coordinated-checkpoint-epochs.md); no online
+checkpoint behavior is implemented or claimed yet.
 
 These foundations and the local operations stack are now implemented. Genuine visual
 evidence and Git-backed Coolify instructions are committed with the deployment slice;
