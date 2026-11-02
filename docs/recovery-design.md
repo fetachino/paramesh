@@ -50,9 +50,9 @@ an older exported checkpoint is a separate, offline operation affecting the enti
 run. Mixing a restored old shard with unreverted live peers is unsupported.
 
 Checkpoint stores expose immutable blob put/get and final manifest publication.
-Local publication must be atomic; an S3-compatible backend publishes the manifest
-only after all content-addressed objects are present. Azure Blob can implement the
-same contract later. An incomplete upload is not a completed checkpoint.
+Local publication must be atomic; S3-compatible and Azure Blob backends publish the
+manifest only after all content-addressed objects are present. Actual SeaweedFS and
+Azurite tests verify that contract. An incomplete upload is not a completed checkpoint.
 
 The implemented first portable cut is offline: every service database must release
 its process lease before export. All source leases are held while reading the cut.

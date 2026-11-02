@@ -165,7 +165,7 @@ mirror did not change the installed package. Normal Git-backed builds use the
 default official CPU index. No Coolify, k3s, AWS or Azure deployment has been exercised.
 
 The optional SeaweedFS storage profile has a private network and a persistent volume.
-The maintenance helper receives S3 credentials and can reach external endpoints;
+The maintenance helper receives storage credentials and can reach external endpoints;
 training containers receive neither storage credentials nor a public route.
 The optional operations profile adds a separate lifecycle event plane and telemetry
 backends. NATS carries bounded allowlisted events, never gradient traffic. Broker
@@ -176,4 +176,5 @@ Its sampler uses read-only RPCs and fixed backend queries; its browser receives
 neither data-plane nor administrative credentials. UI and Grafana publish loopback
 ports through a management network, while internal networks keep training and
 operations services private. See [operations](docs/operations.md) for definitions
-and failure limits. Online checkpoint coordination, Azure and hosted validation follow.
+and failure limits. Azure Blob checkpoints are verified against Azurite; online
+checkpoint coordination and hosted validation remain future work.
