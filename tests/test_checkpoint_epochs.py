@@ -288,6 +288,127 @@ def test_live_checkpoint_abort_unfreezes_shards_and_releases_workers(tmp_path):
         shard_store.close()
 
 
+def test_frozen_checkpoint_retries_after_store_failure_and_service_restart(tmp_path):
+    settings = config(shard_endpoints=["pending", "pending"])
+    security = RpcSecurity.ephemeral()
+    from paramesh.tensors import partition
+    from paramesh.workload import parameters
+
+    initial = parameters()
+    owners = partition(initial, len(settings.shard_endpoints))
+    addresses = []
+    shards = []
+    shard_stores = []
+    shard_hosts = []
+    for index in range(2):
+        with socket.socket() as reservation:
+            reservation.bind(("127.0.0.1", 0))
+            address = f"127.0.0.1:{reservation.getsockname()[1]}"
+        addresses.append(address)
+        settings.shard_endpoints[index] = address
+    for index, address in enumerate(addresses):
+        shard_store = StateDB(tmp_path / f"shard-{index}.sqlite")
+        shard = ParameterShard(
+            settings,
+            {name: value for name, value in initial.items() if owners[name] == index},
+            state=shard_store,
+        )
+        shard_host, _ = shard_server(shard, address, security=security)
+        shard_host.start()
+        shards.append(shard)
+        shard_stores.append(shard_store)
+        shard_hosts.append(shard_host)
+
+    coordinator_address = "127.0.0.1:0"
+    coordinator_store = StateDB(tmp_path / "coordinator.sqlite")
+    coordinator = Coordinator(settings, state=coordinator_store)
+    coordinator_host, coordinator_port = coordinator_server(
+        coordinator, coordinator_address, security=security
+    )
+    coordinator_host.start()
+    address = f"127.0.0.1:{coordinator_port}"
+    store = LocalStore(tmp_path / "online-checkpoints")
+    try:
+        sessions = {
+            worker_id: coordinator.register(worker_id, 1) for worker_id in settings.worker_ids
+        }
+        for worker_id, session in sessions.items():
+            coordinator.heartbeat(
+                pb.HeartbeatRequest(
+                    run_id=settings.run_id,
+                    worker_id=worker_id,
+                    session_id=session.session_id,
+                )
+            )
+        epoch = coordinator.begin_checkpoint("restart-epoch")
+        for worker_id, session in sessions.items():
+            journal = pb.WorkerJournal(
+                format_version=1,
+                config_fingerprint=coordinator.config_fingerprint,
+                worker_id=worker_id,
+            )
+            coordinator.acknowledge_checkpoint(
+                pb.CheckpointAck(
+                    run_id=settings.run_id,
+                    worker_id=worker_id,
+                    session_id=session.session_id,
+                    epoch=epoch.control.epoch,
+                    worker_journal=journal.SerializeToString(deterministic=True),
+                )
+            )
+        coordinator.set_checkpoint_phase(1, pb.CHECKPOINT_FROZEN)
+        for shard in shards:
+            shard.freeze_checkpoint(settings.run_id, 1)
+
+        class FailManifestOnce:
+            failed = False
+
+            def put(self, key, payload):
+                if key.startswith("manifests/") and not self.failed:
+                    self.failed = True
+                    raise OSError("injected manifest publication failure")
+                store.put(key, payload)
+
+            def get(self, key, limit=128 * 1024 * 1024):
+                return store.get(key, limit)
+
+        with pytest.raises(OSError, match="injected"):
+            export_online_checkpoint(address, FailManifestOnce(), "restart-epoch", security)
+        assert coordinator.checkpoint_status().control.phase == pb.CHECKPOINT_FROZEN
+        assert all(shard.checkpoint_frozen for shard in shards)
+
+        coordinator_host.stop(0).wait()
+        coordinator_store.close()
+        coordinator_store = StateDB(tmp_path / "coordinator.sqlite")
+        coordinator = Coordinator(settings, state=coordinator_store)
+        coordinator_host, _ = coordinator_server(coordinator, address, security=security)
+        coordinator_host.start()
+        for index, shard_host in enumerate(shard_hosts):
+            shard_host.stop(0).wait()
+            shard_stores[index].close()
+            shard_stores[index] = StateDB(tmp_path / f"shard-{index}.sqlite")
+            shard = ParameterShard(
+                settings,
+                {name: value for name, value in initial.items() if owners[name] == index},
+                state=shard_stores[index],
+            )
+            shard_hosts[index], _ = shard_server(shard, addresses[index], security=security)
+            shard_hosts[index].start()
+            shards[index] = shard
+
+        manifest = export_online_checkpoint(address, store, "restart-epoch", security)
+        assert manifest["checkpoint_id"] == "restart-epoch"
+        assert coordinator.checkpoint_status().control.phase == pb.CHECKPOINT_RUNNING
+        assert all(not shard.checkpoint_frozen for shard in shards)
+    finally:
+        coordinator_host.stop(0).wait()
+        for shard_host in shard_hosts:
+            shard_host.stop(0).wait()
+        coordinator_store.close()
+        for shard_store in shard_stores:
+            shard_store.close()
+
+
 @pytest.mark.parametrize("mode", [pb.SYNCHRONOUS, pb.ASYNCHRONOUS, pb.BOUNDED_STALENESS])
 def test_workers_pause_at_durable_step_and_resume_after_epoch_release(tmp_path, mode):
     workers = ["worker-0", "worker-1"]
