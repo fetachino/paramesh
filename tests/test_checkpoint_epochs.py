@@ -1,4 +1,8 @@
+import json
+import os
 import socket
+import subprocess
+import sys
 import threading
 import time
 
@@ -706,41 +710,51 @@ def test_worker_process_restarts_from_checkpoint_journal_after_coordinator_resta
     )
     coordinator_host.start()
     coordinator_address = f"127.0.0.1:{coordinator_port}"
-    worker_store = StateDB(tmp_path / "worker.sqlite")
-    results = []
-    errors = []
-
-    def train():
-        try:
-            from paramesh.worker import train_worker
-
-            results.append(
-                train_worker(
-                    coordinator_address,
-                    "worker-0",
-                    40,
-                    state=worker_store,
-                    step_delay=0.2,
-                    security=security,
-                )
-            )
-        except Exception as error:
-            errors.append(error)
-
-    threads = []
+    worker_state_dir = tmp_path / "worker-state"
+    worker_environment = {
+        key: value for key, value in os.environ.items() if not key.startswith("PARAMESH_")
+    }
+    worker_environment["PARAMESH_RPC_TOKEN"] = security.token
+    worker_environment["PARAMESH_ADMIN_TOKEN"] = security.require_admin()
+    worker_command = [
+        sys.executable,
+        "-m",
+        "paramesh.cli",
+        "worker",
+        "--coordinator",
+        coordinator_address,
+        "--id",
+        "worker-0",
+        "--steps",
+        "40",
+        "--step-delay",
+        "0.2",
+        "--state-dir",
+        str(worker_state_dir),
+    ]
+    worker_processes = []
 
     def start_worker():
-        thread = threading.Thread(target=train)
-        thread.start()
-        threads.append(thread)
+        process = subprocess.Popen(
+            worker_command,
+            env=worker_environment,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        worker_processes.append(process)
+        return process
 
     try:
-        start_worker()
+        worker_process = start_worker()
         deadline = time.monotonic() + 10
         while time.monotonic() < deadline:
             status = coordinator.status()
             if status.workers and status.workers[0].health == "healthy":
                 break
+            if worker_process.poll() is not None:
+                stdout, stderr = worker_process.communicate()
+                pytest.fail(f"worker exited before registration: {stdout}\n{stderr}")
             time.sleep(0.01)
         assert coordinator.status().workers[0].health == "healthy"
         coordinator.begin_checkpoint("worker-restart-epoch")
@@ -759,14 +773,10 @@ def test_worker_process_restarts_from_checkpoint_journal_after_coordinator_resta
             export_online_checkpoint(
                 coordinator_address, LostManifestResponse(), "worker-restart-epoch", security
             )
-        paused_step = worker_store.get("worker")
-        assert paused_step is not None
         assert coordinator.checkpoint_status().control.phase == pb.CHECKPOINT_FROZEN
         assert shard.checkpoint_frozen
-        paused_journal = pb.WorkerJournal.FromString(paused_step)
-        assert coordinator.status().workers[0].step == paused_journal.next_step
-        time.sleep(0.15)
-        assert worker_store.get("worker") == paused_step
+        paused_step = coordinator.status().workers[0].step
+        assert worker_process.poll() is None
 
         coordinator_host.stop(0).wait()
         coordinator_store.close()
@@ -776,10 +786,16 @@ def test_worker_process_restarts_from_checkpoint_journal_after_coordinator_resta
             coordinator, coordinator_address, security=security
         )
         coordinator_host.start()
-        for thread in threads:
-            thread.join(timeout=10)
-        assert all(not thread.is_alive() for thread in threads)
-        assert errors and not results
+        _, worker_stderr = worker_process.communicate(timeout=10)
+        assert worker_process.returncode != 0, worker_stderr
+        worker_store = StateDB(worker_state_dir / "worker-0.sqlite")
+        try:
+            saved_journal = worker_store.get("worker")
+        finally:
+            worker_store.close()
+        assert saved_journal is not None
+        saved_journal = pb.WorkerJournal.FromString(saved_journal)
+        assert saved_journal.next_step == paused_step
 
         manifest = export_online_checkpoint(
             coordinator_address, store, "worker-restart-epoch", security
@@ -788,20 +804,29 @@ def test_worker_process_restarts_from_checkpoint_journal_after_coordinator_resta
         assert coordinator.checkpoint_status().control.phase == pb.CHECKPOINT_RUNNING
         assert not shard.checkpoint_frozen
 
-        errors.clear()
-        start_worker()
-        threads[-1].join(timeout=20)
-        assert not threads[-1].is_alive() and not errors
-        assert results[0]["resumed_from"] == pb.WorkerJournal.FromString(paused_step).next_step
+        resumed_process = start_worker()
+        stdout, stderr = resumed_process.communicate(timeout=20)
+        assert resumed_process.returncode == 0, stderr
+        result = json.loads(stdout)
+        assert result["resumed_from"] == saved_journal.next_step
         assert coordinator.status().workers[0].generation == 2
-        assert results[0]["steps"] == 40
+        assert result["steps"] == 40
         assert coordinator.status().global_step == 40
         assert shard.version == 40
-        assert pb.WorkerJournal.FromString(worker_store.get("worker")).next_step == 40
+        worker_store = StateDB(worker_state_dir / "worker-0.sqlite")
+        try:
+            final_journal = worker_store.get("worker")
+        finally:
+            worker_store.close()
+        assert final_journal is not None
+        assert pb.WorkerJournal.FromString(final_journal).next_step == 40
         assert all(np.isfinite(value).all() for value in shard.parameters.values())
     finally:
+        for process in worker_processes:
+            if process.poll() is None:
+                process.terminate()
+                process.communicate(timeout=10)
         coordinator_host.stop(0).wait()
         shard_host.stop(0).wait()
-        worker_store.close()
         coordinator_store.close()
         shard_store.close()
