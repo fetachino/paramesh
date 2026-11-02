@@ -205,6 +205,7 @@ Coordinator restart retains the checkpoint phase and acknowledgments; shard rest
 retains its epoch fence. Resume a frozen/committed epoch by retrying the same export ID,
 or abort an uncommitted epoch. Coordinator restart invalidates existing worker sessions,
 so restart the workers after the coordinator returns to `RUNNING`; they recover from their
-durable worker journals. Tests cover uncertain manifest publication and partial-unfreeze
-recovery across coordinator/shard restarts; failures in remaining phases and active worker
-restart remain open in [the roadmap](../ROADMAP.md).
+durable worker journals. Fault-injection tests cover REQUESTED timeout/abort, partial shard
+freeze, uncertain manifest publication, partial unfreeze, ABORTING/RESUMING restart, and
+active worker-process restart from its journal. See [the roadmap](../ROADMAP.md) for the
+remaining deployment and multi-host limits.
