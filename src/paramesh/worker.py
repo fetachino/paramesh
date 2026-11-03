@@ -274,6 +274,19 @@ def train_worker(
                 wait_for_checkpoint()
             if heartbeat_errors:
                 raise RuntimeError("Coordinator heartbeat failed") from heartbeat_errors[0]
+            # A checkpoint can begin after the final training step and after the
+            # heartbeat thread's last poll. Do not mark this worker completed
+            # until that requested epoch has received its durable acknowledgment.
+            control = _rpc(
+                coordinator.GetCheckpointControl,
+                pb.CheckpointRequest(run_id=config.run_id, worker_id=worker_id),
+                timeout,
+            )
+            if control.phase == pb.CHECKPOINT_REQUESTED:
+                with progress_lock:
+                    checkpoint_epoch[0] = control.epoch
+                checkpoint_requested.set()
+                wait_for_checkpoint()
             stopped.set()
             thread.join(timeout=timeout + 1)
             if heartbeat_errors:

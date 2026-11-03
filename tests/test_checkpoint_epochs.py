@@ -768,6 +768,106 @@ def test_sync_worker_clears_uncommitted_barrier_when_peer_pauses_for_checkpoint(
             storage.close()
 
 
+def test_sync_checkpoint_recovers_high_rate_two_shard_barrier(tmp_path):
+    from paramesh.tensors import partition
+    from paramesh.worker import train_worker
+    from paramesh.workload import local_reference, parameters
+
+    settings = config(
+        mode=pb.SYNCHRONOUS,
+        shard_endpoints=["pending", "pending"],
+        barrier_timeout_seconds=30,
+    )
+    security = RpcSecurity.ephemeral()
+    initial = parameters()
+    owners = partition(initial, 2)
+    addresses: list[str] = []
+    for _ in range(2):
+        with socket.socket() as reservation:
+            reservation.bind(("127.0.0.1", 0))
+            addresses.append(f"127.0.0.1:{reservation.getsockname()[1]}")
+    settings.shard_endpoints[:] = addresses
+    shard_stores = [StateDB(tmp_path / f"shard-{index}.sqlite") for index in range(2)]
+    shards = [
+        ParameterShard(
+            settings,
+            {name: value for name, value in initial.items() if owners[name] == index},
+            state=shard_stores[index],
+        )
+        for index in range(2)
+    ]
+    shard_hosts = [
+        shard_server(shard, addresses[index], security=security)[0]
+        for index, shard in enumerate(shards)
+    ]
+    coordinator_store = StateDB(tmp_path / "coordinator.sqlite")
+    coordinator = managed_coordinator(settings, state=coordinator_store, security=security)
+    coordinator_host, coordinator_port = coordinator_server(
+        coordinator, "127.0.0.1:0", security=security
+    )
+    worker_stores = {
+        worker_id: StateDB(tmp_path / f"{worker_id}.sqlite") for worker_id in settings.worker_ids
+    }
+    errors: list[Exception] = []
+    results: dict[str, dict] = {}
+
+    def train(worker_id: str) -> None:
+        try:
+            results[worker_id] = train_worker(
+                f"127.0.0.1:{coordinator_port}",
+                worker_id,
+                40,
+                timeout=10,
+                state=worker_stores[worker_id],
+                step_delay=0,
+                security=security,
+            )
+        except Exception as error:
+            errors.append(error)
+
+    for host in (*shard_hosts, coordinator_host):
+        host.start()
+    threads = [
+        threading.Thread(target=train, args=(worker_id,)) for worker_id in settings.worker_ids
+    ]
+    for thread in threads:
+        thread.start()
+    try:
+        deadline = time.monotonic() + 20
+        while time.monotonic() < deadline:
+            with shards[0].condition:
+                at_barrier = bool(shards[0].pending)
+            if at_barrier and len(coordinator.status().workers) == 2:
+                break
+            time.sleep(0.01)
+        assert at_barrier
+        coordinator.begin_checkpoint("high-rate-two-shard")
+        manifest = export_online_checkpoint(
+            f"127.0.0.1:{coordinator_port}",
+            LocalStore(tmp_path / "checkpoints"),
+            "high-rate-two-shard",
+            security,
+            timeout=20,
+        )
+        assert manifest["shard_versions"][0] == manifest["shard_versions"][1]
+        for thread in threads:
+            thread.join(timeout=30)
+        assert not errors and all(not thread.is_alive() for thread in threads)
+        assert all(result["steps"] == 40 for result in results.values())
+        reference = local_reference(2, 40, settings.learning_rate)
+        actual = {name: value for shard in shards for name, value in shard.parameters.items()}
+        assert (
+            max(np.max(np.abs(actual[name] - expected)) for name, expected in reference.items())
+            < 1e-6
+        )
+    finally:
+        coordinator_host.stop(0).wait()
+        for host in shard_hosts:
+            host.stop(0).wait()
+        for storage in (*worker_stores.values(), coordinator_store, *shard_stores):
+            storage.close()
+
+
 def test_worker_process_restarts_from_checkpoint_journal_after_coordinator_restart(tmp_path):
     settings = config(worker_ids=["worker-0"], shard_endpoints=["pending"])
     security = RpcSecurity.ephemeral()

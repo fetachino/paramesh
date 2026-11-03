@@ -51,7 +51,12 @@ implementation boundaries, not a claim that infrastructure examples are deployed
       isolated immutable-image smoke test are complete, but the live Coolify
       rollback remains blocked by the mutable `paramesh:local` Compose build tag
       and missing saved Coolify rollback image.
-- [ ] Resolve and retest the high-rate synchronous checkpoint barrier failure.
+- [x] Reproduce and fix the high-rate synchronous checkpoint completion race in a
+      controlled local two-worker/two-shard process test; preserve repeated runs,
+      failure/recovery coverage and numerical correctness evidence.
+- [ ] Retest the fixed protocol on separate Google Cloud hosts under the original
+      high-rate workload and retain raw traces/logs before closing the distributed
+      barrier gate.
       No `v1.0.0` tag is justified yet.
 
 ## Intended cloud portability

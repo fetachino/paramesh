@@ -1,0 +1,36 @@
+{
+  "source_sha": "9aada850fabdbffc5077da9a671b2bbf12b2e25e9",
+  "host": "Windows loopback development host",
+  "topology": {
+    "workers": 2,
+    "shards": 2,
+    "coordinator_processes": 1,
+    "transport": "loopback gRPC",
+    "mode": "SYNCHRONOUS",
+    "aggregation": "MEAN",
+    "barrier_timeout_seconds": 30,
+    "step_delay_seconds": 0,
+    "steps": 40
+  },
+  "high_rate_regression": {
+    "command": "uv run --locked python -m pytest -q tests/test_checkpoint_epochs.py -k high_rate_two_shard --maxfail=1",
+    "runs": [
+      {"run": 1, "duration_seconds": 6.22, "passed": 1},
+      {"run": 2, "duration_seconds": 6.36, "passed": 1},
+      {"run": 3, "duration_seconds": 6.05, "passed": 1}
+    ],
+    "assertions": [
+      "both workers completed 40 steps",
+      "checkpoint shard versions were equal",
+      "final parameters matched uninterrupted SGD within 1e-6"
+    ]
+  },
+  "regression_suites": [
+    {"suite": "tests/test_checkpoint_epochs.py", "passed": 13, "duration_seconds": 69.86},
+    {"suite": "tests/test_failures.py tests/test_shard.py tests/test_worker.py", "passed": 20, "duration_seconds": 6.00},
+    {"suite": "tests/test_recovery_processes.py", "passed": 2, "duration_seconds": 51.64},
+    {"suite": "checkpoint abort/restart subset", "passed": 5, "duration_seconds": 22.95}
+  ],
+  "production_impact": "none",
+  "separate_host_retest_required": true
+}

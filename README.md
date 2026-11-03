@@ -15,10 +15,13 @@ has run on one Google Cloud x86-64 VM, with an authenticated dashboard over HTTP
 and private Grafana access.
 A separate test ran training and observability across two Google Cloud VMs;
 high-rate synchronous live checkpointing hit a barrier deadline. Hosted rollback
-and scaling performance remain unverified. See the
+and scaling performance remain unverified. A local multi-process reproduction and
+correctness fix now cover the completion race; a real two-host retest remains
+required. See the
 [single-host evidence](docs/evidence/gcp-single-host-2026-11-03/README.md) and
 [two-host evidence](docs/evidence/gcp-multihost-2026-11-03/README.md), plus the
-[hosted HTTPS evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md).
+[hosted HTTPS evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md) and
+[local barrier evidence](docs/evidence/checkpoint-barrier-local-2026-11-03/README.md).
 
 [Architecture](ARCHITECTURE.md) · [Evidence and methodology](BENCHMARKS.md) ·
 [Security boundaries](SECURITY.md) · [Roadmap](ROADMAP.md)

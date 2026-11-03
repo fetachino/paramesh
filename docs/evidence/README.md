@@ -158,6 +158,13 @@ failure and does not claim controlled scaling measurements or public HTTPS.
 single-host DuckDNS, Let's Encrypt, dashboard authentication and private routing
 checks. It does not establish hosted rollback or resolve the high-rate barrier failure.
 
+## Local high-rate synchronous checkpoint fix
+
+[The local barrier evidence](checkpoint-barrier-local-20261103/README.md) records
+the deterministic two-worker/two-shard reproduction, root cause, smallest fix,
+repeated high-rate runs and existing abort/restart coverage. It does not substitute
+for a real separate-host retest.
+
 ## Google Cloud hosted rollback investigation
 
 [The rollback evidence](gcp-hosted-rollback-2026-11-03/README.md) records the
