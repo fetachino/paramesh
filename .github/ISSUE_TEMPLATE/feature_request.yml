@@ -1,0 +1,33 @@
+name: Feature request
+description: Propose an improvement or experiment
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What problem are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the expected behavior and scope.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and tradeoffs
+      description: Consider compatibility, performance, state recovery, security, and simpler approaches.
+    validations:
+      required: false
+  - type: textarea
+    id: validation
+    attributes:
+      label: How should this be tested?
+      description: Suggest correctness tests, failure cases, or reproducible benchmarks.
+    validations:
+      required: false
