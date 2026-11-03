@@ -7,6 +7,12 @@ x-multihost-environment: &multihost-environment
 x-multihost-tls-volume: &multihost-tls-volume '${PARAMESH_TLS_DIR:?Set PARAMESH_TLS_DIR to the host TLS directory}:/run/paramesh/tls:ro'
 
 services:
+  checkpoint:
+    networks: [host-link]
+    environment: *multihost-environment
+    volumes:
+      - *multihost-tls-volume
+
   coordinator:
     networks: [host-link]
     command: [coordinator, --config, /run/paramesh/run.json, --bind, '0.0.0.0:50050']

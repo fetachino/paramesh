@@ -1,0 +1,43 @@
+{
+  "config": {
+    "run_id": "gcp-mh-20261103",
+    "mode": "SYNCHRONOUS",
+    "shard_endpoints": [
+      "10.90.0.2:50051",
+      "10.90.0.3:50051"
+    ],
+    "worker_ids": [
+      "worker-0",
+      "worker-1"
+    ],
+    "learning_rate": 0.05,
+    "barrier_timeout_seconds": 30.0
+  },
+  "workers": [
+    {
+      "worker_id": "worker-0",
+      "health": "healthy",
+      "step": "1404",
+      "parameter_version": "1404",
+      "heartbeat_age_seconds": 0.7355450750037562,
+      "generation": "4",
+      "checkpoint_epoch": "3",
+      "checkpoint_id": "gcp-mh-controlled-20261103",
+      "checkpoint_phase": "CHECKPOINT_RUNNING",
+      "checkpoint_committed": true
+    },
+    {
+      "worker_id": "worker-1",
+      "health": "healthy",
+      "step": "1404",
+      "parameter_version": "1404",
+      "heartbeat_age_seconds": 0.4026030070090201,
+      "generation": "6",
+      "checkpoint_epoch": "3",
+      "checkpoint_id": "gcp-mh-controlled-20261103",
+      "checkpoint_phase": "CHECKPOINT_RUNNING",
+      "checkpoint_committed": true
+    }
+  ],
+  "global_step": "1404"
+}

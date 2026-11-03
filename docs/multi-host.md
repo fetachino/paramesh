@@ -1,6 +1,8 @@
 # Multi-host Linux deployment path
 
-**Deployment configuration prepared and locally exercised; separate-host operation is not yet validated.**
+**Validated on two Google Cloud Linux VMs on 2026-11-03.** The local bridge
+simulation remains a separate, earlier check. See the [two-host evidence](evidence/gcp-multihost-2026-11-03/README.md)
+for the exact topology, results, and limits.
 
 `deploy/multihost/compose.yaml` overlays the existing Compose stack. It publishes
 only the ports needed between private Linux hosts, binds them to a configured
@@ -16,11 +18,10 @@ networks and that host port mappings are needed for communication outside them
 ([Compose networking](https://docs.docker.com/compose/how-tos/networking/),
 [Compose port mappings](https://docs.docker.com/reference/compose-file/services/#ports)).
 
-The repository has **not** run on multiple Linux hosts. The local check uses
-separate containers with fixed private IPs on one isolated Docker Desktop Linux
-engine. It verifies direct addressing, TLS, training, monitoring and restart
-behavior without modeling host firewalls, separate kernels, WAN latency or a real
-cloud network.
+The earlier local check uses separate containers with fixed private IPs on one
+isolated Docker Desktop Linux engine. The Google Cloud check runs roles on two
+different kernels over a private VPC; it does not establish WAN or multi-region
+behavior.
 
 ## Network layout
 
@@ -141,6 +142,25 @@ checkpoint outside the host being protected. Local volume persistence is not a
 backup or live replica. Follow [checkpoint operations](checkpoints.md) for export,
 restore and the limits of current recovery semantics.
 
+For an active two-host run, execute the maintenance helper on a host that can
+reach the coordinator and both shards. The multi-host overlay supplies its mTLS
+client certificate and private network attachment. Publish to durable storage
+outside the host being protected for an actual backup. A volume on the coordinator
+host is sufficient only for a same-host restore check:
+
+```sh
+docker compose -p paramesh -f compose.yaml -f deploy/multihost/compose.yaml \
+  --profile maintenance run --rm --no-deps checkpoint checkpoint live-export \
+  --id example-live --coordinator COORDINATOR_PRIVATE_IP:50050 --store /checkpoints
+```
+
+Under the tested two-host synchronous workload, a live checkpoint at the normal
+step rate twice timed out when one worker entered the next gradient barrier as
+its peer paused. Both uncommitted epochs were explicitly aborted and training
+recovered. A controlled run with a 120-second step delay published and restored
+a valid checkpoint. Do not assume a high-rate synchronous live checkpoint is
+reliable across hosts until this boundary race is fixed and retested.
+
 ## Local verification and limits
 
 Run the same-host private-network simulation with:
@@ -158,7 +178,7 @@ run passed with global step 100, shard versions `[100, 100]`, four healthy persi
 scrapes, and retained state after coordinator/shard restart. Its preserved report is
 [`verification.json`](evidence/multihost-local-simulation-2026-11-02/verification.json).
 
-This validates address/configuration wiring over a private container bridge. It
-does not validate separate Linux hosts, host firewalls, DNS management, WAN
-performance, provider capacity, or public deployment. Controlled multi-host
-measurements and hosted HTTPS remain open.
+The local simulation validates address/configuration wiring over one container
+bridge. The later two-VM run validates separate Linux hosts, private VPC rules,
+training, monitoring, a controlled live checkpoint and process restart. It does
+not validate DNS management, WAN performance, sustained scaling or public HTTPS.

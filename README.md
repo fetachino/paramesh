@@ -5,15 +5,18 @@ workers, a membership coordinator and sharded authoritative model state. The
 repository owns the gRPC protocol, gradient validation, SGD updates, versioning,
 replay protection and synchronization behavior.
 
-**Status: local verification and one hosted Linux deployment.** Independent CPU workers and parameter shards
+**Status: local verification, one hosted Coolify deployment, and a two-VM private-network test.** Independent CPU workers and parameter shards
 survive tested process failures using durable local state. Synchronous recovery
 is checked against equivalent uninterrupted PyTorch SGD. Offline whole-run
 checkpoints support local, authenticated S3-compatible and Azure Blob storage, with
 actual SeaweedFS and Azurite tests. A read-only operator dashboard uses actual RPC state, Prometheus,
 NATS lifecycle history, Tempo traces and Loki logs. A Git-backed Coolify deployment
-has run on one Google Cloud x86-64 VM, with private dashboard and Grafana access;
-public HTTPS and separate-host scaling remain unverified. See the
-[hosted evidence](docs/evidence/gcp-single-host-2026-11-03/README.md).
+has run on one Google Cloud x86-64 VM, with private dashboard and Grafana access.
+A separate test ran training and observability across two Google Cloud VMs;
+high-rate synchronous live checkpointing exposed a boundary race. Public HTTPS
+and scaling performance remain unverified. See the
+[single-host evidence](docs/evidence/gcp-single-host-2026-11-03/README.md) and
+[two-host evidence](docs/evidence/gcp-multihost-2026-11-03/README.md).
 
 [Architecture](ARCHITECTURE.md) · [Evidence and methodology](BENCHMARKS.md) ·
 [Security boundaries](SECURITY.md) · [Roadmap](ROADMAP.md)
