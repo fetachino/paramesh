@@ -1,33 +1,30 @@
 # Git-backed Coolify deployment
 
-**Prepared and tested locally; public deployment is pending an available server.**
-No Coolify resource, public hostname or hosted success screenshot exists yet.
-Coolify manages Docker on a server; it does not supply free compute. Do not create
-a paid server, subscription, domain purchase or cloud storage account for this demo.
+**Deployed on one Google Cloud Free Trial Linux VM; public HTTPS is pending a domain.**
+Coolify manages Docker on the VM. The [hosted run and raw evidence](evidence/gcp-single-host-2026-11-03/README.md)
+cover actual native x86-64 training, observability, checkpoint restore and restart.
+This is a credit-funded VM, not an Always Free instance or a multi-host deployment.
 
 The deployment path is GitHub → Coolify Application → repository `compose.yaml` →
 the same independently running ParamMesh containers tested locally. Keep configuration
 changes in Git; do not maintain a pasted, divergent stack in Coolify.
 
-## Before deployment
+## Target and prerequisites
 
-The hosted Linux target remains flexible: Oracle Cloud Always Free Ampere A1 if
-capacity returns, an Azure VM if the student subscription is approved and the VM
-fits its no-charge allowance, or another genuinely free Linux VM. No provider has
-been selected and no cloud resource has been created. [Local ARM64 validation](arm64-validation.md)
-covers the image and Compose stack under emulation; it does not establish a native
-host, provider quota, or Coolify deployment.
+The first hosted target is a Google Cloud `e2-standard-2` (2 vCPU, 8 GB RAM) VM
+in `us-central1-a`, with a 50 GiB `pd-balanced` persistent boot disk. The VM is
+x86-64. [Local ARM64 validation](arm64-validation.md) covers emulation only;
+native ARM64 and separate-host operation remain unverified. Oracle A1 remains an
+option if Always Free capacity becomes available.
 
-Before creating a host, verify the selected account and region still qualify for
-the required no-charge allowance and have capacity for the chosen VM. Check the
-full expected bill, including its boot and persistent disks, public IPv4, network
-egress, snapshots, and any DNS or storage service the deployment would use.
-Credits or promotional balance do not establish a $0 ongoing cost. Do not
-proceed if a required resource is billable, a paid upgrade is required, or its
-cost cannot be confirmed as zero.
+For any new target, check compute, disk, public IPv4, egress, snapshots and DNS
+charges before provisioning. The Google VM consumes promotional credit while it
+runs; credits do not make it a $0 ongoing resource. Do not upgrade billing or
+assume a second host is covered without checking the available trial balance.
 
 Use a persistent disk and enough memory for five Python/PyTorch processes plus
-telemetry and Coolify. Establish actual host limits before a sizing claim.
+telemetry and Coolify. The full stack completed on the 8 GB target; available RAM
+was about 4.6 GiB after the run, which is an observation rather than capacity sizing.
 The build needs access to PyPI, the official PyTorch CPU index and image registries.
 Never use the development machine's temporary wheel mirror in a hosted build.
 
@@ -57,7 +54,9 @@ deployment or scaling result.
    repository-relative file bind mounts. Use managed Compose deployment, not Raw.
 4. Set custom build command `docker compose --profile operations build` and custom
    start command `docker compose --profile operations up -d`. Coolify supplies the
-   generated Compose/environment-file flags. Keep the maintenance profile inactive.
+   generated Compose/environment-file flags. The hosted resource uses
+   `docker compose --profile operations --profile storage up -d` to include
+   private SeaweedFS. Keep the maintenance profile inactive.
 
 These settings follow [Coolify's Git Compose workflow](https://coolify.io/docs/applications/builds/docker-compose).
 
@@ -89,10 +88,11 @@ maintenance task, not a startup side effect.
 
 ## Route only the dashboard
 
-Add an HTTPS domain for receiving service **dashboard**, internal port **8080**,
-root path. Keep Grafana, coordinator, shards, workers, NATS, Prometheus, Tempo, Loki
-and SeaweedFS without domains. Keep host mappings on loopback; use an SSH tunnel
-for private Grafana administration. Do not add host gRPC or backend query ports.
+When a domain controlled by the operator is available, add an HTTPS domain for
+receiving service **dashboard**, internal port **8080**, root path. Until then,
+keep dashboard and Grafana on loopback and use SSH tunnels for private access.
+Keep coordinator, shards, workers, NATS, Prometheus, Tempo, Loki and SeaweedFS
+without domains. Do not add host gRPC or backend query ports.
 
 Point DNS at the authorized resource server and allow its proxy to receive 80/443.
 Coolify's domain port selects the container listener, not a new public host mapping.
@@ -104,6 +104,21 @@ labels. The proxy must reach its management-side network. Preserve internal trai
 and operations network isolation; do not expose them to fix a dashboard routing issue.
 The default private bridges authenticate RPCs but do not encrypt them. Use the tested
 TLS/mTLS options if crossing hosts or an untrusted network.
+
+On the Google VM, the cloud firewall admits only 80/443 publicly and SSH from
+the operator's current /32 address. Coolify's UI port 8000 and real-time ports
+6001/6002 remain closed publicly. Forward all three together when administering
+Coolify through `127.0.0.1`; forwarding 8000 alone produces its “Cannot connect
+to real-time service” warning. Use the authorized SSH account, for example:
+
+```text
+gcloud compute ssh paramesh-gcp --zone us-central1-a -- -L 8000:127.0.0.1:8000 -L 6001:127.0.0.1:6001 -L 6002:127.0.0.1:6002
+```
+
+Dashboard and Grafana use separate loopback host ports assigned by Compose;
+inspect their current `docker port` mappings after each deployment and forward
+those ports to local `18080` and `13000` if private browser access is needed.
+Do not publish either port to the Internet to work around tunnel setup.
 
 ## Deploy and verify on the actual server
 
@@ -117,8 +132,9 @@ TLS/mTLS options if crossing hosts or an untrusted network.
   checkout. Do not assume Coolify's resource identifier is the Docker project name.
 - Inspect host bindings and generated proxy labels; all data-plane/backend ports
   must remain private. Restart roles with retained state and verify their progress.
-- Capture `docs/images/coolify-deployment.png` only after these checks succeed,
-  with server addresses, account details and credentials excluded.
+- Preserve raw verifier reports and checkpoint manifests with their source revision
+  and host architecture. Capture screenshots only from actual authenticated views,
+  without credentials or account details.
 
 Back up full offline checkpoints outside the server before host maintenance. Named
 volumes survive ordinary recreation but are not replicated backups. Never use

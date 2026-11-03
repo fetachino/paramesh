@@ -1,0 +1,48 @@
+{
+  "run_id": "compose-demo",
+  "mode": "SYNCHRONOUS",
+  "global_step": "1000",
+  "shard_versions": [
+    1000,
+    1000
+  ],
+  "max_observed_accepted_staleness": 0.0,
+  "healthy_scrapes": [
+    "coordinator",
+    "dashboard",
+    "shard-0",
+    "shard-1"
+  ],
+  "worker_counter_series": 2,
+  "loki_records_checked": 13,
+  "event_names": [
+    "checkpoint_completed",
+    "shard_restored",
+    "training_completed",
+    "worker_joined",
+    "worker_recovered"
+  ],
+  "trace": {
+    "trace_id": "5e826bc0af7da99b17e9d6b69faede60",
+    "services": [
+      "shard-0",
+      "shard-1",
+      "worker-1"
+    ],
+    "spans": 8
+  },
+  "dashboard_authenticated": true,
+  "backends": {
+    "prometheus": true,
+    "tempo": true,
+    "loki": true
+  },
+  "image_id": "sha256:cedb03c8e23293ad6575bf74d8afe44a743288aa685273c335eefa139f9966e9",
+  "environment": {
+    "commit": "65292da8460a4cc0d91f2fd45dd4e43f1cf20178",
+    "dirty": false,
+    "docker_platform": "linux/x86_64",
+    "verified_at": "2026-11-03T03:43:06.251881+00:00",
+    "project": "mk3mvzgiuoepucocer1weywk"
+  }
+}

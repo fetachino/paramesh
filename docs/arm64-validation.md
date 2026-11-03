@@ -1,9 +1,10 @@
 # Linux ARM64 deployment gate
 
 Oracle Cloud Always Free Ampere A1 remains one candidate for native Linux ARM64
-deployment if capacity returns. The final Linux VM target is provider-flexible;
-this page records local ARM64 validation only. No cloud account, VM, Coolify
-resource or public endpoint was created.
+deployment if capacity returns. This page records local ARM64 validation only.
+At the time of this test, no cloud VM or Coolify resource existed. A later
+[Google Cloud deployment](evidence/gcp-single-host-2026-11-03/README.md) ran on
+x86-64 and does not establish native ARM64 correctness.
 
 ## Local test on 2026-11-02
 
@@ -17,7 +18,8 @@ The test used a separate Compose project and the
 [`compose.arm64-validation.yaml`](../compose.arm64-validation.yaml) override.
 That override pins every service to ARM64 and uses TCP startup probes for the
 Python services because the normal 3–5 second CLI health probes exceeded their
-timeouts under QEMU. The ordinary `compose.yaml` health checks were not changed.
+timeouts under QEMU. The ordinary `compose.yaml` health checks were not changed
+for that test; a later small-host cold-start fix increased their timeout/grace.
 The test project did not share the existing stack's volumes or networks.
 
 ```powershell

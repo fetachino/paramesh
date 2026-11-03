@@ -37,7 +37,8 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Validate the shared Compose stack locally and document Git-backed Coolify settings.
 - [x] Assess additional identity/secrets infrastructure against the current private single-operator model;
       defer OpenBao/Keycloak until actual target requirements justify them.
-- [ ] Validate self-hosted deployment on an authorized server; add OpenTofu/k3s only if the target requires them.
+- [x] Validate the shared stack through Coolify on one Google Cloud x86-64 Linux VM,
+      including training, observability, checkpoint restore and retained-state restart.
 - [x] Audit local documentation claims, clean-clone setup, storage/failure tests,
       package/security checks and preserved visual evidence; see [readiness audit](docs/release-readiness.md).
 - [ ] Validate actual hosted HTTPS, isolation and rollback before a production release.
@@ -57,16 +58,16 @@ of having deployed their managed equivalents.
 | NATS | Operational messaging |
 | OpenTofu / Traefik | Infrastructure as code / ingress |
 
-The hosted Linux target remains flexible: Oracle Cloud Always Free Ampere A1 if
-capacity returns, Azure if the student subscription and VM fit an approved no-charge
-allowance, or another genuinely free Linux VM. The [local ARM64 validation](docs/arm64-validation.md)
-exercises the stack under emulation; native host and Coolify deployment checks remain
-open. No cloud resource has been created.
+The first hosted target is a Google Cloud Free Trial `e2-standard-2` VM with a 50 GiB
+persistent disk. [Single-host evidence](docs/evidence/gcp-single-host-2026-11-03/README.md)
+records the native x86-64 Coolify run. The [local ARM64 validation](docs/arm64-validation.md)
+exercises that architecture under emulation; native ARM64 and separate-host validation
+remain open. Oracle Always Free A1 remains a future option if capacity returns.
 
 Dependency locking, the [controlled local baseline](docs/evidence/benchmarks/uncompressed-local-2026-11-02/README.md),
 [larger-payload loopback trial](docs/evidence/benchmarks/uncompressed-wide-sync-local-2026-11-02/README.md),
 and Azure/Azurite checkpoint portability are complete. The tiny baseline model
 does not establish a bandwidth bottleneck; larger-payload loopback measurements
 are available but do not substitute for controlled network measurements, so
-compression remains deferred. Actual Coolify deployment is pending
-an available authorized server; no paid compute has been provisioned.
+compression remains deferred. The hosted VM consumes promotional credit while running;
+public HTTPS, hosted rollback and real multi-host measurements remain open.
