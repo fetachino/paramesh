@@ -157,3 +157,10 @@ failure and does not claim controlled scaling measurements or public HTTPS.
 [The HTTPS evidence](gcp-hosted-https-2026-11-03/README.md) records the later
 single-host DuckDNS, Let's Encrypt, dashboard authentication and private routing
 checks. It does not establish hosted rollback or resolve the high-rate barrier failure.
+
+## Google Cloud hosted rollback investigation
+
+[The rollback evidence](gcp-hosted-rollback-2026-11-03/README.md) records the
+actual image identities, Compose behavior, root-only backup, archive hashes and
+isolated candidate check. It does not claim a live rollback because the current
+Coolify build is mutable-tag based and no prior Coolify rollback image exists.

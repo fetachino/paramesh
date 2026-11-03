@@ -59,13 +59,16 @@ explicitly; regeneration is byte-identical to committed dashboard JSON.
   [The deployment runbook](coolify.md) records setup and remaining validation.
   [Public HTTPS verification](evidence/gcp-hosted-https-2026-11-03/README.md)
   now covers trusted TLS, the dashboard login, Secure cookies and the public
-  routing boundary. Hosted rollback remains unverified because Coolify reports
-  no saved rollback images.
+  routing boundary. [Hosted rollback investigation](evidence/gcp-hosted-rollback-2026-11-03/README.md)
+  established a root-only backup and an isolated immutable-image smoke test, but
+  live rollback remains unverified because this Compose deployment uses a mutable
+  local build tag and Coolify reports no saved rollback images.
 - **Protocol/model limits:** CPU float32 and the bundled fixed workload; offline
   whole-run checkpoints with the original topology; no coordinator consensus or
   replicated live state. Azurite compatibility is not managed Azure durability.
 
-Before a public release, verify hosted rollback and resolve the high-rate
+Before a public release, make the deployment source-to-image mapping immutable,
+verify hosted rollback and resolve the high-rate
 synchronous checkpoint barrier failure. Preserve an offline
 checkpoint and the deployed source/image identity before a rollout. Roll back code
 only to a compatible version; state rollback is an offline whole-run restore into
