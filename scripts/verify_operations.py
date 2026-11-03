@@ -386,7 +386,9 @@ def main() -> None:
                 checkpoint = services["checkpoint"]
                 assert checkpoint["environment"]["PARAMESH_TLS_CA"] == "/run/paramesh/tls/ca.pem"
                 assert checkpoint["environment"]["PARAMESH_ADMIN_TOKEN"]
-                assert any(volume["target"] == "/run/paramesh/tls" for volume in checkpoint["volumes"])
+                assert any(
+                    volume["target"] == "/run/paramesh/tls" for volume in checkpoint["volumes"]
+                )
                 assert not services["worker-0"].get("depends_on")
                 assert not services["worker-1"].get("depends_on")
                 assert "PARAMESH_ADMIN_TOKEN" not in services["worker-0"]["environment"]
