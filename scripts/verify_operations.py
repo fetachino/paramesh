@@ -369,6 +369,19 @@ def main() -> None:
                     )
                 )
                 services = overlay_model["services"]
+                assert not overlay_model["networks"]["host-link"].get("internal", False)
+                for name in (
+                    "coordinator",
+                    "shard-0",
+                    "shard-1",
+                    "worker-0",
+                    "worker-1",
+                    "dashboard",
+                    "nats",
+                    "tempo",
+                    "prometheus",
+                ):
+                    assert "host-link" in services[name]["networks"]
                 assert not services["worker-0"].get("depends_on")
                 assert not services["worker-1"].get("depends_on")
                 assert "PARAMESH_ADMIN_TOKEN" not in services["worker-0"]["environment"]
