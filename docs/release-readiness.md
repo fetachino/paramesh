@@ -57,13 +57,16 @@ explicitly; regeneration is byte-identical to committed dashboard JSON.
   persistent volumes, private dashboard/Grafana access, a completed 1,000-step run,
   local and S3-compatible checkpoint restore, and retained-state restart.
   [The deployment runbook](coolify.md) records setup and remaining validation.
-  Public HTTPS and hosted rollback remain unverified; proxy isolation was checked
-  against the actual firewall and host bindings, not against a public domain.
+  [Public HTTPS verification](evidence/gcp-hosted-https-2026-11-03/README.md)
+  now covers trusted TLS, the dashboard login, Secure cookies and the public
+  routing boundary. Hosted rollback remains unverified because Coolify reports
+  no saved rollback images.
 - **Protocol/model limits:** CPU float32 and the bundled fixed workload; offline
   whole-run checkpoints with the original topology; no coordinator consensus or
   replicated live state. Azurite compatibility is not managed Azure durability.
 
-Before a public release, verify DNS/TLS and hosted rollback. Preserve an offline
+Before a public release, verify hosted rollback and resolve the high-rate
+synchronous checkpoint barrier failure. Preserve an offline
 checkpoint and the deployed source/image identity before a rollout. Roll back code
 only to a compatible version; state rollback is an offline whole-run restore into
 fresh volumes, never mixing old shards with live peers. No hosted rollback duration

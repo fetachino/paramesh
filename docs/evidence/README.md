@@ -151,3 +151,9 @@ HTTPS, native ARM64 or separate-host scaling.
 private-VPC training, cross-host observability, a controlled live checkpoint
 and process restart. It also records the high-rate synchronous checkpoint
 failure and does not claim controlled scaling measurements or public HTTPS.
+
+## Google Cloud hosted HTTPS rollout
+
+[The HTTPS evidence](gcp-hosted-https-2026-11-03/README.md) records the later
+single-host DuckDNS, Let's Encrypt, dashboard authentication and private routing
+checks. It does not establish hosted rollback or resolve the high-rate barrier failure.
