@@ -5,12 +5,15 @@ workers, a membership coordinator and sharded authoritative model state. The
 repository owns the gRPC protocol, gradient validation, SGD updates, versioning,
 replay protection and synchronization behavior.
 
-**Status: local training, recovery and operations stack verified.** Independent CPU workers and parameter shards
+**Status: local verification and one hosted Linux deployment.** Independent CPU workers and parameter shards
 survive tested process failures using durable local state. Synchronous recovery
 is checked against equivalent uninterrupted PyTorch SGD. Offline whole-run
 checkpoints support local, authenticated S3-compatible and Azure Blob storage, with
 actual SeaweedFS and Azurite tests. A read-only operator dashboard uses actual RPC state, Prometheus,
-NATS lifecycle history, Tempo traces and Loki logs. Public deployment is pending a server.
+NATS lifecycle history, Tempo traces and Loki logs. A Git-backed Coolify deployment
+has run on one Google Cloud x86-64 VM, with private dashboard and Grafana access;
+public HTTPS and separate-host scaling remain unverified. See the
+[hosted evidence](docs/evidence/gcp-single-host-2026-11-03/README.md).
 
 [Architecture](ARCHITECTURE.md) · [Evidence and methodology](BENCHMARKS.md) ·
 [Security boundaries](SECURITY.md) · [Roadmap](ROADMAP.md)
@@ -188,8 +191,8 @@ only its own synthetic test volumes. This check passed locally; the CI container
 job runs the same script.
 
 `PARAMESH_STEPS` and `PARAMESH_STEP_DELAY` control target steps and optional pacing
-for demonstrations. A larger target continues an existing run. No Coolify/server
-deployment has been performed yet.
+for demonstrations. A larger target continues an existing run. The separate
+[Coolify deployment](docs/coolify.md) completed 1,000 steps on one Linux VM.
 
 ## Inspect the operations stack
 
@@ -273,7 +276,7 @@ See [checkpoint operator commands](docs/checkpoints.md) for private SeaweedFS/Az
 offline export, coordinated live export, fresh-directory restore and fresh-volume installation.
 Live export quiesces active workers and fences all shards; offline export requires
 stopping the full run. Both retain the original topology. Larger-payload/network
-benchmarks and authorized self-hosted deployment follow in [ROADMAP.md](ROADMAP.md).
+benchmarks and remaining hosted validation follow in [ROADMAP.md](ROADMAP.md).
 
 ## Additional documentation
 
@@ -284,5 +287,5 @@ benchmarks and authorized self-hosted deployment follow in [ROADMAP.md](ROADMAP.
 - [Multi-host Linux deployment path](docs/multi-host.md)
 - [Architecture and consistency model](ARCHITECTURE.md)
 - [Correctness evidence and benchmark policy](BENCHMARKS.md)
-- [Local release-readiness audit and deployment limits](docs/release-readiness.md)
+- [Release-readiness audit and deployment limits](docs/release-readiness.md)
 - [Security model](SECURITY.md)

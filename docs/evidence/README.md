@@ -136,4 +136,11 @@ payloads. They remain local loopback measurements and do not justify compression
 environment with 117 passing tests, 92.00% coverage, zero known OSV advisories across
 86 installed packages, package checks, preserved screenshots/raw captures and the
 retained operations stack. [Scope and remaining gates](../release-readiness.md)
-distinguish local verification from the pending hosted deployment.
+distinguish the November 2 local audit from the later hosted deployment.
+
+## Google Cloud single-host deployment
+
+[The hosted evidence](gcp-single-host-2026-11-03/README.md) records a real
+Coolify deployment on one Google Cloud x86-64 Linux VM, with raw training,
+observability, checkpoint and restart records. It does not establish public
+HTTPS, native ARM64 or separate-host scaling.

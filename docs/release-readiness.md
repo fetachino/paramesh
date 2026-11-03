@@ -1,7 +1,8 @@
 # Local release-readiness audit
 
-The November 2, 2026 UTC audit verifies the local development system. It does not
-establish a hosted deployment or justify a production `v1.0.0` release.
+The November 2, 2026 UTC audit verifies the local development system. A separate
+[November 3 hosted run](evidence/gcp-single-host-2026-11-03/README.md) verified one
+Google Cloud Linux VM. Neither result justifies a production `v1.0.0` release.
 [The machine-readable record](evidence/release-readiness.json) preserves exact source,
 dependency/package hashes, test results, CI identities and retained-service state.
 
@@ -52,17 +53,17 @@ explicitly; regeneration is byte-identical to committed dashboard JSON.
   conditional options. The current private single-operator stack has no demonstrated
   need for additional identity infrastructure; adding undeployed templates would not
   validate portability. Reassess against an actual target and operator requirements.
-- **Coolify:** deployment needs an authorized Linux Docker server, persistent disk,
-  network/proxy access and a domain. No target or paid compute was provisioned.
-  [The deployment runbook](coolify.md) defines Git-backed setup and validation.
-  Actual public HTTPS, proxy isolation, target capacity and hosted rollback remain
-  unverified until deployment is possible.
+- **Coolify:** the Git-backed stack ran on one Google Cloud Free Trial Linux VM with
+  persistent volumes, private dashboard/Grafana access, a completed 1,000-step run,
+  local and S3-compatible checkpoint restore, and retained-state restart.
+  [The deployment runbook](coolify.md) records setup and remaining validation.
+  Public HTTPS and hosted rollback remain unverified; proxy isolation was checked
+  against the actual firewall and host bindings, not against a public domain.
 - **Protocol/model limits:** CPU float32 and the bundled fixed workload; offline
   whole-run checkpoints with the original topology; no coordinator consensus or
   replicated live state. Azurite compatibility is not managed Azure durability.
 
-Before a hosted release, verify the target's DNS/TLS, private backend ports,
-credentials, actual training/checkpoint restore and telemetry. Preserve an offline
+Before a public release, verify DNS/TLS and hosted rollback. Preserve an offline
 checkpoint and the deployed source/image identity before a rollout. Roll back code
 only to a compatible version; state rollback is an offline whole-run restore into
 fresh volumes, never mixing old shards with live peers. No hosted rollback duration
