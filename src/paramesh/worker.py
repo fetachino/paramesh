@@ -224,6 +224,23 @@ def train_worker(
                                     client.PushGradients, request, timeout
                                 )
                             except grpc.RpcError as error:
+                                if (
+                                    error.code() == grpc.StatusCode.DEADLINE_EXCEEDED
+                                    and checkpoint_requested.is_set()
+                                    and all(
+                                        _rpc(
+                                            shard.GetProgress,
+                                            pb.PullRequest(run_id=config.run_id),
+                                            timeout,
+                                        ).next_steps[worker_id]
+                                        == step
+                                        for shard in clients
+                                    )
+                                ):
+                                    journal.discard()
+                                    wait_for_checkpoint()
+                                    refresh = True
+                                    break
                                 if error.code() != grpc.StatusCode.FAILED_PRECONDITION:
                                     raise
                                 refreshes += 1
