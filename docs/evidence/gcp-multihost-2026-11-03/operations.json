@@ -1,0 +1,50 @@
+{
+  "run_id": "gcp-mh-20261103",
+  "mode": "SYNCHRONOUS",
+  "global_step": "1016",
+  "shard_versions": [
+    1019,
+    1019
+  ],
+  "max_observed_accepted_staleness": 0.0,
+  "healthy_scrapes": [
+    "coordinator",
+    "dashboard",
+    "shard-0",
+    "shard-1",
+    "worker-0",
+    "worker-1"
+  ],
+  "worker_counter_series": 2,
+  "loki_records_checked": 8,
+  "event_names": [
+    "training_completed",
+    "training_started",
+    "worker_joined",
+    "worker_lost",
+    "worker_recovered"
+  ],
+  "trace": {
+    "trace_id": "1b91089e00b0b792d61fb888e18be9b2",
+    "services": [
+      "shard-0",
+      "shard-1",
+      "worker-0"
+    ],
+    "spans": 9
+  },
+  "dashboard_authenticated": true,
+  "backends": {
+    "prometheus": true,
+    "tempo": true,
+    "loki": true
+  },
+  "image_id": "sha256:1a3705871c503b388ef02e5294fed631d48a8219003c9f9f837173d37c534b26",
+  "environment": {
+    "commit": "379c340b0f690d590e1f4aaf5ff54fc3fb5208ad",
+    "dirty": true,
+    "docker_platform": "linux/x86_64",
+    "verified_at": "2026-11-03T18:22:02.757072+00:00",
+    "project": "paramesh-mh-20261103"
+  }
+}

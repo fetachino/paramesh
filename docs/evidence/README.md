@@ -144,3 +144,10 @@ distinguish the November 2 local audit from the later hosted deployment.
 Coolify deployment on one Google Cloud x86-64 Linux VM, with raw training,
 observability, checkpoint and restart records. It does not establish public
 HTTPS, native ARM64 or separate-host scaling.
+
+## Google Cloud two-host test
+
+[The two-VM evidence](gcp-multihost-2026-11-03/README.md) records actual
+private-VPC training, cross-host observability, a controlled live checkpoint
+and process restart. It also records the high-rate synchronous checkpoint
+failure and does not claim controlled scaling measurements or public HTTPS.

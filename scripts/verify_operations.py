@@ -320,7 +320,7 @@ def main() -> None:
         else []
     )
 
-    def compose(*arguments, source=None, files=None):
+    def compose(*arguments, source=None, files=None, profiles=("operations",)):
         selected_files = project_files if files is None else files
         result = subprocess.run(
             [
@@ -329,8 +329,7 @@ def main() -> None:
                 *selected_files,
                 "-p",
                 project,
-                "--profile",
-                "operations",
+                *(item for profile in profiles for item in ("--profile", profile)),
                 *arguments,
             ],
             input=source,
@@ -366,11 +365,13 @@ def main() -> None:
                         "--format",
                         "json",
                         files=["-f", "compose.yaml", "-f", "deploy/multihost/compose.yaml"],
+                        profiles=("operations", "maintenance"),
                     )
                 )
                 services = overlay_model["services"]
                 assert not overlay_model["networks"]["host-link"].get("internal", False)
                 for name in (
+                    "checkpoint",
                     "coordinator",
                     "shard-0",
                     "shard-1",
@@ -382,6 +383,12 @@ def main() -> None:
                     "prometheus",
                 ):
                     assert "host-link" in services[name]["networks"]
+                checkpoint = services["checkpoint"]
+                assert checkpoint["environment"]["PARAMESH_TLS_CA"] == "/run/paramesh/tls/ca.pem"
+                assert checkpoint["environment"]["PARAMESH_ADMIN_TOKEN"]
+                assert any(
+                    volume["target"] == "/run/paramesh/tls" for volume in checkpoint["volumes"]
+                )
                 assert not services["worker-0"].get("depends_on")
                 assert not services["worker-1"].get("depends_on")
                 assert "PARAMESH_ADMIN_TOKEN" not in services["worker-0"]["environment"]
