@@ -47,8 +47,10 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Validate the hosted dashboard hostname, trusted HTTPS, Secure session cookie,
       authentication and public/private service routing on the actual VM;
       see [evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md).
-- [ ] Verify a compatible hosted image rollback; Coolify currently has no saved
-      rollback image for this resource.
+- [ ] Verify a compatible hosted image rollback. A root-only VM backup and
+      isolated immutable-image smoke test are complete, but the live Coolify
+      rollback remains blocked by the mutable `paramesh:local` Compose build tag
+      and missing saved Coolify rollback image.
 - [ ] Resolve and retest the high-rate synchronous checkpoint barrier failure.
       No `v1.0.0` tag is justified yet.
 
