@@ -8,6 +8,7 @@ x-multihost-tls-volume: &multihost-tls-volume '${PARAMESH_TLS_DIR:?Set PARAMESH_
 
 services:
   coordinator:
+    networks: [host-link]
     command: [coordinator, --config, /run/paramesh/run.json, --bind, '0.0.0.0:50050']
     environment:
       <<: *multihost-environment
@@ -20,6 +21,7 @@ services:
       - '${PARAMESH_PRIVATE_BIND_IP}:9101:9100'
 
   shard-0:
+    networks: [host-link]
     command: [shard, --config, /run/paramesh/run.json, --index, '0', --bind, '0.0.0.0:50051']
     environment:
       <<: *multihost-environment
@@ -34,6 +36,7 @@ services:
       - '${PARAMESH_PRIVATE_BIND_IP}:9102:9100'
 
   shard-1:
+    networks: [host-link]
     command: [shard, --config, /run/paramesh/run.json, --index, '1', --bind, '0.0.0.0:50051']
     environment:
       <<: *multihost-environment
@@ -48,6 +51,7 @@ services:
       - '${PARAMESH_PRIVATE_BIND_IP}:9103:9100'
 
   worker-0:
+    networks: [host-link]
     environment: *multihost-environment
     volumes:
       - *multihost-tls-volume
@@ -57,6 +61,7 @@ services:
       - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:9104:9100'
 
   worker-1:
+    networks: [host-link]
     environment: *multihost-environment
     volumes:
       - *multihost-tls-volume
@@ -66,6 +71,7 @@ services:
       - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:9105:9100'
 
   dashboard:
+    networks: [host-link]
     environment: *multihost-environment
     command: [dashboard, --config, /run/paramesh/run.json, --coordinator, '${PARAMESH_COORDINATOR_ENDPOINT:-coordinator:50050}', --bind, '0.0.0.0', --state-dir, /app/state]
     volumes:
@@ -75,6 +81,7 @@ services:
       - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:9106:9100'
 
   nats:
+    networks: [host-link]
     volumes:
       - ${PARAMESH_NATS_TLS_DIR:?Set PARAMESH_NATS_TLS_DIR to the NATS server certificate directory}:/run/paramesh/nats-tls:ro
     command: ['test -n "$$PARAMESH_NATS_TOKEN"; exec nats-server --auth "$$PARAMESH_NATS_TOKEN" --tls --tlscert /run/paramesh/nats-tls/nats.crt --tlskey /run/paramesh/nats-tls/nats.key -m 8222']
@@ -82,10 +89,15 @@ services:
       - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:4222:4222'
 
   tempo:
+    networks: [host-link]
     ports:
       - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:4318:4318'
 
   prometheus:
+    networks: [host-link]
     volumes:
       - ./deploy/multihost/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
       - ${PARAMESH_PROMETHEUS_TARGETS_DIR:-./deploy/multihost/prometheus-targets}:/etc/prometheus/targets:ro
+
+networks:
+  host-link:

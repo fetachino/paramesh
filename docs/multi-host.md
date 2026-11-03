@@ -6,7 +6,10 @@
 only the ports needed between private Linux hosts, binds them to a configured
 private interface, disables same-project worker dependencies, mounts the shared
 run config and per-host certificates, and keeps each role's existing named state
-volume local to its Docker host. Use private DNS names or stable private IPs in
+volume local to its Docker host. The overlay adds a `host-link` bridge to roles
+that need private VPC traffic; the original internal training/operations networks
+remain in place. Cloud firewall rules must restrict the published private-IP
+ports to the participating hosts. Use private DNS names or stable private IPs in
 the run config and `.env`; Compose service names only resolve within a Compose
 network. Docker documents that service-name discovery is scoped to shared Compose
 networks and that host port mappings are needed for communication outside them
