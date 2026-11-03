@@ -1,8 +1,10 @@
 # Git-backed Coolify deployment
 
-**Deployed on one Google Cloud Free Trial Linux VM; public HTTPS is pending a domain.**
+**Deployed on one Google Cloud Free Trial Linux VM with an authenticated dashboard over HTTPS.**
 Coolify manages Docker on the VM. The [hosted run and raw evidence](evidence/gcp-single-host-2026-11-03/README.md)
 cover actual native x86-64 training, observability, checkpoint restore and restart.
+The [HTTPS rollout evidence](evidence/gcp-hosted-https-2026-11-03/README.md)
+records the public route, certificate, authentication and remaining rollback gate.
 This is a credit-funded VM, not an Always Free instance or a multi-host deployment.
 
 The deployment path is GitHub → Coolify Application → repository `compose.yaml` →
@@ -14,8 +16,9 @@ changes in Git; do not maintain a pasted, divergent stack in Coolify.
 The first hosted target is a Google Cloud `e2-standard-2` (2 vCPU, 8 GB RAM) VM
 in `us-central1-a`, with a 50 GiB `pd-balanced` persistent boot disk. The VM is
 x86-64. [Local ARM64 validation](arm64-validation.md) covers emulation only;
-native ARM64 and separate-host operation remain unverified. Oracle A1 remains an
-option if Always Free capacity becomes available.
+native ARM64 remains unverified. A separate [two-host Google Cloud test](evidence/gcp-multihost-2026-11-03/README.md)
+verified private-VPC operation, with the high-rate barrier limitation noted there.
+Oracle A1 remains an option if Always Free capacity becomes available.
 
 For any new target, check compute, disk, public IPv4, egress, snapshots and DNS
 charges before provisioning. The Google VM consumes promotional credit while it
@@ -88,14 +91,17 @@ maintenance task, not a startup side effect.
 
 ## Route only the dashboard
 
-When a domain controlled by the operator is available, add an HTTPS domain for
-receiving service **dashboard**, internal port **8080**, root path. Until then,
-keep dashboard and Grafana on loopback and use SSH tunnels for private access.
+The hosted resource routes `https://paramesh-operator.duckdns.org` to receiving
+service **dashboard**, internal port **8080**, root path, with HTTP redirected to
+HTTPS. `PARAMESH_COOKIE_SECURE=true` is set in Coolify. Keep Grafana on loopback
+and use an SSH tunnel for private access.
 Keep coordinator, shards, workers, NATS, Prometheus, Tempo, Loki and SeaweedFS
 without domains. Do not add host gRPC or backend query ports.
 
 Point DNS at the authorized resource server and allow its proxy to receive 80/443.
 Coolify's domain port selects the container listener, not a new public host mapping.
+The DuckDNS record currently points to the VM's public IPv4 address; update it if
+that address changes. The extra `www` route is not configured.
 See [domain routing and TLS](https://coolify.io/docs/core/networking/domains) and
 [Compose-specific settings](https://coolify.io/docs/applications/configuration/general).
 
@@ -140,6 +146,8 @@ Back up full offline checkpoints outside the server before host maintenance. Nam
 volumes survive ordinary recreation but are not replicated backups. Never use
 `down --volumes` on a retained deployment. Code rollback does not roll model state
 back; whole-run restore requires fresh state for every role. See [checkpoints](checkpoints.md).
+Coolify currently reports **no saved rollback images** for this resource. Capture
+and verify a compatible image rollback before treating that release gate as passed.
 
 OpenTofu and k3s are deferred until an actual host/provisioning requirement exists;
 placeholder infrastructure cannot establish a working public deployment.

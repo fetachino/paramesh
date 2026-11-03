@@ -11,12 +11,14 @@ is checked against equivalent uninterrupted PyTorch SGD. Offline whole-run
 checkpoints support local, authenticated S3-compatible and Azure Blob storage, with
 actual SeaweedFS and Azurite tests. A read-only operator dashboard uses actual RPC state, Prometheus,
 NATS lifecycle history, Tempo traces and Loki logs. A Git-backed Coolify deployment
-has run on one Google Cloud x86-64 VM, with private dashboard and Grafana access.
+has run on one Google Cloud x86-64 VM, with an authenticated dashboard over HTTPS
+and private Grafana access.
 A separate test ran training and observability across two Google Cloud VMs;
-high-rate synchronous live checkpointing exposed a boundary race. Public HTTPS
+high-rate synchronous live checkpointing hit a barrier deadline. Hosted rollback
 and scaling performance remain unverified. See the
 [single-host evidence](docs/evidence/gcp-single-host-2026-11-03/README.md) and
-[two-host evidence](docs/evidence/gcp-multihost-2026-11-03/README.md).
+[two-host evidence](docs/evidence/gcp-multihost-2026-11-03/README.md), plus the
+[hosted HTTPS evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md).
 
 [Architecture](ARCHITECTURE.md) · [Evidence and methodology](BENCHMARKS.md) ·
 [Security boundaries](SECURITY.md) · [Roadmap](ROADMAP.md)

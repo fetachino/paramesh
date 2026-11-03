@@ -44,7 +44,12 @@ implementation boundaries, not a claim that infrastructure examples are deployed
       including training, observability, checkpoint restore and retained-state restart.
 - [x] Audit local documentation claims, clean-clone setup, storage/failure tests,
       package/security checks and preserved visual evidence; see [readiness audit](docs/release-readiness.md).
-- [ ] Validate actual hosted HTTPS, isolation and rollback before a production release.
+- [x] Validate the hosted dashboard hostname, trusted HTTPS, Secure session cookie,
+      authentication and public/private service routing on the actual VM;
+      see [evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md).
+- [ ] Verify a compatible hosted image rollback; Coolify currently has no saved
+      rollback image for this resource.
+- [ ] Resolve and retest the high-rate synchronous checkpoint barrier failure.
       No `v1.0.0` tag is justified yet.
 
 ## Intended cloud portability
@@ -74,4 +79,5 @@ and Azure/Azurite checkpoint portability are complete. The tiny baseline model
 does not establish a bandwidth bottleneck; larger-payload loopback measurements
 are available but do not substitute for controlled network measurements, so
 compression remains deferred. The hosted VM consumes promotional credit while running;
-public HTTPS, hosted rollback and real multi-host measurements remain open.
+hosted rollback, high-rate checkpoint recovery and controlled multi-host
+measurements remain open.
