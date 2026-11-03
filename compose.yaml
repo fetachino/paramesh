@@ -186,9 +186,9 @@ services:
     healthcheck:
       test: [CMD, paramesh, status, --coordinator, '127.0.0.1:50050']
       interval: 5s
-      timeout: 5s
+      timeout: 20s
       retries: 5
-      start_period: 10s
+      start_period: 60s
 
   shard-0:
     <<: *common
@@ -199,9 +199,9 @@ services:
     healthcheck:
       test: [CMD, paramesh, check-shard, --address, '127.0.0.1:50051', --run-id, compose-demo]
       interval: 5s
-      timeout: 5s
+      timeout: 20s
       retries: 5
-      start_period: 15s
+      start_period: 60s
 
   shard-1:
     <<: *common
@@ -212,9 +212,9 @@ services:
     healthcheck:
       test: [CMD, paramesh, check-shard, --address, '127.0.0.1:50051', --run-id, compose-demo]
       interval: 5s
-      timeout: 5s
+      timeout: 20s
       retries: 5
-      start_period: 15s
+      start_period: 60s
 
   worker-0:
     <<: *common
