@@ -69,3 +69,11 @@ class Journal:
         del record.requests[:]
         record.next_step += 1
         self._write(record)
+
+    def discard(self) -> None:
+        if not self.record.requests:
+            raise ValueError("No prepared gradients to discard")
+        record = pb.WorkerJournal()
+        record.CopyFrom(self.record)
+        del record.requests[:]
+        self._write(record)

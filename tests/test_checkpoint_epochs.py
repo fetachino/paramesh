@@ -690,6 +690,84 @@ def test_workers_pause_at_durable_step_and_resume_after_epoch_release(tmp_path, 
             shard_store.close()
 
 
+def test_sync_worker_clears_uncommitted_barrier_when_peer_pauses_for_checkpoint(tmp_path):
+    from paramesh.worker import train_worker
+    from paramesh.workload import local_reference, parameters
+
+    with socket.socket() as reservation:
+        reservation.bind(("127.0.0.1", 0))
+        shard_address = f"127.0.0.1:{reservation.getsockname()[1]}"
+    settings = config(
+        mode=pb.SYNCHRONOUS,
+        shard_endpoints=[shard_address],
+        barrier_timeout_seconds=2,
+    )
+    security = RpcSecurity.ephemeral()
+    shard_store = StateDB(tmp_path / "shard.sqlite")
+    shard = ParameterShard(settings, parameters(), state=shard_store)
+    shard_host, _ = shard_server(shard, shard_address, security=security)
+    coordinator_store = StateDB(tmp_path / "coordinator.sqlite")
+    coordinator = managed_coordinator(settings, state=coordinator_store, security=security)
+    coordinator_host, coordinator_port = coordinator_server(
+        coordinator, "127.0.0.1:0", security=security
+    )
+    worker_stores = {name: StateDB(tmp_path / f"{name}.sqlite") for name in settings.worker_ids}
+    errors = []
+
+    def train(name):
+        try:
+            train_worker(
+                f"127.0.0.1:{coordinator_port}",
+                name,
+                4,
+                timeout=1,
+                state=worker_stores[name],
+                step_delay=3 if name == "worker-0" else 0,
+                security=security,
+            )
+        except Exception as error:
+            errors.append(error)
+
+    shard_host.start()
+    coordinator_host.start()
+    threads = [threading.Thread(target=train, args=(name,)) for name in settings.worker_ids]
+    for thread in threads:
+        thread.start()
+    try:
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            with shard.condition:
+                at_barrier = shard.version >= 1 and set(shard.pending) == {"worker-1"}
+            if at_barrier and all(
+                worker.health == "healthy" for worker in coordinator.status().workers
+            ):
+                break
+            time.sleep(0.01)
+        assert at_barrier, "The faster worker did not reach the unmatched gradient barrier"
+        coordinator.begin_checkpoint("sync-boundary")
+        manifest = export_online_checkpoint(
+            f"127.0.0.1:{coordinator_port}",
+            LocalStore(tmp_path / "checkpoints"),
+            "sync-boundary",
+            security,
+            timeout=15,
+        )
+        assert 0 < manifest["global_step"] < 4
+        for thread in threads:
+            thread.join(timeout=20)
+        assert not errors and all(not thread.is_alive() for thread in threads)
+        reference = local_reference(2, 4, settings.learning_rate)
+        assert all(
+            np.max(np.abs(shard.parameters[name] - expected)) < 1e-6
+            for name, expected in reference.items()
+        )
+    finally:
+        coordinator_host.stop(0).wait()
+        shard_host.stop(0).wait()
+        for storage in (*worker_stores.values(), coordinator_store, shard_store):
+            storage.close()
+
+
 def test_worker_process_restarts_from_checkpoint_journal_after_coordinator_restart(tmp_path):
     settings = config(worker_ids=["worker-0"], shard_endpoints=["pending"])
     security = RpcSecurity.ephemeral()
