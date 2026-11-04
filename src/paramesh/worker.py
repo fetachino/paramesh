@@ -241,6 +241,26 @@ def train_worker(
                                     wait_for_checkpoint()
                                     refresh = True
                                     break
+                                if error.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                                    # A synchronous barrier can abort after the peer lease is
+                                    # lost.  Keep the durable journal and inspect progress before
+                                    # replaying so a lost response cannot duplicate an update.
+                                    progress_state = _rpc(
+                                        clients[index].GetProgress,
+                                        pb.PullRequest(run_id=config.run_id),
+                                        timeout,
+                                    )
+                                    position = progress_state.next_steps[worker_id]
+                                    if position > step:
+                                        accepted.add(index)
+                                        committed_versions[index] = progress_state.version
+                                        continue
+                                    if position != step:
+                                        raise RuntimeError(
+                                            "Shard progress crossed the worker step after a "
+                                            "synchronous RPC deadline"
+                                        ) from error
+                                    break
                                 if error.code() != grpc.StatusCode.FAILED_PRECONDITION:
                                     raise
                                 refreshes += 1
