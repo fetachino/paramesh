@@ -1,3 +1,4 @@
+import time
 from concurrent.futures import ThreadPoolExecutor
 from threading import Event
 
@@ -77,3 +78,25 @@ def test_last_worker_cannot_commit_after_barrier_deadline(monkeypatch):
         with pytest.raises(TimeoutError):
             first.result(timeout=2)
     assert weight(server) == 1
+
+
+def test_canceled_sync_gradient_aborts_pending_barrier_without_commit():
+    server = ParameterShard(
+        config(mode=pb.SYNCHRONOUS, barrier_timeout_seconds=5),
+        {"weight": np.ones(1, dtype=np.float32)},
+    )
+    with ThreadPoolExecutor(1) as pool:
+        pending = pool.submit(server.push, update())
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            with server.condition:
+                if set(server.pending) == {"worker-0"}:
+                    break
+            Event().wait(0.01)
+        with server.condition:
+            assert set(server.pending) == {"worker-0"}
+        server.abort_barrier_if_pending("test-run", "worker-0", 0)
+        with pytest.raises(TimeoutError):
+            pending.result(timeout=2)
+    assert server.version == 0
+    assert server.pending == {}

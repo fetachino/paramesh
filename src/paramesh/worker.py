@@ -19,19 +19,15 @@ from paramesh.tensors import decode_many, encode, partition
 from paramesh.workload import dataset, load_parameters, model
 
 
-def _rpc(method: Any, request: Any, timeout: float) -> Any:
+def _rpc(method: Any, request: Any, timeout: float, *, retry_deadline: bool = True) -> Any:
     for attempt in range(3):
         try:
             return method(request, timeout=timeout, wait_for_ready=True)
         except grpc.RpcError as error:
-            if (
-                error.code()
-                not in (
-                    grpc.StatusCode.UNAVAILABLE,
-                    grpc.StatusCode.DEADLINE_EXCEEDED,
-                )
-                or attempt == 2
-            ):
+            retryable = error.code() == grpc.StatusCode.UNAVAILABLE or (
+                error.code() == grpc.StatusCode.DEADLINE_EXCEEDED and retry_deadline
+            )
+            if not retryable or attempt == 2:
                 raise
             threading.Event().wait(0.1 * 2**attempt)
     raise AssertionError("Retry loop must return or raise")
@@ -221,7 +217,7 @@ def train_worker(
                             request.generation = session.generation
                             try:
                                 result: pb.UpdateResult = _rpc(
-                                    client.PushGradients, request, timeout
+                                    client.PushGradients, request, timeout, retry_deadline=False
                                 )
                             except grpc.RpcError as error:
                                 if (
