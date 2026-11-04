@@ -62,8 +62,11 @@ explicitly; regeneration is byte-identical to committed dashboard JSON.
   routing boundary. [Hosted rollback investigation](evidence/gcp-hosted-rollback-2026-11-03/README.md)
   established a root-only backup and an isolated immutable-image smoke test.
   The [immutable deployment workflow](immutable-deployment.md) now records
-  digest-qualified image identity and guards rollback compatibility, but hosted
-  rollback remains unverified until the isolated restoration evidence is complete.
+  digest-qualified image identity and guards rollback compatibility. The
+  [2026-11-04 validation](evidence/gcp-hosted-rollback-2026-11-04/README.md)
+  verified an equal-shard checkpoint archive and retained-state isolated rollback;
+  registry-backed publication and an approved Coolify production cutover remain
+  open.
 - **Protocol/model limits:** CPU float32 and the bundled fixed workload; offline
   whole-run checkpoints with the original topology; no coordinator consensus or
   replicated live state. Azurite compatibility is not managed Azure durability.

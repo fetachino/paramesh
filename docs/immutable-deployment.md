@@ -109,7 +109,9 @@ risk and restoration steps documented first.
 ## Release boundary
 
 The immutable workflow and guard can be tested without changing production. The
-hosted rollback gate remains open until an actual registry-backed image is
-published, an isolated deployment has exercised a second revision and a real
-rollback with persistent-state checks, and any required production cutover is
-explicitly approved and verified.
+[2026-11-04 isolated validation](evidence/gcp-hosted-rollback-2026-11-04/README.md)
+exercised a second revision, preserved a checksummed checkpoint archive and
+completed a retained-state rollback. The hosted rollback gate remains open until
+an actual registry-backed image is published and a digest-qualified Coolify
+deployment is explicitly approved and verified; no production cutover was made
+by that isolated test.

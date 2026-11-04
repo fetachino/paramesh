@@ -1,0 +1,49 @@
+{
+  "main_sha": "af183e465e13470e69d0ea4900a6922d10d8c2bc",
+  "implementation_sha": "3cf38da61057237cdc58ac4ea8a82921a555ba1c",
+  "host": {
+    "vm": "paramesh-gcp",
+    "zone": "us-central1-a",
+    "machine_type": "e2-standard-2",
+    "isolated_project": "paramesh-immutable-test"
+  },
+  "images": {
+    "candidate": {
+      "source_commit": "1eacc17be19a02b956351c27f5a7b0223b975c2c",
+      "image": "paramesh@sha256:d2626dba65eff89e37516bf699a72c3aaaf5b18e12cc615202aeee62ad492265"
+    },
+    "previous_known_good": {
+      "source_commit": "af183e465e13470e69d0ea4900a6922d10d8c2bc",
+      "image": "paramesh@sha256:4041619ce29a8f083659657ea90a341aa058514b034e965e7b414c0f1bb3c506"
+    }
+  },
+  "checkpoint": {
+    "id": "baseline-offline",
+    "global_step": 727,
+    "shard_versions": [727, 727],
+    "manifest_sha256": "7e1dfd1c7da1616ab6867bfbf122ee501e040c1d3dca857e7c9f36e3267625e3",
+    "archive_sha256": "22dec21689cda897e45478bbd658220a0f4b4477d732e7048c638343d499d809"
+  },
+  "failed_attempts": {
+    "live_checkpoint": "DEADLINE_EXCEEDED: Cannot freeze a shard with pending synchronous contributions",
+    "invalid_image_pull": "pull access denied; no containers or volumes changed",
+    "first_compose_apply": "dependency health wait timed out under 2-vCPU contention; no volume reset"
+  },
+  "rollback": {
+    "guard_passed": true,
+    "applied_previous_digest": true,
+    "volumes_reset": false,
+    "worker_state_after": {"worker-0": 763, "worker-1": 763},
+    "dashboard_login_status": 303,
+    "dashboard_protected_status": 200,
+    "checkpoint_manifest_preserved": true
+  },
+  "cleanup": {
+    "temporary_project_deleted": true,
+    "temporary_volumes_deleted": true,
+    "temporary_images_deleted": true,
+    "temporary_vm_created": false,
+    "production_verified_healthy": true
+  },
+  "release_gate": "isolated-rollback-passed-hosted-coolify-cutover-pending"
+}

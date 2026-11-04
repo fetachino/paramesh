@@ -47,10 +47,11 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Validate the hosted dashboard hostname, trusted HTTPS, Secure session cookie,
       authentication and public/private service routing on the actual VM;
       see [evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md).
-- [ ] Verify a compatible hosted image rollback. A root-only VM backup and
-      the [immutable deployment workflow](docs/immutable-deployment.md) and
-      guarded rollback procedure are now implemented; isolated restoration and
-      any production cutover remain open.
+- [ ] Verify a compatible hosted image rollback. The [immutable deployment
+      workflow](docs/immutable-deployment.md), guarded procedure and
+      [2026-11-04 isolated validation](docs/evidence/gcp-hosted-rollback-2026-11-04/README.md)
+      now verify digest identity, raw checkpoint preservation and retained-state
+      rollback. Registry publication and any production cutover remain open.
 - [x] Reproduce and fix the high-rate synchronous checkpoint completion race in a
       controlled local two-worker/two-shard process test; preserve repeated runs,
       failure/recovery coverage and numerical correctness evidence.

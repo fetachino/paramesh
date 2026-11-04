@@ -149,7 +149,9 @@ volumes survive ordinary recreation but are not replicated backups. Never use
 `down --volumes` on a retained deployment. Code rollback does not roll model state
 back; whole-run restore requires fresh state for every role. See [checkpoints](checkpoints.md).
 The current production resource still reports no saved Coolify rollback images;
-the historical investigation is preserved in the [rollback evidence](evidence/gcp-hosted-rollback-2026-11-03/README.md).
+the historical investigation is preserved in the [rollback evidence](evidence/gcp-hosted-rollback-2026-11-03/README.md),
+and the later [immutable isolated validation](evidence/gcp-hosted-rollback-2026-11-04/README.md)
+records the digest-qualified rollback and retained-state checks.
 Use the new [immutable deployment and rollback procedure](immutable-deployment.md)
 for registry-backed digest images. It records source/image identity, removes
 application build sections from the Compose deployment, verifies checkpoint/state

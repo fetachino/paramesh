@@ -173,3 +173,10 @@ Google Cloud evidence above is the separate-host retest.
 actual image identities, Compose behavior, root-only backup, archive hashes and
 isolated candidate check. It does not claim a live rollback because the current
 Coolify build is mutable-tag based and no prior Coolify rollback image exists.
+
+[The immutable rollback validation](gcp-hosted-rollback-2026-11-04/README.md)
+records digest-qualified candidate and previous images, a checksummed raw
+checkpoint archive, an equal-shard offline checkpoint, a genuine aborted live
+checkpoint, and a successful isolated rollback with retained state. It closes
+the isolated rollback check, but not the hosted release gate: registry-backed
+publication and an operator-approved Coolify cutover remain unverified.
