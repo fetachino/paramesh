@@ -1,0 +1,15 @@
+{
+  "workflow_run": 41842320861,
+  "source_commit": "2b1fbae42a5ea15cfa3507baed5f25a2533af33c",
+  "image": "ghcr.io/fetachino/paramesh@sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1",
+  "registry_index_media_type": "application/vnd.oci.image.index.v1+json",
+  "platform": "linux/amd64",
+  "native_manifest_digest": "sha256:1fea1b581601fb1085b1ae871d14205b0f657dd830d95f4a3e904db7ce29170a",
+  "oci_labels": {
+    "org.opencontainers.image.revision": "2b1fbae42a5ea15cfa3507baed5f25a2533af33c",
+    "org.opencontainers.image.source": "https://github.com/fetachino/paramesh",
+    "org.opencontainers.image.source-dirty": "false"
+  },
+  "pull_host": "paramesh-gcp",
+  "pull_result": "repository digest matched the requested immutable reference"
+}

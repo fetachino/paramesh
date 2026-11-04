@@ -63,10 +63,10 @@ explicitly; regeneration is byte-identical to committed dashboard JSON.
   established a root-only backup and an isolated immutable-image smoke test.
   The [immutable deployment workflow](immutable-deployment.md) now records
   digest-qualified image identity and guards rollback compatibility. The
-  [2026-11-04 validation](evidence/gcp-hosted-rollback-2026-11-04/README.md)
-  verified an equal-shard checkpoint archive and retained-state isolated rollback;
-  registry-backed publication and an approved Coolify production cutover remain
-  open.
+  [2026-11-04 GHCR validation](evidence/gcp-ghcr-rollback-2026-11-04/README.md)
+  verified registry publication, an exact Linux pull, equal-shard checkpoint
+  preservation and retained-state isolated rollback. The approved Coolify
+  production cutover and any live production restoration remain open.
 - **Protocol/model limits:** CPU float32 and the bundled fixed workload; offline
   whole-run checkpoints with the original topology; no coordinator consensus or
   replicated live state. Azurite compatibility is not managed Azure durability.

@@ -1,0 +1,10 @@
+{
+  "approved": true,
+  "candidate_image": "ghcr.io/fetachino/paramesh@sha256:a715e03c948d4cd234fbd0a161e5f5d55d632b01100d9d92178909ec1b2277f1",
+  "candidate_source_commit": "d7ee8eb212369f16b67e7ad7a7afb0509b290089",
+  "checkpoint_id": "ghcr-verified",
+  "current_image": "ghcr.io/fetachino/paramesh@sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1",
+  "destructive_volume_reset": false,
+  "requires_explicit_operator_approval": true,
+  "requires_volume_backup": true
+}

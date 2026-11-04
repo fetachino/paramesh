@@ -48,10 +48,12 @@ implementation boundaries, not a claim that infrastructure examples are deployed
       authentication and public/private service routing on the actual VM;
       see [evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md).
 - [ ] Verify a compatible hosted image rollback. The [immutable deployment
-      workflow](docs/immutable-deployment.md), guarded procedure and
-      [2026-11-04 isolated validation](docs/evidence/gcp-hosted-rollback-2026-11-04/README.md)
-      now verify digest identity, raw checkpoint preservation and retained-state
-      rollback. Registry publication and any production cutover remain open.
+      workflow](docs/immutable-deployment.md), guarded procedure,
+      [local-image validation](docs/evidence/gcp-hosted-rollback-2026-11-04/README.md)
+      and [GHCR validation](docs/evidence/gcp-ghcr-rollback-2026-11-04/README.md)
+      verify digest identity, OCI/Linux pull behavior, raw checkpoint preservation
+      and retained-state isolated rollback. The existing Coolify production
+      cutover and any live restoration remain open.
 - [x] Reproduce and fix the high-rate synchronous checkpoint completion race in a
       controlled local two-worker/two-shard process test; preserve repeated runs,
       failure/recovery coverage and numerical correctness evidence.
