@@ -1,5 +1,15 @@
 # Security model
 
+## Report a vulnerability
+
+Use the repository's enabled
+[private vulnerability reporting form](https://github.com/fetachino/paramesh/security/advisories/new).
+Include an affected revision, a minimal reproduction and impact without
+publishing credentials or private data. Do not open a public issue for an
+unpatched vulnerability. The maintainers will assess supported revisions and
+coordinate disclosure through that private report; no response-time guarantee
+is claimed.
+
 ParamMesh supports a trusted internal training group. CLI services require strong
 service credentials. Native services bind to loopback by default; Compose keeps
 gRPC on an internal network with no published ports. TLS/mTLS is available for
