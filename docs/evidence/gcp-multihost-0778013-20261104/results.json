@@ -1,0 +1,48 @@
+{
+  "source_sha": "077801304c6dbf1f1a28c029871f13f5990f43df",
+  "pr_fixes": [31, 33],
+  "run_ids": ["gcp-mh-fixed-20261103", "gcp-mh-abort-20261104"],
+  "topology": {
+    "primary_vm": "paramesh-gcp",
+    "primary_private_ip": "10.90.0.2",
+    "secondary_vm": "paramesh-mh-test-20261104",
+    "secondary_private_ip": "10.90.0.6",
+    "machine_type": "e2-standard-2",
+    "network": "paramesh-vpc",
+    "subnet": "paramesh-us-central1",
+    "mode": "SYNCHRONOUS",
+    "steps": 2000,
+    "step_delay_seconds": 0,
+    "learning_rate": 0.05,
+    "barrier_timeout_seconds": 30
+  },
+  "checkpoints": [
+    {"id": "highrate-1", "global_step": 236, "shard_versions": [236, 236], "duration_seconds": 99.23076953898999},
+    {"id": "highrate-2", "global_step": 530, "shard_versions": [530, 530], "duration_seconds": 81.30206272299984},
+    {"id": "highrate-3", "global_step": 954, "shard_versions": [954, 954], "duration_seconds": 62.557185515004676}
+  ],
+  "worker_restart": {
+    "worker": "worker-0",
+    "resumed_from": 1264,
+    "replayed_contributions": 2,
+    "exit_code": 0,
+    "duplicate_or_loss_error": false
+  },
+  "abort_recovery": {
+    "checkpoint_id": "abort-check",
+    "freeze_failure": "Cannot freeze a shard with pending synchronous contributions",
+    "abort_command_succeeded": true,
+    "workers_completed_after_abort": true,
+    "post_abort_checkpoint": false
+  },
+  "release_gate": "open",
+  "limitations": [
+    "Raw high-rate checkpoint manifests were not retained before the isolated volume reset.",
+    "No direct real-host numerical comparison artifact against an uninterrupted reference was captured.",
+    "No successful post-abort checkpoint was captured."
+  ],
+  "temporary_resources_deleted": [
+    "paramesh-mh-test-20261104",
+    "paramesh-mh-private-20261104"
+  ]
+}
