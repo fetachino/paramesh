@@ -352,7 +352,7 @@ def _rollback_apply(args: argparse.Namespace) -> None:
     environment["PARAMESH_IMAGE"] = candidate["image"]
     subprocess.run([*command, "config", "--quiet"], cwd=ROOT, env=environment, check=True)
     subprocess.run(
-        [*command, "up", "-d", "--no-build", "--force-recreate"],
+        [*command, "up", "-d", "--no-build", "--no-deps", "--force-recreate"],
         cwd=ROOT,
         env=environment,
         check=True,

@@ -91,7 +91,9 @@ Rollback is a code-image change, not a model-state rollback. Before any apply:
      --isolated --execute
    ```
 
-   The command runs `config --quiet` and `up -d --no-build --force-recreate`.
+   The command runs `config --quiet` and `up -d --no-build --no-deps
+   --force-recreate`; dependency health is verified explicitly afterward rather
+   than allowing a busy host's Compose wait loop to hide the image/state result.
    It never runs `down --volumes`, removes a volume, or restores only one shard.
 4. Verify coordinator/shard health, equal versions, checkpoint visibility,
    retained training state, dashboard authentication, HTTPS, metrics, logs and
