@@ -1,0 +1,24 @@
+paramesh-mh-fixed-shard-0-1 Up 15 minutes (healthy)
+paramesh-mh-fixed-coordinator-1 Up 15 minutes (healthy)
+paramesh-mh-fixed-worker-0-1 Exited (0) 7 minutes ago
+paramesh-mh-fixed-nats-1 Up About an hour (healthy)
+paramesh-mh-fixed-tempo-1 Up About an hour
+paramesh-mh-fixed-prometheus-1 Up About an hour (healthy)
+coolify Up About an hour (healthy)
+coolify-db Up About an hour (healthy)
+coolify-redis Up About an hour (healthy)
+worker-0-mk3mvzgiuoepucocer1weywk-20261103T203143 Exited (0) 6 hours ago
+worker-1-mk3mvzgiuoepucocer1weywk-20261103T203144 Exited (0) 6 hours ago
+seaweedfs-mk3mvzgiuoepucocer1weywk-20261103T203137 Up 6 hours (healthy)
+nats-mk3mvzgiuoepucocer1weywk-20261103T203135 Up 6 hours (healthy)
+tempo-mk3mvzgiuoepucocer1weywk-20261103T203135 Up 6 hours
+loki-mk3mvzgiuoepucocer1weywk-20261103T203136 Up 6 hours
+shard-1-mk3mvzgiuoepucocer1weywk-20261103T203142 Up 6 hours (healthy)
+shard-0-mk3mvzgiuoepucocer1weywk-20261103T203140 Up 6 hours (healthy)
+dashboard-mk3mvzgiuoepucocer1weywk-20261103T203134 Up 6 hours (healthy)
+coordinator-mk3mvzgiuoepucocer1weywk-20261103T203139 Up 6 hours (healthy)
+prometheus-mk3mvzgiuoepucocer1weywk-20261103T203135 Up 6 hours (healthy)
+grafana-mk3mvzgiuoepucocer1weywk-20261103T203136 Up 6 hours (healthy)
+coolify-proxy-error-pages Up 26 hours
+coolify-proxy Up 26 hours (healthy)
+coolify-sentinel Up 26 hours (healthy)
