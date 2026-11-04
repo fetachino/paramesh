@@ -9,18 +9,24 @@ dependency/package hashes, test results, CI identities and retained-service stat
 
 ## 2026-11-04 audit addendum
 
-- `origin/main` is `9224217cba8c13b44fbdc2ab4df3fe17005909f6`.
+- `origin/main` is `4c28aa3e10fe6a5bf6cc8202c015f581502f934d` after PR #39 merged.
 - Production runs the Linux/amd64 image
   `ghcr.io/fetachino/paramesh@sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1`,
-  whose OCI revision is `2b1fbae42a5ea15cfa3507baed5f25a2533af33c`. The only changes
-  between that image source and current `main` are documentation/evidence changes.
+  whose OCI revision is `2b1fbae42a5ea15cfa3507baed5f25a2533af33c`. Current
+  `main` also contains PR #39's changes to worker deadline recovery, shard barrier
+  cancellation and the gRPC adapter, plus regression tests and documentation. The
+  production image predates those application-code changes; it has not been rebuilt
+  or redeployed with PR #39. A release image must identify its own newer source SHA.
 - The exact-head GitHub Actions CI run [41853757527](https://github.com/fetachino/paramesh/actions/runs/41853757527)
   passed both quality and container jobs. Local locked Ruff, formatting, mypy,
   generated-file, package-build and OSV audit checks also passed.
-- The full local Windows suite reached 138 passed and 1 failed (91.20% coverage):
-  the high-rate two-shard checkpoint test timed out once. A focused rerun passed,
-  but five repetitions reproduced one failure, so this remains a flaky supported-
-  environment release concern rather than a green local release gate.
+- Before PR #39, the full Windows suite reached 138 passed and 1 failed (91.20%
+  coverage); the high-rate two-shard checkpoint test failed twice in five focused
+  repetitions. PR #39 diagnosed hidden `PushGradients` deadline retries and a
+  canceled-barrier cleanup race. After the fix, 10/10 repeated Windows trials and
+  the full locked Windows suite (141 passed, 91.42% coverage) passed. Three Linux
+  container regression tests and PR #39's exact-head quality/container CI passed.
+  See the [Windows barrier evidence](evidence/checkpoint-barrier-windows-2026-11-04/README.md).
 - The production cutover recreated only the running application roles with the
   digest-qualified image, left completed workers stopped, retained all named
   volumes, and verified HTTPS authentication, SQLite integrity, checkpoint blobs
