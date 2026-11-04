@@ -47,14 +47,13 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Validate the hosted dashboard hostname, trusted HTTPS, Secure session cookie,
       authentication and public/private service routing on the actual VM;
       see [evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md).
-- [ ] Verify a compatible hosted image rollback. The [immutable deployment
+- [x] Verify a compatible hosted image rollback. The [immutable deployment
       workflow](docs/immutable-deployment.md), guarded procedure,
       [local-image validation](docs/evidence/gcp-hosted-rollback-2026-11-04/README.md)
       and [GHCR validation](docs/evidence/gcp-ghcr-rollback-2026-11-04/README.md)
       verify digest identity, OCI/Linux pull behavior, raw checkpoint preservation
-      and retained-state isolated rollback. The Coolify production cutover now
-      uses the verified digest; only the separately authorized live restoration
-      exercise remains open.
+      and retained-state isolated rollback. The [authorized live exercise](docs/evidence/gcp-live-rollback-2026-11-04/README.md)
+      restored the original GHCR digest with equal shard versions and retained state.
 - [x] Reproduce and fix the high-rate synchronous checkpoint completion race in a
       controlled local two-worker/two-shard process test; preserve repeated runs,
       failure/recovery coverage and numerical correctness evidence.
@@ -90,4 +89,5 @@ and Azure/Azurite checkpoint portability are complete. The tiny baseline model
 does not establish a bandwidth bottleneck; larger-payload loopback measurements
 are available but do not substitute for controlled network measurements, so
 compression remains deferred. The hosted VM consumes promotional credit while running;
-the live hosted rollback exercise remains open as a separate release gate.
+the live hosted rollback gate is closed. Final release-image publication and
+provenance verification remain separate from the release candidate.

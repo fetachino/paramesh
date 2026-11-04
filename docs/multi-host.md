@@ -157,7 +157,8 @@ docker compose -p paramesh -f compose.yaml -f deploy/multihost/compose.yaml \
 The completed two-host evidence records repeated high-rate checkpoints with
 equal shard versions, a genuine in-flight abort followed by successful
 publication, worker restart/replay, raw immutable manifests and a direct
-numerical comparison. Hosted rollback remains a separate release gate.
+numerical comparison. The separate [hosted rollback gate](evidence/gcp-live-rollback-2026-11-04/README.md)
+has since passed on the single production VM.
 
 ## Local verification and limits
 

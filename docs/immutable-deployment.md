@@ -58,9 +58,11 @@ if named volumes, networks, service mappings or infrastructure images change.
 For Coolify, first create and verify the release manifest, then configure the
 application to use the same two Compose files (or the equivalent checked-in
 Compose deployment setting) and set `PARAMESH_IMAGE` to the complete digest
-reference. Disable the application build step and use `up --no-build`. Do not
-change the live application until the isolated test below passes and an
-operator-approved change plan exists.
+reference. Disable the application build step and use `up --no-build`. The
+current Coolify-generated Compose still has application `build` stanzas: an
+ordinary Coolify redeploy without the override is **not** an immutable rollout.
+Do not change a live application until an isolated test and an operator-approved
+change plan exist.
 
 ## Rollback guard and procedure
 
@@ -106,51 +108,59 @@ Rollback is a code-image change, not a model-state rollback. Before any apply:
    original image and volumes from the verified backup; do not mix state from
    different topology or schema generations.
 
-The production flag is intentionally separate from the isolated flag. A real
-production cutover or rollback requires an explicit operator approval with the
-current/proposed digests, backup hashes, expected downtime, state-compatibility
-risk and restoration steps documented first.
+The helper requires explicit repeated `--service` selections for production
+execution; it rejects an unscoped production recreation. The isolated command
+above retains its full-profile behavior. For a retained production run with
+completed workers, select only the approved services and validate the actual
+Coolify configuration before execution.
 
-## Planned live rollback exercise
+## Verified hosted rollback and future redeployment
 
-This exercise is prepared but intentionally not executed. The currently deployed
-image is
-`ghcr.io/fetachino/paramesh@sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1`.
-The rollback artifact is the protected `paramesh:local` archive from the November 4
-preflight, whose image ID is `sha256:913b68db7a61dacf13beed4a475404f49b28a7e413f2b089041d320a5fcec042`.
-Its archive, the five SQLite snapshots, checkpoint volume, Coolify configuration,
-PostgreSQL dump and Redis dump have independent SHA-256 records outside Git.
+The [authorized November 4 exercise](evidence/gcp-live-rollback-2026-11-04/README.md)
+temporarily ran coordinator, both shards and dashboard on the protected old
+image, then restored the exact prior GHCR digest. The workers remained stopped,
+the maintenance checkpoint service was absent, and all 12 volumes were retained.
+Both shard versions, durable journal records, checkpoint hashes, SQLite
+integrity and authenticated HTTPS passed before and after restoration. This
+closes the tested compatible-image hosted rollback gate; it does not authorize
+an arbitrary image or state migration.
 
-Before approval, confirm the same equal-shard checkpoint and all role databases are
-readable by both images. Quiesce training with completed workers left stopped, mark
-the maintenance window (budget 5–10 minutes on the 2-vCPU VM), and verify the backup
-checksums. Then, using the same project, environment, named volumes and immutable
-Compose override:
+For the **current completed-worker topology**, use this procedure for any
+future digest change:
 
-1. Stop only the running ParamMesh application roles; never use `down --volumes`.
-2. Load the protected archive and switch all seven application references to the
-   restored image, leaving Coolify, proxy, databases and observability untouched.
-3. Verify image identity, coordinator/shard health, step and parameter versions,
-   SQLite integrity, checkpoint manifest/blob hashes, HTTPS authentication and the
-   private-service boundary. Do not start completed workers.
-4. Stop immediately on a digest mismatch, unequal shard versions, missing manifest,
-   failed authenticated health check, unexpected worker start, or sustained resource
-   contention. Restore the GHCR digest and repeat the same health checks.
-5. After the rollback observation, restore the GHCR digest even if the old image
-   appears healthy, then verify the production state again. Preserve both image
-   identities and all command output in the private deployment evidence directory.
+1. Record the running image IDs and OCI revisions, source SHA, current Compose
+   and environment-file hashes, checkpoint phase and equal shard versions.
+   Confirm no training or checkpoint operation is active. Verify a fresh
+   off-host backup covering all role/dashboard SQLite databases, worker
+   journals, checkpoint blobs, Coolify configuration/database, Redis and all
+   named volumes. Keep secrets and raw backups outside Git.
+2. Build from an exact merged commit, publish with `GITHUB_TOKEN`, verify the
+   registry digest, OCI revision and platform, and pull by digest on the host.
+   Reject incompatible protocol, checkpoint or state-schema contracts. Test
+   the proposed digest in isolation before a production approval.
+3. Stage the checked-in override in a persistent root-controlled location.
+   Render the actual Coolify Compose and environment file with and without it;
+   require identical volumes, networks, credentials, ports, HTTPS labels and
+   dependencies, with only the approved application image changed and every
+   application `build` block removed. Confirm the old image remains locally
+   recoverable. Do not use a `/tmp` override.
+4. During an approved maintenance window, use `docker compose --dry-run` first.
+   Then select **only** `coordinator shard-0 shard-1 dashboard` with
+   `up -d --pull never --no-build --no-deps --force-recreate` and the same
+   project name, private environment file, base Compose and immutable override.
+   Do not include workers or the maintenance checkpoint service. An active
+   training run needs its own quiescence and service plan; this command is not
+   safe to copy into that situation.
+5. Verify actual image IDs, direct coordinator/shard health, equal versions,
+   SQLite and journal integrity, checkpoint hashes, HTTPS authentication and
+   private backend bindings. Stop on any mismatch and restore the previous
+   verified image with the same four-service command if state remains
+   compatible. Never delete volumes or restore one shard independently.
 
-No live rollback claim or release tag is justified until this sequence is explicitly
-approved, completed, and the current digest is restored successfully.
-
-## Release boundary
-
-The immutable workflow and guard can be tested without changing production. The
-[2026-11-04 local-image validation](evidence/gcp-hosted-rollback-2026-11-04/README.md)
-and the [2026-11-04 GHCR validation](evidence/gcp-ghcr-rollback-2026-11-04/README.md)
-preserved checksummed checkpoint archives and completed retained-state isolated
-rollbacks. The GHCR publication, OCI identity, Linux pull and digest-qualified
-Compose rollback are now verified. The production Coolify cutover to
-`sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1` is
-complete. The hosted rollback gate remains open only for the separately approved
-live restoration exercise.
+The production image remains
+`ghcr.io/fetachino/paramesh@sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1`
+with older OCI source revision `2b1fbae42a5ea15cfa3507baed5f25a2533af33c`.
+The v1.0.0 candidate source includes newer PR #39 code and has **not** been
+deployed. A future Coolify redeploy must first adopt the build-free override
+and an approved digest; clicking redeploy against the current generated
+Compose could rebuild from source.

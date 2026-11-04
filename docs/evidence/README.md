@@ -12,6 +12,7 @@ newer durable recovery artifacts are documented separately.
 | [verification.json](verification.json) | 41 passing tests, no skips, 93.39% statement coverage against a 90% gate |
 | [dependency-audit.json](dependency-audit.json) | pip-audit/OSV found no known advisories across 54 installed packages |
 | [checkpoint-barrier-windows-2026-11-04/](checkpoint-barrier-windows-2026-11-04/) | Intermittent Windows high-rate synchronous checkpoint failure, root cause, fix, and 10/10 repetition evidence |
+| [gcp-live-rollback-2026-11-04/](gcp-live-rollback-2026-11-04/) | Authorized single-host old-image rollback and exact GHCR restoration with retained state |
 
 Run reports contain their exact commit, dirty state and workload configuration.
 Async/bounded artifacts were captured concurrently and are not performance comparisons.

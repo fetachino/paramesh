@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paramesh"
-version = "0.1.0"
+version = "1.0.0"
 description = "An explicit parameter-server training protocol with independently running services"
 readme = "README.md"
 requires-python = ">=3.12"

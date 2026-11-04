@@ -6,6 +6,8 @@ import pytest
 from scripts.immutable_release import (
     COMPATIBILITY,
     _digest_image,
+    _parser,
+    _rollback_apply,
     checkpoint_compatible,
     validate_manifest,
 )
@@ -62,3 +64,40 @@ def test_checkpoint_requires_equal_shard_versions(tmp_path: Path) -> None:
     path.write_text(path.read_text(encoding="utf-8").replace("[4, 4]", "[4, 3]"), encoding="utf-8")
     with pytest.raises(ValueError, match="equal shard"):
         checkpoint_compatible(path)
+
+
+def test_production_rollback_requires_explicit_services(tmp_path: Path, monkeypatch) -> None:
+    current = tmp_path / "current.json"
+    candidate = tmp_path / "candidate.json"
+    current.write_text(json.dumps(manifest()), encoding="utf-8")
+    candidate.write_text(json.dumps(manifest(digest="sha256:" + "e" * 64)), encoding="utf-8")
+    backup = tmp_path / "backup-verified"
+    backup.touch()
+    commands = []
+    monkeypatch.setattr(
+        "scripts.immutable_release.subprocess.run", lambda command, **_: commands.append(command)
+    )
+    arguments = [
+        "rollback-apply",
+        "--current",
+        str(current),
+        "--candidate",
+        str(candidate),
+        "--project-name",
+        "production",
+        "--env-file",
+        str(tmp_path / ".env"),
+        "--backup-marker",
+        str(backup),
+        "--production-approved",
+        "--execute",
+    ]
+    with pytest.raises(ValueError, match="explicit --service"):
+        _rollback_apply(_parser().parse_args(arguments))
+    assert commands == []
+
+    selected = ["dashboard", "checkpoint", "coordinator", "shard-0", "shard-1"]
+    selected_args = [arg for name in selected for arg in ("--service", name)]
+    _rollback_apply(_parser().parse_args([*arguments, *selected_args]))
+    assert commands[-1][-len(selected) :] == selected
+    assert all(name not in commands[-1] for name in ("worker-0", "worker-1"))

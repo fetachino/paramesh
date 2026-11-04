@@ -330,6 +330,8 @@ def _rollback_apply(args: argparse.Namespace) -> None:
         return
     if not args.isolated and not args.production_approved:
         raise ValueError("execution requires --isolated or explicit --production-approved")
+    if args.production_approved and not args.service:
+        raise ValueError("production execution requires explicit --service selections")
     if not args.backup_marker or not args.backup_marker.is_file():
         raise ValueError("execution requires a verified backup marker file")
     command = [
@@ -352,7 +354,7 @@ def _rollback_apply(args: argparse.Namespace) -> None:
     environment["PARAMESH_IMAGE"] = candidate["image"]
     subprocess.run([*command, "config", "--quiet"], cwd=ROOT, env=environment, check=True)
     subprocess.run(
-        [*command, "up", "-d", "--no-build", "--no-deps", "--force-recreate"],
+        [*command, "up", "-d", "--no-build", "--no-deps", "--force-recreate", *args.service],
         cwd=ROOT,
         env=environment,
         check=True,
@@ -413,6 +415,20 @@ def _parser() -> argparse.ArgumentParser:
     apply.add_argument("--execute", action="store_true")
     apply.add_argument("--isolated", action="store_true")
     apply.add_argument("--production-approved", action="store_true")
+    apply.add_argument(
+        "--service",
+        action="append",
+        choices=(
+            "dashboard",
+            "checkpoint",
+            "coordinator",
+            "shard-0",
+            "shard-1",
+            "worker-0",
+            "worker-1",
+        ),
+        default=[],
+    )
     apply.set_defaults(function=_rollback_apply)
     return parser
 

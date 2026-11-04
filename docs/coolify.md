@@ -6,7 +6,8 @@ cover actual native x86-64 training, observability, checkpoint restore and resta
 The [HTTPS rollout evidence](evidence/gcp-hosted-https-2026-11-03/README.md)
 records the public route, certificate and authentication. The 2026-11-04
 production cutover applied the verified digest-qualified GHCR image without
-changing persistent state; the live rollback exercise remains separately authorized.
+changing persistent state; the [authorized live rollback and restoration](evidence/gcp-live-rollback-2026-11-04/README.md)
+subsequently passed.
 This is a credit-funded VM, not an Always Free instance or a multi-host deployment.
 The [GHCR immutable validation](evidence/gcp-ghcr-rollback-2026-11-04/README.md)
 records the exact image digest, Linux pull, isolated deployment and retained-state
@@ -24,8 +25,8 @@ in `us-central1-a`, with a 50 GiB `pd-balanced` persistent boot disk. The VM is
 x86-64. [Local ARM64 validation](arm64-validation.md) covers emulation only;
 native ARM64 remains unverified. The [completed two-host Google Cloud checkpoint evidence](evidence/gcp-multihost-919bc0-20261104/README.md)
 verified private-VPC operation, high-rate checkpoint publication, abort/recovery,
-raw manifests and numerical agreement. Hosted live rollback remains a separate
-release gate.
+raw manifests and numerical agreement. The separate hosted live rollback gate
+has also passed on the single production VM.
 Oracle A1 remains an option if Always Free capacity becomes available.
 
 For any new target, check compute, disk, public IPv4, egress, snapshots and DNS
@@ -166,8 +167,7 @@ compatibility and requires a backup plus explicit approval before any apply.
 
 Never use `down --volumes`, restore one shard without its peers, or mix a
 checkpoint from one code/topology generation with another. The isolated immutable
-rollback gate passed; the hosted live-restoration gate remains open until the
-explicitly approved production restoration is verified.
+rollback gate and the authorized hosted live-restoration gate both passed.
 
 ## Digest-qualified production cutover record
 
@@ -198,20 +198,28 @@ evidence used the same Compose files, compatibility contract and host architectu
    unequal shard versions, failed authenticated health checks, missing checkpoint
    records, or any public backend binding. Stop and restore the prior release
    without deleting volumes.
-5. The verified isolated rollback candidate is
-   `ghcr.io/fetachino/paramesh@sha256:a715e03c948d4cd234fbd0a161e5f5d55d632b01100d9d92178909ec1b2277f1`.
-   Run `scripts/immutable_release.py rollback-check` against the preserved current,
-   candidate and checkpoint manifests, confirm the backup marker, then run
-   `rollback-apply --production-approved --execute` only after explicit approval.
-   It must use the same project/env/Compose files and never `down --volumes`.
+5. For a retained completed-worker run, `rollback-apply` rejects an unscoped
+   production recreation and requires explicit `--service` selections. Use the
+   four-service [immutable redeployment procedure](immutable-deployment.md)
+   after verifying the old image, backups and compatibility. Never use
+   `down --volumes`.
 6. Recheck the public HTTPS endpoint, dashboard authentication, persistent
    checkpoint state and production container health after either action. Preserve
    the deployment identity and all raw reports in the release evidence directory.
 
-The live deployment used the immutable override with `--no-build`, retained all
-named volumes, and verified the digest, HTTPS authentication, checkpoint manifest,
-SQLite integrity and worker journal state. The intentional live rollback remains
-unperformed by design.
+The live deployment and later rollback/restoration used the immutable override
+with `--no-build`, retained all named volumes, and verified the digest, HTTPS
+authentication, checkpoint manifest, SQLite integrity and worker journal state.
+The four running ParamMesh services finished healthy on the original GHCR
+digest. Completed workers and the maintenance checkpoint service stayed stopped.
+
+**Future Coolify redeploy risk:** the current Coolify-generated Compose still
+contains application build stanzas. Do not press Redeploy or change its source
+revision as an assumed immutable update. First configure Coolify to include the
+checked-in build-free override and the exact reviewed digest, render and compare
+the real configuration, verify backups and compatibility, and obtain approval.
+The [release candidate notes](releases/v1.0.0.md) keep the newer PR #39 image
+publication separate from this already-running production image.
 
 OpenTofu and k3s are deferred until an actual host/provisioning requirement exists;
 placeholder infrastructure cannot establish a working public deployment.

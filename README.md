@@ -16,12 +16,13 @@ and private Grafana access.
 A separate test ran training and observability across two Google Cloud VMs;
 the corrected high-rate synchronous checkpoint workload now has repeated
 checkpoint, abort/recovery, raw-manifest and numerical evidence. The immutable
-GHCR production cutover is complete; a live production rollback exercise and
+GHCR production cutover and compatible-image live rollback/restoration passed;
 controlled scaling-performance measurements remain unverified. See the
 [single-host evidence](docs/evidence/gcp-single-host-2026-11-03/README.md) and
 [completed two-host evidence](docs/evidence/gcp-multihost-919bc0-20261104/README.md), plus the
-[hosted HTTPS evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md) and
-[local barrier evidence](docs/evidence/checkpoint-barrier-local-2026-11-03/README.md).
+[hosted HTTPS evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md),
+[live rollback evidence](docs/evidence/gcp-live-rollback-2026-11-04/README.md) and
+[local barrier evidence](docs/evidence/checkpoint-barrier-local-20261103/README.md).
 
 [Architecture](ARCHITECTURE.md) · [Evidence and methodology](BENCHMARKS.md) ·
 [Security boundaries](SECURITY.md) · [Roadmap](ROADMAP.md)
@@ -59,10 +60,10 @@ local Linux x86-64 containers and an emulated Linux ARM64 Compose stack have
 been exercised; native ARM64 hardware remains to be checked.
 
 ```powershell
-python -m venv .venv
 python -m pip install uv==0.13.6
 uv sync --locked --all-extras --python 3.12
 .\.venv\Scripts\Activate.ps1
+paramesh --version
 paramesh demo --mode sync --workers 2 --shards 2 --steps 20 --output artifacts/sync.json
 ```
 
@@ -284,7 +285,7 @@ See [checkpoint operator commands](docs/checkpoints.md) for private SeaweedFS/Az
 offline export, coordinated live export, fresh-directory restore and fresh-volume installation.
 Live export quiesces active workers and fences all shards; offline export requires
 stopping the full run. Both retain the original topology. Larger-payload/network
-benchmarks and remaining hosted validation follow in [ROADMAP.md](ROADMAP.md).
+benchmarks and remaining release work follow in [ROADMAP.md](ROADMAP.md).
 
 ## Additional documentation
 
@@ -297,4 +298,6 @@ benchmarks and remaining hosted validation follow in [ROADMAP.md](ROADMAP.md).
 - [Architecture and consistency model](ARCHITECTURE.md)
 - [Correctness evidence and benchmark policy](BENCHMARKS.md)
 - [Release-readiness audit and deployment limits](docs/release-readiness.md)
+- [v1.0.0 release candidate notes](docs/releases/v1.0.0.md)
+- [Changelog](CHANGELOG.md)
 - [Security model](SECURITY.md)
