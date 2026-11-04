@@ -1,6 +1,11 @@
 x-common: &common
-  build: .
-  image: paramesh:local
+  image: ${PARAMESH_IMAGE:-paramesh:local}
+  build:
+    context: .
+    args:
+      SOURCE_COMMIT: ${PARAMESH_SOURCE_COMMIT:-unknown}
+      BUILD_DATE: ${PARAMESH_BUILD_DATE:-unknown}
+      SOURCE_DIRTY: ${PARAMESH_SOURCE_DIRTY:-unknown}
   init: true
   read_only: true
   tmpfs: [/tmp]

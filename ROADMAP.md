@@ -48,15 +48,15 @@ implementation boundaries, not a claim that infrastructure examples are deployed
       authentication and public/private service routing on the actual VM;
       see [evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md).
 - [ ] Verify a compatible hosted image rollback. A root-only VM backup and
-      isolated immutable-image smoke test are complete, but the live Coolify
-      rollback remains blocked by the mutable `paramesh:local` Compose build tag
-      and missing saved Coolify rollback image.
+      the [immutable deployment workflow](docs/immutable-deployment.md) and
+      guarded rollback procedure are now implemented; isolated restoration and
+      any production cutover remain open.
 - [x] Reproduce and fix the high-rate synchronous checkpoint completion race in a
       controlled local two-worker/two-shard process test; preserve repeated runs,
       failure/recovery coverage and numerical correctness evidence.
-- [ ] Retest the fixed protocol on separate Google Cloud hosts under the original
-      high-rate workload and retain raw traces/logs before closing the distributed
-      barrier gate.
+- [x] Retest the fixed protocol on separate Google Cloud hosts under the original
+      high-rate workload, preserve raw traces/logs and close the distributed
+      checkpoint barrier gate; see [evidence](docs/evidence/gcp-multihost-919bc0-20261104/README.md).
       No `v1.0.0` tag is justified yet.
 
 ## Intended cloud portability

@@ -1,4 +1,11 @@
 FROM python:3.12-slim
+ARG SOURCE_COMMIT=unknown
+ARG BUILD_DATE=unknown
+ARG SOURCE_DIRTY=unknown
+LABEL org.opencontainers.image.source="https://github.com/fetachino/paramesh" \
+      org.opencontainers.image.revision="${SOURCE_COMMIT}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.source-dirty="${SOURCE_DIRTY}"
 COPY --from=ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0 /uv /usr/local/bin/uv
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 ENV PATH="/app/.venv/bin:$PATH" UV_LINK_MODE=copy
