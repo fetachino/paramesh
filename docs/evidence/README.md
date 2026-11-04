@@ -178,5 +178,9 @@ Coolify build is mutable-tag based and no prior Coolify rollback image exists.
 records digest-qualified candidate and previous images, a checksummed raw
 checkpoint archive, an equal-shard offline checkpoint, a genuine aborted live
 checkpoint, and a successful isolated rollback with retained state. It closes
-the isolated rollback check, but not the hosted release gate: registry-backed
-publication and an operator-approved Coolify cutover remain unverified.
+the initial isolated rollback check. The later [GHCR registry validation](gcp-ghcr-rollback-2026-11-04/README.md)
+publishes the exact main SHA, verifies the OCI index and Linux pull, runs the
+immutable Compose deployment, and repeats the retained-state digest rollback.
+The hosted release gate remains open only for the explicitly approved Coolify
+production cutover and any live restoration; production was not changed by either
+isolated test.

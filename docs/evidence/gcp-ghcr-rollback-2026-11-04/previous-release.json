@@ -1,0 +1,15 @@
+{
+  "build_metadata": {},
+  "compatibility": {
+    "checkpoint_format_version": 1,
+    "protocol_version": 1,
+    "state_schema_version": 1
+  },
+  "compose_sha256": "b519dd3a9101c846db22e0bb8bf4fa07f3a012583fabee70f944c44db0120509",
+  "created_at": "2026-11-04T13:57:57.609713+00:00",
+  "image": "ghcr.io/fetachino/paramesh@sha256:a715e03c948d4cd234fbd0a161e5f5d55d632b01100d9d92178909ec1b2277f1",
+  "image_digest": "sha256:a715e03c948d4cd234fbd0a161e5f5d55d632b01100d9d92178909ec1b2277f1",
+  "immutable_compose_sha256": "b750f4101f268ce678b3dcef8770f82eab231ebe672194504dd9bc40829ef240",
+  "schema_version": 1,
+  "source_commit": "d7ee8eb212369f16b67e7ad7a7afb0509b290089"
+}

@@ -1,0 +1,50 @@
+{
+  "main_sha": "2b1fbae42a5ea15cfa3507baed5f25a2533af33c",
+  "vm": {
+    "name": "paramesh-gcp",
+    "zone": "us-central1-a",
+    "machine_type": "e2-standard-2",
+    "architecture": "x86-64",
+    "isolated_compose_project": "paramesh-ghcr-2b1fbae"
+  },
+  "current_digest_run": {
+    "image": "ghcr.io/fetachino/paramesh@sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1",
+    "workers": {"worker-0": {"exit_code": 0}, "worker-1": {"exit_code": 0}},
+    "dashboard_healthz": 200,
+    "dashboard_login": 303,
+    "dashboard_protected_api": 200,
+    "training": {"steps": 40, "resumed_from": 0, "loss_records": 0}
+  },
+  "rollback": {
+    "candidate_image": "ghcr.io/fetachino/paramesh@sha256:a715e03c948d4cd234fbd0a161e5f5d55d632b01100d9d92178909ec1b2277f1",
+    "candidate_source_commit": "d7ee8eb212369f16b67e7ad7a7afb0509b290089",
+    "guard_approved": true,
+    "apply_executed": true,
+    "volumes_reset": false,
+    "dashboard_healthz": 200,
+    "dashboard_login": 303,
+    "dashboard_protected_api": 200,
+    "workers": {"worker-0": {"exit_code": 0}, "worker-1": {"exit_code": 0}},
+    "coordinator_events": ["worker_recovered", "training_completed"]
+  },
+  "checkpoint": {
+    "id": "ghcr-verified",
+    "global_step": 40,
+    "shard_versions": [40, 40],
+    "manifest_sha256": "6dff724f8489548c32ba7a7d64237637c9ebdacda7ea9a62c7265d6056e98dc3",
+    "archive_sha256": "2983c13ec3c79f1d1084de94bbd0e429e1533c7c8211e9f8b86e332fbf322b60"
+  },
+  "cleanup": {
+    "temporary_vm_created": false,
+    "temporary_compose_project_removed": true,
+    "temporary_volumes_removed": true,
+    "temporary_images_removed": true,
+    "production_healthz": 200,
+    "production_containers": "healthy and unchanged"
+  },
+  "limitations": [
+    "The existing 2-vCPU host was CPU-contended by production and the normal Compose health probes timed out; direct health, logs, image identity and authenticated API checks were used.",
+    "This was an isolated deployment on the existing production VM, not a production cutover or live production rollback.",
+    "The local Windows Docker pull was canceled after a stall; the Linux VM pull and digest verification succeeded."
+  ]
+}

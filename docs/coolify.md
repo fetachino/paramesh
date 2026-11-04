@@ -6,6 +6,10 @@ cover actual native x86-64 training, observability, checkpoint restore and resta
 The [HTTPS rollout evidence](evidence/gcp-hosted-https-2026-11-03/README.md)
 records the public route, certificate, authentication and remaining rollback gate.
 This is a credit-funded VM, not an Always Free instance or a multi-host deployment.
+The [GHCR immutable validation](evidence/gcp-ghcr-rollback-2026-11-04/README.md)
+records the exact main image digest, Linux pull, isolated deployment and retained-state
+rollback. Production is still on the mutable `paramesh:local` definition until an
+operator-approved cutover.
 
 The deployment path is GitHub → Coolify Application → repository `compose.yaml` →
 the same independently running ParamMesh containers tested locally. Keep configuration
@@ -150,8 +154,9 @@ volumes survive ordinary recreation but are not replicated backups. Never use
 back; whole-run restore requires fresh state for every role. See [checkpoints](checkpoints.md).
 The current production resource still reports no saved Coolify rollback images;
 the historical investigation is preserved in the [rollback evidence](evidence/gcp-hosted-rollback-2026-11-03/README.md),
-and the later [immutable isolated validation](evidence/gcp-hosted-rollback-2026-11-04/README.md)
-records the digest-qualified rollback and retained-state checks.
+and the [immutable isolated validation](evidence/gcp-hosted-rollback-2026-11-04/README.md)
+plus the [GHCR validation](evidence/gcp-ghcr-rollback-2026-11-04/README.md) record
+digest-qualified rollback and retained-state checks.
 Use the new [immutable deployment and rollback procedure](immutable-deployment.md)
 for registry-backed digest images. It records source/image identity, removes
 application build sections from the Compose deployment, verifies checkpoint/state
@@ -161,6 +166,48 @@ Never use `down --volumes`, restore one shard without its peers, or mix a
 checkpoint from one code/topology generation with another. The immutable
 hosted-rollback gate remains open until the isolated and any explicitly approved
 production restoration are verified.
+
+## Digest-qualified production cutover plan
+
+The verified candidate for the next controlled deployment is:
+
+```text
+source: 2b1fbae42a5ea15cfa3507baed5f25a2533af33c
+image:  ghcr.io/fetachino/paramesh@sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1
+```
+
+Do not apply this plan until the operator approves the exact digest and a fresh
+offline checkpoint/volume backup has been verified. The isolated evidence used the
+same Compose files, compatibility contract and host architecture; it did not change
+the production project.
+
+1. Record the current production Compose image identities, Coolify export,
+   checkpoint manifest and volume/archive checksums. Confirm every role has a
+   compatible checkpoint and that no training job is in a non-quiescent phase.
+2. In Coolify **Production**, set `PARAMESH_IMAGE` to the complete digest above,
+   remove application build steps, and retain the existing environment values,
+   domains, proxy labels, networks and named volumes. Do not expose coordinator,
+   shards, workers, NATS or telemetry ports.
+3. Deploy with the immutable Compose override and `--no-build`. Expected downtime
+   is the role recreation interval; no volume reset is permitted. Verify every
+   application container reports the exact digest, coordinator/shards are healthy,
+   the dashboard `/healthz` is `200`, HTTPS login succeeds, the protected API is
+   authenticated, and checkpoints/metrics/logs/traces remain visible.
+4. Failure conditions are a digest mismatch, incompatible manifest/state contract,
+   unequal shard versions, failed authenticated health checks, missing checkpoint
+   records, or any public backend binding. Stop and restore the prior release
+   without deleting volumes.
+5. The verified isolated rollback candidate is
+   `ghcr.io/fetachino/paramesh@sha256:a715e03c948d4cd234fbd0a161e5f5d55d632b01100d9d92178909ec1b2277f1`.
+   Run `scripts/immutable_release.py rollback-check` against the preserved current,
+   candidate and checkpoint manifests, confirm the backup marker, then run
+   `rollback-apply --production-approved --execute` only after explicit approval.
+   It must use the same project/env/Compose files and never `down --volumes`.
+6. Recheck the public HTTPS endpoint, dashboard authentication, persistent
+   checkpoint state and production container health after either action. Preserve
+   the deployment identity and all raw reports in the release evidence directory.
+
+This is a cutover procedure, not a claim that production has already been changed.
 
 OpenTofu and k3s are deferred until an actual host/provisioning requirement exists;
 placeholder infrastructure cannot establish a working public deployment.

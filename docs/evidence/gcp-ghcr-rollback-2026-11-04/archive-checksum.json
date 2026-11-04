@@ -1,0 +1,7 @@
+{
+  "algorithm": "SHA256",
+  "path": "checkpoint-volume.tgz",
+  "sha256": "2983c13ec3c79f1d1084de94bbd0e429e1533c7c8211e9f8b86e332fbf322b60",
+  "bytes": 1618,
+  "manifest_sha256": "6dff724f8489548c32ba7a7d64237637c9ebdacda7ea9a62c7265d6056e98dc3"
+}

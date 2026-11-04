@@ -109,9 +109,11 @@ risk and restoration steps documented first.
 ## Release boundary
 
 The immutable workflow and guard can be tested without changing production. The
-[2026-11-04 isolated validation](evidence/gcp-hosted-rollback-2026-11-04/README.md)
-exercised a second revision, preserved a checksummed checkpoint archive and
-completed a retained-state rollback. The hosted rollback gate remains open until
-an actual registry-backed image is published and a digest-qualified Coolify
-deployment is explicitly approved and verified; no production cutover was made
-by that isolated test.
+[2026-11-04 local-image validation](evidence/gcp-hosted-rollback-2026-11-04/README.md)
+and the [2026-11-04 GHCR validation](evidence/gcp-ghcr-rollback-2026-11-04/README.md)
+preserved checksummed checkpoint archives and completed retained-state isolated
+rollbacks. The GHCR publication, OCI identity, Linux pull and digest-qualified
+Compose rollback are now verified. The hosted rollback gate remains open until
+the existing Coolify application is explicitly cut over to the verified digest
+and, if approved, a live restoration is verified; no production cutover was made
+by either isolated test.
