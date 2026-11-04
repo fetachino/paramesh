@@ -15,8 +15,9 @@ has run on one Google Cloud x86-64 VM, with an authenticated dashboard over HTTP
 and private Grafana access.
 A separate test ran training and observability across two Google Cloud VMs;
 the corrected high-rate synchronous checkpoint workload now has repeated
-checkpoint, abort/recovery, raw-manifest and numerical evidence. Hosted immutable
-rollback and scaling performance remain unverified. See the
+checkpoint, abort/recovery, raw-manifest and numerical evidence. The immutable
+GHCR production cutover is complete; a live production rollback exercise and
+controlled scaling-performance measurements remain unverified. See the
 [single-host evidence](docs/evidence/gcp-single-host-2026-11-03/README.md) and
 [completed two-host evidence](docs/evidence/gcp-multihost-919bc0-20261104/README.md), plus the
 [hosted HTTPS evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md) and
@@ -274,7 +275,7 @@ Existing correctness screenshots and startup-inclusive durations remain separate
 
 The host-addressing, mTLS, NATS TLS, metrics-discovery and restart path is prepared
 and verified on an isolated private Docker network; that remains a single-host
-simulation. Compression and real multi-machine verification remain pending. Process restart requires retained local volumes;
+simulation. Compression and controlled multi-host performance measurements remain pending. Process restart requires retained local volumes;
 offline whole-run recovery can use an exported local/S3/Azure checkpoint. The system
 does not provide coordinator consensus or replicated live training state.
 The protocol is float32-only and the workload is fixed and CPU-only.

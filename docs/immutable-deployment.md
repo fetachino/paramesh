@@ -1,9 +1,10 @@
 # Immutable deployment and rollback
 
-ParamMesh production currently runs through Coolify on the `paramesh-gcp` VM.
-The old application definition built the mutable `paramesh:local` tag. This
-workflow keeps the existing Compose topology and persistent volumes, but makes
-the application image a digest-qualified artifact before Coolify is changed.
+ParamMesh production currently runs through Coolify on the `paramesh-gcp` VM and
+uses the digest-qualified GHCR image recorded below. The old application definition
+built the mutable `paramesh:local` tag. This workflow keeps the existing Compose
+topology and persistent volumes while preventing an immutable deployment from
+silently rebuilding a different checkout.
 
 ## Build and publish
 
@@ -49,6 +50,10 @@ The override removes every application `build` section. A missing or mutable
 `PARAMESH_IMAGE` therefore fails configuration rather than silently rebuilding
 from a different checkout. Infrastructure image tags remain unchanged and the
 existing private-network, TLS and HTTPS routing boundaries are preserved.
+
+CI runs `scripts/verify_immutable_compose.py` against the merged configuration. It
+fails if application build sections return, if the image is not digest-qualified, or
+if named volumes, networks, service mappings or infrastructure images change.
 
 For Coolify, first create and verify the release manifest, then configure the
 application to use the same two Compose files (or the equivalent checked-in
@@ -106,6 +111,38 @@ production cutover or rollback requires an explicit operator approval with the
 current/proposed digests, backup hashes, expected downtime, state-compatibility
 risk and restoration steps documented first.
 
+## Planned live rollback exercise
+
+This exercise is prepared but intentionally not executed. The currently deployed
+image is
+`ghcr.io/fetachino/paramesh@sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1`.
+The rollback artifact is the protected `paramesh:local` archive from the November 4
+preflight, whose image ID is `sha256:913b68db7a61dacf13beed4a475404f49b28a7e413f2b089041d320a5fcec042`.
+Its archive, the five SQLite snapshots, checkpoint volume, Coolify configuration,
+PostgreSQL dump and Redis dump have independent SHA-256 records outside Git.
+
+Before approval, confirm the same equal-shard checkpoint and all role databases are
+readable by both images. Quiesce training with completed workers left stopped, mark
+the maintenance window (budget 5–10 minutes on the 2-vCPU VM), and verify the backup
+checksums. Then, using the same project, environment, named volumes and immutable
+Compose override:
+
+1. Stop only the running ParamMesh application roles; never use `down --volumes`.
+2. Load the protected archive and switch all seven application references to the
+   restored image, leaving Coolify, proxy, databases and observability untouched.
+3. Verify image identity, coordinator/shard health, step and parameter versions,
+   SQLite integrity, checkpoint manifest/blob hashes, HTTPS authentication and the
+   private-service boundary. Do not start completed workers.
+4. Stop immediately on a digest mismatch, unequal shard versions, missing manifest,
+   failed authenticated health check, unexpected worker start, or sustained resource
+   contention. Restore the GHCR digest and repeat the same health checks.
+5. After the rollback observation, restore the GHCR digest even if the old image
+   appears healthy, then verify the production state again. Preserve both image
+   identities and all command output in the private deployment evidence directory.
+
+No live rollback claim or release tag is justified until this sequence is explicitly
+approved, completed, and the current digest is restored successfully.
+
 ## Release boundary
 
 The immutable workflow and guard can be tested without changing production. The
@@ -113,7 +150,7 @@ The immutable workflow and guard can be tested without changing production. The
 and the [2026-11-04 GHCR validation](evidence/gcp-ghcr-rollback-2026-11-04/README.md)
 preserved checksummed checkpoint archives and completed retained-state isolated
 rollbacks. The GHCR publication, OCI identity, Linux pull and digest-qualified
-Compose rollback are now verified. The hosted rollback gate remains open until
-the existing Coolify application is explicitly cut over to the verified digest
-and, if approved, a live restoration is verified; no production cutover was made
-by either isolated test.
+Compose rollback are now verified. The production Coolify cutover to
+`sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1` is
+complete. The hosted rollback gate remains open only for the separately approved
+live restoration exercise.

@@ -37,8 +37,8 @@ jobs:
       - run: docker compose config --quiet
       - name: Verify immutable Compose override
         run: |
-          PARAMESH_IMAGE="paramesh@sha256:$(printf 'a%.0s' {1..64})" \
-            docker compose -f compose.yaml -f deploy/immutable/compose.yaml config --quiet
+          PARAMESH_IMAGE="ghcr.io/fetachino/paramesh@sha256:$(printf 'a%.0s' {1..64})" \
+            python scripts/verify_immutable_compose.py
           python scripts/immutable_release.py record \
             --image-ref ghcr.io/fetachino/paramesh:ci-${GITHUB_SHA} \
             --digest "sha256:$(printf 'b%.0s' {1..64})" \

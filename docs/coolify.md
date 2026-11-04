@@ -4,12 +4,14 @@
 Coolify manages Docker on the VM. The [hosted run and raw evidence](evidence/gcp-single-host-2026-11-03/README.md)
 cover actual native x86-64 training, observability, checkpoint restore and restart.
 The [HTTPS rollout evidence](evidence/gcp-hosted-https-2026-11-03/README.md)
-records the public route, certificate, authentication and remaining rollback gate.
+records the public route, certificate and authentication. The 2026-11-04
+production cutover applied the verified digest-qualified GHCR image without
+changing persistent state; the live rollback exercise remains separately authorized.
 This is a credit-funded VM, not an Always Free instance or a multi-host deployment.
 The [GHCR immutable validation](evidence/gcp-ghcr-rollback-2026-11-04/README.md)
-records the exact main image digest, Linux pull, isolated deployment and retained-state
-rollback. Production is still on the mutable `paramesh:local` definition until an
-operator-approved cutover.
+records the exact image digest, Linux pull, isolated deployment and retained-state
+rollback. Production now uses
+`ghcr.io/fetachino/paramesh@sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1`.
 
 The deployment path is GitHub → Coolify Application → repository `compose.yaml` →
 the same independently running ParamMesh containers tested locally. Keep configuration
@@ -22,7 +24,7 @@ in `us-central1-a`, with a 50 GiB `pd-balanced` persistent boot disk. The VM is
 x86-64. [Local ARM64 validation](arm64-validation.md) covers emulation only;
 native ARM64 remains unverified. The [completed two-host Google Cloud checkpoint evidence](evidence/gcp-multihost-919bc0-20261104/README.md)
 verified private-VPC operation, high-rate checkpoint publication, abort/recovery,
-raw manifests and numerical agreement. Hosted immutable rollback remains a separate
+raw manifests and numerical agreement. Hosted live rollback remains a separate
 release gate.
 Oracle A1 remains an option if Always Free capacity becomes available.
 
@@ -152,7 +154,7 @@ Back up full offline checkpoints outside the server before host maintenance. Nam
 volumes survive ordinary recreation but are not replicated backups. Never use
 `down --volumes` on a retained deployment. Code rollback does not roll model state
 back; whole-run restore requires fresh state for every role. See [checkpoints](checkpoints.md).
-The current production resource still reports no saved Coolify rollback images;
+The current production resource may still report no saved Coolify rollback images;
 the historical investigation is preserved in the [rollback evidence](evidence/gcp-hosted-rollback-2026-11-03/README.md),
 and the [immutable isolated validation](evidence/gcp-hosted-rollback-2026-11-04/README.md)
 plus the [GHCR validation](evidence/gcp-ghcr-rollback-2026-11-04/README.md) record
@@ -163,23 +165,22 @@ application build sections from the Compose deployment, verifies checkpoint/stat
 compatibility and requires a backup plus explicit approval before any apply.
 
 Never use `down --volumes`, restore one shard without its peers, or mix a
-checkpoint from one code/topology generation with another. The immutable
-hosted-rollback gate remains open until the isolated and any explicitly approved
-production restoration are verified.
+checkpoint from one code/topology generation with another. The isolated immutable
+rollback gate passed; the hosted live-restoration gate remains open until the
+explicitly approved production restoration is verified.
 
-## Digest-qualified production cutover plan
+## Digest-qualified production cutover record
 
-The verified candidate for the next controlled deployment is:
+The verified candidate used for this controlled deployment was:
 
 ```text
 source: 2b1fbae42a5ea15cfa3507baed5f25a2533af33c
 image:  ghcr.io/fetachino/paramesh@sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1
 ```
 
-Do not apply this plan until the operator approves the exact digest and a fresh
-offline checkpoint/volume backup has been verified. The isolated evidence used the
-same Compose files, compatibility contract and host architecture; it did not change
-the production project.
+This cutover was approved and completed on 2026-11-04 after the offline checkpoint,
+SQLite, Coolify configuration and database backup set was verified. The isolated
+evidence used the same Compose files, compatibility contract and host architecture.
 
 1. Record the current production Compose image identities, Coolify export,
    checkpoint manifest and volume/archive checksums. Confirm every role has a
@@ -207,7 +208,10 @@ the production project.
    checkpoint state and production container health after either action. Preserve
    the deployment identity and all raw reports in the release evidence directory.
 
-This is a cutover procedure, not a claim that production has already been changed.
+The live deployment used the immutable override with `--no-build`, retained all
+named volumes, and verified the digest, HTTPS authentication, checkpoint manifest,
+SQLite integrity and worker journal state. The intentional live rollback remains
+unperformed by design.
 
 OpenTofu and k3s are deferred until an actual host/provisioning requirement exists;
 placeholder infrastructure cannot establish a working public deployment.
