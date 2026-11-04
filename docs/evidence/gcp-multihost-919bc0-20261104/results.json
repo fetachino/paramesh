@@ -1,0 +1,53 @@
+{
+  "source_sha": "919bc0ac02bdb17516ae3ab1b1d494c53e8d874b",
+  "run_id": "gcp-mh-evidence-20261104",
+  "topology": {
+    "primary_vm": "paramesh-gcp",
+    "primary_private_ip": "10.90.0.2",
+    "secondary_vm": "paramesh-mh-test-20261104b",
+    "secondary_private_ip": "10.90.0.7",
+    "machine_type": "e2-standard-2",
+    "network": "paramesh-vpc",
+    "mode": "SYNCHRONOUS",
+    "steps": 4000,
+    "learning_rate": 0.05,
+    "barrier_timeout_seconds": 30,
+    "step_delay_seconds": 0
+  },
+  "abort": {
+    "checkpoint_id": "abort-controlled",
+    "begin_epoch": 2,
+    "worker_interrupted": "worker-1",
+    "abort_succeeded": true
+  },
+  "post_abort_checkpoint": {
+    "checkpoint_id": "after-abort",
+    "global_step": 3702,
+    "shard_versions": [3702, 3702],
+    "archive_sha256": "6fc617b6a8f7a9a381f374e16a114bbcfef7583998ba0fce621bfc601d00cb88"
+  },
+  "numerical_comparison": {
+    "reference": "local_reference(workers=2, steps=3702, learning_rate=0.05)",
+    "max_abs_parameter_error": 0.0002601146697998047,
+    "tolerance": 0.0003,
+    "within_tolerance": true,
+    "per_parameter_max_abs_error": {
+      "0.bias": 0.0002601146697998047,
+      "0.weight": 0.00020802021026611328,
+      "2.bias": 0.0000028014183044433594,
+      "2.weight": 0.0002124309539794922
+    }
+  },
+  "raw_evidence": {
+    "archive": "checkpoints-after.tgz",
+    "checksums": "raw-object-checksums.json",
+    "manifest": "after-abort-manifest.json"
+  },
+  "temporary_resources_deleted": [
+    "paramesh-mh-test-20261104b",
+    "paramesh-mh-private-20261104b"
+  ],
+  "production_verified": true,
+  "release_gate": "closed",
+  "other_release_gates": ["immutable-hosted-rollback"]
+}

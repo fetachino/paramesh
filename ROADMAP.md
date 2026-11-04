@@ -29,7 +29,7 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Prepare and verify private host addressing, RPC mTLS, NATS TLS, remote metrics targets and persistent role restart on an isolated Docker bridge; this is a single-host simulation only.
 - [x] Run an actual two-VM Google Cloud private-VPC deployment with cross-host training,
       observability, controlled live checkpoint publication/restore validation and process restart;
-      [evidence and high-rate checkpoint limitation](docs/evidence/gcp-multihost-2026-11-03/README.md).
+      [completed checkpoint-gate evidence](docs/evidence/gcp-multihost-919bc0-20261104/README.md).
 - [x] Add configurable larger-payload loopback measurements while retaining numerical-reference checks.
 - [ ] Add compression only when measured payload/network bottlenecks justify it.
 - [x] Add optional NATS lifecycle events without using it for gradient traffic.
@@ -75,8 +75,8 @@ of having deployed their managed equivalents.
 
 The first hosted target is a Google Cloud Free Trial `e2-standard-2` VM with a 50 GiB
 persistent disk. [Single-host evidence](docs/evidence/gcp-single-host-2026-11-03/README.md)
-records the native x86-64 Coolify run. The [two-host evidence](docs/evidence/gcp-multihost-2026-11-03/README.md)
-records private-VPC operation on separate x86-64 Linux VMs. The [local ARM64 validation](docs/arm64-validation.md)
+records the native x86-64 Coolify run. The [two-host evidence](docs/evidence/gcp-multihost-919bc0-20261104/README.md)
+records the completed private-VPC checkpoint gate on separate x86-64 Linux VMs. The [local ARM64 validation](docs/arm64-validation.md)
 exercises that architecture under emulation; native ARM64 remains open. Oracle
 Always Free A1 remains a future option if capacity returns.
 
@@ -86,5 +86,4 @@ and Azure/Azurite checkpoint portability are complete. The tiny baseline model
 does not establish a bandwidth bottleneck; larger-payload loopback measurements
 are available but do not substitute for controlled network measurements, so
 compression remains deferred. The hosted VM consumes promotional credit while running;
-hosted rollback, high-rate checkpoint recovery and controlled multi-host
-measurements remain open.
+hosted immutable rollback remains open as a separate release gate.

@@ -1,0 +1,24 @@
+{
+  "source_sha": "919bc0ac02bdb17516ae3ab1b1d494c53e8d874b",
+  "checkpoint_id": "after-abort",
+  "global_step": 3702,
+  "reference": {
+    "implementation": "paramesh.workload.local_reference",
+    "workers": 2,
+    "steps": 3702,
+    "learning_rate": 0.05,
+    "optimizer": "sgd",
+    "aggregation": "MEAN",
+    "initial_seed": 7,
+    "dataset_seeds": [100, 101]
+  },
+  "max_abs_parameter_error": 0.0002601146697998047,
+  "tolerance": 0.0003,
+  "within_tolerance": true,
+  "per_parameter_max_abs_error": {
+    "0.bias": 0.0002601146697998047,
+    "0.weight": 0.00020802021026611328,
+    "2.bias": 0.0000028014183044433594,
+    "2.weight": 0.0002124309539794922
+  }
+}

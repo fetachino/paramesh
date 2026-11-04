@@ -147,10 +147,12 @@ HTTPS, native ARM64 or separate-host scaling.
 
 ## Google Cloud two-host test
 
-[The two-VM evidence](gcp-multihost-2026-11-03/README.md) records actual
-private-VPC training, cross-host observability, a controlled live checkpoint
-and process restart. It also records the high-rate synchronous checkpoint
-failure and does not claim controlled scaling measurements or public HTTPS.
+[The completed two-VM checkpoint evidence](gcp-multihost-919bc0-20261104/README.md)
+records the exact source, private-VPC topology, repeated high-rate checkpoints,
+equal shard versions, worker restart, genuine abort and post-abort publication,
+raw manifest checksums, and direct numerical comparison. Historical runs remain
+available in [the original two-host record](gcp-multihost-2026-11-03/README.md).
+Hosted immutable rollback remains a separate release gate.
 
 ## Google Cloud hosted HTTPS rollout
 
@@ -162,8 +164,8 @@ checks. It does not establish hosted rollback or resolve the high-rate barrier f
 
 [The local barrier evidence](checkpoint-barrier-local-20261103/README.md) records
 the deterministic two-worker/two-shard reproduction, root cause, smallest fix,
-repeated high-rate runs and existing abort/restart coverage. It does not substitute
-for a real separate-host retest.
+repeated high-rate runs and existing abort/restart coverage. The completed
+Google Cloud evidence above is the separate-host retest.
 
 ## Google Cloud hosted rollback investigation
 
