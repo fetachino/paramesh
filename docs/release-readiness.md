@@ -1,10 +1,36 @@
-# Local release-readiness audit
+# Release-readiness audit
 
-The November 2, 2026 UTC audit verifies the local development system. A separate
+The November 4, 2026 UTC audit covers the local development system and the
+digest-qualified production cutover. A separate
 [November 3 hosted run](evidence/gcp-single-host-2026-11-03/README.md) verified one
 Google Cloud Linux VM. Neither result justifies a production `v1.0.0` release.
 [The machine-readable record](evidence/release-readiness.json) preserves exact source,
 dependency/package hashes, test results, CI identities and retained-service state.
+
+## 2026-11-04 audit addendum
+
+- `origin/main` is `4c28aa3e10fe6a5bf6cc8202c015f581502f934d` after PR #39 merged.
+- Production runs the Linux/amd64 image
+  `ghcr.io/fetachino/paramesh@sha256:31b6cb80d1fda851536e508cf38b593dcd1135b1fbf94f846c3d840aaba06ba1`,
+  whose OCI revision is `2b1fbae42a5ea15cfa3507baed5f25a2533af33c`. Current
+  `main` also contains PR #39's changes to worker deadline recovery, shard barrier
+  cancellation and the gRPC adapter, plus regression tests and documentation. The
+  production image predates those application-code changes; it has not been rebuilt
+  or redeployed with PR #39. A release image must identify its own newer source SHA.
+- The exact-head GitHub Actions CI run [41853757527](https://github.com/fetachino/paramesh/actions/runs/41853757527)
+  passed both quality and container jobs. Local locked Ruff, formatting, mypy,
+  generated-file, package-build and OSV audit checks also passed.
+- Before PR #39, the full Windows suite reached 138 passed and 1 failed (91.20%
+  coverage); the high-rate two-shard checkpoint test failed twice in five focused
+  repetitions. PR #39 diagnosed hidden `PushGradients` deadline retries and a
+  canceled-barrier cleanup race. After the fix, 10/10 repeated Windows trials and
+  the full locked Windows suite (141 passed, 91.42% coverage) passed. Three Linux
+  container regression tests and PR #39's exact-head quality/container CI passed.
+  See the [Windows barrier evidence](evidence/checkpoint-barrier-windows-2026-11-04/README.md).
+- The production cutover recreated only the running application roles with the
+  digest-qualified image, left completed workers stopped, retained all named
+  volumes, and verified HTTPS authentication, SQLite integrity, checkpoint blobs
+  and worker-journal consistency. No live rollback was performed.
 
 ## Verified boundaries
 
@@ -66,13 +92,15 @@ explicitly; regeneration is byte-identical to committed dashboard JSON.
   [2026-11-04 GHCR validation](evidence/gcp-ghcr-rollback-2026-11-04/README.md)
   verified registry publication, an exact Linux pull, equal-shard checkpoint
   preservation and retained-state isolated rollback. The approved Coolify
-  production cutover and any live production restoration remain open.
+  production cutover is complete with the verified GHCR digest. The intentionally
+  unperformed live production restoration remains open as a separately authorized
+  release gate.
 - **Protocol/model limits:** CPU float32 and the bundled fixed workload; offline
   whole-run checkpoints with the original topology; no coordinator consensus or
   replicated live state. Azurite compatibility is not managed Azure durability.
 
-Before a public release, publish a digest-qualified image, verify hosted rollback
-and preserve an offline
+Before a public release, complete the separately authorized hosted live rollback
+exercise and preserve an offline
 checkpoint and the deployed source/image identity before a rollout. Roll back code
 only to a compatible version; state rollback is an offline whole-run restore into
 fresh volumes, never mixing old shards with live peers. No hosted rollback duration
