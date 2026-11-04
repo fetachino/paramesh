@@ -365,3 +365,12 @@ class ParameterShard:
         self.pending.clear()
         self.barrier_generation += 1
         self.condition.notify_all()
+
+    def abort_barrier_if_pending(self, run_id: str, worker_id: str, step: int) -> None:
+        """Abort an uncommitted synchronous barrier after its RPC is canceled."""
+        if run_id != self.config.run_id or worker_id not in self.config.worker_ids:
+            return
+        with self.condition:
+            pending = self.pending.get(worker_id)
+            if pending is not None and pending[0].step == step:
+                self._abort_barrier()
