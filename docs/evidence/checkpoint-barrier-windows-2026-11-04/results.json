@@ -27,43 +27,49 @@
     },
     "diagnostic_timeline": [
       {
-        "t_seconds": 0.211974,
+        "t_seconds": 0.159997,
+        "event": "shard0_pending",
+        "worker": "worker-0",
+        "shard_version": 1
+      },
+      {
+        "t_seconds": 0.161379,
         "event": "checkpoint_requested",
         "epoch": 1
       },
       {
-        "t_seconds": 1.106,
+        "t_seconds": 1.123726,
         "event": "checkpoint_acknowledged",
-        "worker": "worker-0",
-        "step": 38
+        "worker": "worker-1",
+        "step": 40
       },
       {
-        "t_seconds": 1.123032,
+        "t_seconds": 1.136168,
         "event": "worker_push_started",
-        "worker": "worker-1",
-        "step": 38,
+        "worker": "worker-0",
+        "step": 40,
         "shard": 0
       },
       {
-        "t_seconds": 11.240099,
+        "t_seconds": 11.148175,
         "event": "barrier_deadline_returned",
-        "worker": "worker-1",
+        "worker": "worker-0",
         "shard": 0,
         "exception": "TimeoutError: Missing worker at synchronous gradient barrier"
       },
       {
-        "t_seconds": 11.242609,
+        "t_seconds": 11.249357,
         "event": "hidden_deadline_retry_started",
-        "worker": "worker-1",
+        "worker": "worker-0",
         "shard": 0,
-        "step": 38
+        "step": 40
       },
       {
-        "t_seconds": 20.224514,
+        "t_seconds": 20.188372,
         "event": "checkpoint_export_timeout",
         "phase": "CHECKPOINT_REQUESTED",
-        "acknowledged_workers": ["worker-0"],
-        "pending": {"shard0": ["worker-1"], "shard1": []}
+        "acknowledged_workers": ["worker-1"],
+        "pending": {"shard0": ["worker-0"], "shard1": []}
       }
     ]
   },

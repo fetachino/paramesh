@@ -40,3 +40,5 @@ added to production logic, and no assertion was weakened.
 The raw measured summary and diagnostic timeline are in
 [`results.json`](results.json). The full Linux suite was not repeated locally;
 the Linux regression path above is supplemented by the required Ubuntu CI job.
+Full diagnostic JSON and stack captures are retained in the protected local
+evidence store; the repository contains only the sanitized, secret-free record.
