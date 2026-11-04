@@ -16,8 +16,10 @@ changes in Git; do not maintain a pasted, divergent stack in Coolify.
 The first hosted target is a Google Cloud `e2-standard-2` (2 vCPU, 8 GB RAM) VM
 in `us-central1-a`, with a 50 GiB `pd-balanced` persistent boot disk. The VM is
 x86-64. [Local ARM64 validation](arm64-validation.md) covers emulation only;
-native ARM64 remains unverified. A separate [two-host Google Cloud test](evidence/gcp-multihost-2026-11-03/README.md)
-verified private-VPC operation, with the high-rate barrier limitation noted there.
+native ARM64 remains unverified. The [completed two-host Google Cloud checkpoint evidence](evidence/gcp-multihost-919bc0-20261104/README.md)
+verified private-VPC operation, high-rate checkpoint publication, abort/recovery,
+raw manifests and numerical agreement. Hosted immutable rollback remains a separate
+release gate.
 Oracle A1 remains an option if Always Free capacity becomes available.
 
 For any new target, check compute, disk, public IPv4, egress, snapshots and DNS

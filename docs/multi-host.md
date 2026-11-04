@@ -1,7 +1,7 @@
 # Multi-host Linux deployment path
 
-**Validated on two Google Cloud Linux VMs on 2026-11-03.** The local bridge
-simulation remains a separate, earlier check. See the [two-host evidence](evidence/gcp-multihost-2026-11-03/README.md)
+**Validated on two Google Cloud Linux VMs on 2026-11-04.** The local bridge
+simulation remains a separate, earlier check. See the [completed checkpoint evidence](evidence/gcp-multihost-919bc0-20261104/README.md)
 for the exact topology, results, and limits.
 
 `deploy/multihost/compose.yaml` overlays the existing Compose stack. It publishes
@@ -154,12 +154,10 @@ docker compose -p paramesh -f compose.yaml -f deploy/multihost/compose.yaml \
   --id example-live --coordinator COORDINATOR_PRIVATE_IP:50050 --store /checkpoints
 ```
 
-Under the tested two-host synchronous workload, a live checkpoint at the normal
-step rate twice timed out when one worker entered the next gradient barrier as
-its peer paused. Both uncommitted epochs were explicitly aborted and training
-recovered. A controlled run with a 120-second step delay published and restored
-a valid checkpoint. Do not assume a high-rate synchronous live checkpoint is
-reliable across hosts until this boundary race is fixed and retested.
+The completed two-host evidence records repeated high-rate checkpoints with
+equal shard versions, a genuine in-flight abort followed by successful
+publication, worker restart/replay, raw immutable manifests and a direct
+numerical comparison. Hosted rollback remains a separate release gate.
 
 ## Local verification and limits
 
