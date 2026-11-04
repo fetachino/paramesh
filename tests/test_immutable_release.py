@@ -38,6 +38,13 @@ def test_manifest_requires_digest_identity() -> None:
         validate_manifest(value)
 
 
+def test_manifest_rejects_incompatible_state_contract() -> None:
+    value = manifest()
+    value["compatibility"] = {**COMPATIBILITY, "state_schema_version": 2}
+    with pytest.raises(ValueError, match="compatibility"):
+        validate_manifest(value)
+
+
 def test_checkpoint_requires_equal_shard_versions(tmp_path: Path) -> None:
     path = tmp_path / "manifest.json"
     path.write_text(
