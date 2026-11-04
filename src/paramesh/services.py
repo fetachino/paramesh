@@ -105,6 +105,11 @@ class ShardService:
         return _call(context, lambda: self.shard.pull(request.run_id))
 
     def PushGradients(self, request: pb.GradientUpdate, context: Any) -> pb.UpdateResult:
+        context.add_callback(
+            lambda: self.shard.abort_barrier_if_pending(
+                request.run_id, request.worker_id, request.step
+            )
+        )
         return _call(context, lambda: self.shard.push(request, timeout=context.time_remaining()))
 
     def GetProgress(self, request: pb.PullRequest, context: Any) -> pb.ShardProgress:

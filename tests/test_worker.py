@@ -48,6 +48,24 @@ def test_retry_after_lost_response_preserves_exact_update_and_commits_once():
     assert weight(shard) == pytest.approx(0.8)
 
 
+def test_rpc_surfaces_deadline_without_retry_when_caller_handles_barrier_recovery():
+    class Deadline(grpc.RpcError):
+        def code(self):
+            return grpc.StatusCode.DEADLINE_EXCEEDED
+
+    class Transport:
+        calls = 0
+
+        def PushGradients(self, request, timeout, **options):
+            self.calls += 1
+            raise Deadline()
+
+    transport = Transport()
+    with pytest.raises(Deadline):
+        _rpc(transport.PushGradients, update(), 1, retry_deadline=False)
+    assert transport.calls == 1
+
+
 def test_bounded_refresh_does_not_resubmit_a_previously_committed_shard():
     settings = config(
         mode=pb.BOUNDED_STALENESS, max_staleness=0, shard_endpoints=["pending-0:0", "pending-1:0"]
