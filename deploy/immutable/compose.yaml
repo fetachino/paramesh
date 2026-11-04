@@ -1,0 +1,24 @@
+# Merge with compose.yaml for an already-built, digest-qualified application image.
+# This removes build sections so Coolify/Docker Compose cannot silently rebuild it.
+services:
+  dashboard:
+    build: !reset null
+    image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}
+  checkpoint:
+    build: !reset null
+    image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}
+  coordinator:
+    build: !reset null
+    image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}
+  shard-0:
+    build: !reset null
+    image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}
+  shard-1:
+    build: !reset null
+    image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}
+  worker-0:
+    build: !reset null
+    image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}
+  worker-1:
+    build: !reset null
+    image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}

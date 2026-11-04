@@ -14,12 +14,11 @@ NATS lifecycle history, Tempo traces and Loki logs. A Git-backed Coolify deploym
 has run on one Google Cloud x86-64 VM, with an authenticated dashboard over HTTPS
 and private Grafana access.
 A separate test ran training and observability across two Google Cloud VMs;
-high-rate synchronous live checkpointing hit a barrier deadline. Hosted rollback
-and scaling performance remain unverified. A local multi-process reproduction and
-correctness fix now cover the completion race; a real two-host retest remains
-required. See the
+the corrected high-rate synchronous checkpoint workload now has repeated
+checkpoint, abort/recovery, raw-manifest and numerical evidence. Hosted immutable
+rollback and scaling performance remain unverified. See the
 [single-host evidence](docs/evidence/gcp-single-host-2026-11-03/README.md) and
-[two-host evidence](docs/evidence/gcp-multihost-2026-11-03/README.md), plus the
+[completed two-host evidence](docs/evidence/gcp-multihost-919bc0-20261104/README.md), plus the
 [hosted HTTPS evidence](docs/evidence/gcp-hosted-https-2026-11-03/README.md) and
 [local barrier evidence](docs/evidence/checkpoint-barrier-local-2026-11-03/README.md).
 
@@ -292,6 +291,7 @@ benchmarks and remaining hosted validation follow in [ROADMAP.md](ROADMAP.md).
 - [Operations and signals](docs/operations.md)
 - [Dependency locking and updates](docs/dependencies.md)
 - [Git-backed Coolify deployment](docs/coolify.md)
+- [Immutable deployment and rollback](docs/immutable-deployment.md)
 - [Multi-host Linux deployment path](docs/multi-host.md)
 - [Architecture and consistency model](ARCHITECTURE.md)
 - [Correctness evidence and benchmark policy](BENCHMARKS.md)

@@ -148,24 +148,19 @@ Back up full offline checkpoints outside the server before host maintenance. Nam
 volumes survive ordinary recreation but are not replicated backups. Never use
 `down --volumes` on a retained deployment. Code rollback does not roll model state
 back; whole-run restore requires fresh state for every role. See [checkpoints](checkpoints.md).
-Coolify currently reports **no saved rollback images** for this resource. Capture
-and verify a compatible image rollback before treating that release gate as passed.
-The current Compose definition builds the application as the mutable local tag
-`paramesh:local`; Coolify's image-retention setting does not turn those build outputs
-into a selectable rollback when no registry image or prior Coolify image record is
-available. The VM retains the live image and two older `mh-*` images from the
-multi-host trial, but those tags are not Coolify deployment records. See the
-[rollback evidence](evidence/gcp-hosted-rollback-2026-11-03/README.md).
+The current production resource still reports no saved Coolify rollback images;
+the historical investigation is preserved in the [rollback evidence](evidence/gcp-hosted-rollback-2026-11-03/README.md),
+and the later [immutable isolated validation](evidence/gcp-hosted-rollback-2026-11-04/README.md)
+records the digest-qualified rollback and retained-state checks.
+Use the new [immutable deployment and rollback procedure](immutable-deployment.md)
+for registry-backed digest images. It records source/image identity, removes
+application build sections from the Compose deployment, verifies checkpoint/state
+compatibility and requires a backup plus explicit approval before any apply.
 
-For a safe rollback, first export the current image by digest and all named volumes,
-record the source revision and Compose configuration, and verify the archive hashes.
-Validate the candidate image in an isolated network-disabled container and check its
-CLI/configuration compatibility. Only then deploy the candidate by immutable digest
-with the same environment and retained volumes. Never use `down --volumes`, restore
-one shard without its peers, or mix a checkpoint from one code/topology generation
-with another. Restore into fresh volumes if the live state is incompatible; keep the
-original volumes untouched until the replacement passes health, authentication,
-HTTPS, retained-step and telemetry checks.
+Never use `down --volumes`, restore one shard without its peers, or mix a
+checkpoint from one code/topology generation with another. The immutable
+hosted-rollback gate remains open until the isolated and any explicitly approved
+production restoration are verified.
 
 OpenTofu and k3s are deferred until an actual host/provisioning requirement exists;
 placeholder infrastructure cannot establish a working public deployment.

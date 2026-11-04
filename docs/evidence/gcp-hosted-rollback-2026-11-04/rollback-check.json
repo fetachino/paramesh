@@ -1,0 +1,10 @@
+{
+  "approved": true,
+  "candidate_image": "paramesh@sha256:4041619ce29a8f083659657ea90a341aa058514b034e965e7b414c0f1bb3c506",
+  "candidate_source_commit": "af183e465e13470e69d0ea4900a6922d10d8c2bc",
+  "checkpoint_id": "baseline-offline",
+  "current_image": "paramesh@sha256:d2626dba65eff89e37516bf699a72c3aaaf5b18e12cc615202aeee62ad492265",
+  "destructive_volume_reset": false,
+  "requires_explicit_operator_approval": true,
+  "requires_volume_backup": true
+}

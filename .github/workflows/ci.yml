@@ -35,6 +35,15 @@ jobs:
       - run: python -m build
       - run: python scripts/create_dev_env.py
       - run: docker compose config --quiet
+      - name: Verify immutable Compose override
+        run: |
+          PARAMESH_IMAGE="paramesh@sha256:$(printf 'a%.0s' {1..64})" \
+            docker compose -f compose.yaml -f deploy/immutable/compose.yaml config --quiet
+          python scripts/immutable_release.py record \
+            --image-ref ghcr.io/fetachino/paramesh:ci-${GITHUB_SHA} \
+            --digest "sha256:$(printf 'b%.0s' {1..64})" \
+            --source-commit "$(git rev-parse HEAD)" \
+            --output artifacts/immutable-release.json
       - run: python -m pip_audit --vulnerability-service osv
       - uses: actions/upload-artifact@v4
         with:
