@@ -60,7 +60,25 @@ implementation boundaries, not a claim that infrastructure examples are deployed
 - [x] Retest the fixed protocol on separate Google Cloud hosts under the original
       high-rate workload, preserve raw traces/logs and close the distributed
       checkpoint barrier gate; see [evidence](docs/evidence/gcp-multihost-919bc0-20261104/README.md).
-      No `v1.0.0` tag is justified yet.
+- [x] Publish the stable `v1.0.0` source release and its digest-qualified GHCR
+      image after exact-source verification; see [release notes](docs/releases/v1.0.0.md).
+
+## Post-v1 adoption path
+
+The first release is intentionally focused on a small, inspectable CPU topology.
+The next work should improve adoption around the same recovery-first product
+boundary before adding GPUs, Kubernetes or high availability:
+
+- [ ] Define a stable external PyTorch model/training interface and preserve the
+      bundled MLP as the deterministic reference workload.
+- [ ] Add one end-to-end example using an external model, with checkpoint,
+      worker-restart and numerical-correctness evidence.
+- [ ] Provide a one-command local quickstart that creates ignored credentials,
+      starts the self-hosted stack and links to the operator checks.
+- [ ] Validate the workflow with several research or small-team users before
+      committing to GPU, scheduler or managed-service features.
+- [ ] Evaluate paid deployment, support and integration services only after the
+      external-model workflow has adoption evidence.
 
 ## Intended cloud portability
 
