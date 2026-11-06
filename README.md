@@ -1,6 +1,8 @@
 # ParamMesh
 
-A distributed parameter-server training core with independently running PyTorch
+ParamMesh is a lightweight, self-hosted distributed training system for teams
+that need checkpoint recovery, worker restart and operational visibility without
+adopting a large cluster platform. It provides independently running PyTorch
 workers, a membership coordinator and sharded authoritative model state. The
 repository owns the gRPC protocol, gradient validation, SGD updates, versioning,
 replay protection and synchronization behavior.
@@ -49,9 +51,17 @@ Samples across services are collected separately; their step counters need not m
 ## Why this project exists
 
 Parameter servers make optimizer ownership, stale gradients, membership and
-failure boundaries explicit. A small CPU model keeps the focus on those systems
-decisions. No Ray Train, DDP, Horovod or other distributed trainer implements the
-protocol underneath this project.
+failure boundaries explicit. ParamMesh is aimed at small ML infrastructure teams,
+research labs and self-hosted environments where recoverable training state and
+clear operations matter more than operating a large cluster platform. A small
+CPU model keeps the reference workload easy to reproduce, while the protocol and
+checkpoint boundaries remain the main subject of the project.
+
+ParamMesh is a good fit when you want a fixed, inspectable topology, durable
+whole-run checkpoints, worker recovery and a Docker-based deployment on ordinary
+Linux hosts. It is not a replacement for GPU-scale training systems, general
+cluster scheduling or high-availability orchestration. Ray, Horovod, DeepSpeed
+and similar projects remain better fits for those workloads.
 
 ## Run the distributed demo
 
