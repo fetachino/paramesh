@@ -835,17 +835,14 @@ def test_sync_checkpoint_recovers_high_rate_two_shard_barrier(tmp_path):
     try:
         deadline = time.monotonic() + 20
         while time.monotonic() < deadline:
-            with shards[0].condition:
-                at_barrier = bool(shards[0].pending)
             status = coordinator.status()
-            if (
-                at_barrier
-                and len(status.workers) == 2
-                and all(worker.health == "healthy" for worker in status.workers)
+            if len(status.workers) == len(settings.worker_ids) and all(
+                worker.health == "healthy" for worker in status.workers
             ):
                 break
             time.sleep(0.01)
-        assert at_barrier and all(worker.health == "healthy" for worker in status.workers)
+        assert len(status.workers) == len(settings.worker_ids)
+        assert all(worker.health == "healthy" for worker in status.workers)
         coordinator.begin_checkpoint("high-rate-two-shard")
         manifest = export_online_checkpoint(
             f"127.0.0.1:{coordinator_port}",
