@@ -30,11 +30,14 @@ from paramesh.workload import (
 
 
 def partial_run(root, *, workload: TrainingWorkload | None = None):
-    endpoints = []
-    for _ in range(2):
-        with socket.socket() as connection:
+    connections = [socket.socket() for _ in range(2)]
+    try:
+        for connection in connections:
             connection.bind(("127.0.0.1", 0))
-            endpoints.append(f"127.0.0.1:{connection.getsockname()[1]}")
+        endpoints = [f"127.0.0.1:{connection.getsockname()[1]}" for connection in connections]
+    finally:
+        for connection in connections:
+            connection.close()
     settings = config(mode=pb.SYNCHRONOUS, worker_ids=["worker-0"], shard_endpoints=endpoints)
     active = workload or TrainingWorkload(model, dataset)
     initial = parameters_for(active)
