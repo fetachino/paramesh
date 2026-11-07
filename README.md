@@ -180,6 +180,27 @@ This is a controlled workload comparison, not proof of multi-host scaling or a
 claim that ParamMesh is faster than PyTorch. Use `--workers 8` only on a host with
 enough CPU headroom, and report failed trials rather than dropping them.
 
+For the recovery demonstration, run the actual process-kill harness and keep its
+raw report directory:
+
+```powershell
+python examples/recovery_demo.py --output artifacts/recovery-demo --repetitions 1
+```
+
+This terminates and replaces a worker and a shard in separate trials, then checks
+durable progress, equal final shard versions, completed workers, and numerical
+agreement with uninterrupted local SGD. To show the captured recovery rows in the
+operator dashboard, start the operations profile with the artifact directory:
+
+```powershell
+$env:PARAMESH_EXTERNAL_ARTIFACTS_DIR = (Resolve-Path artifacts/recovery-demo)
+python scripts/quickstart.py --no-build
+```
+
+The dashboard labels these rows **external recovery**. They are local evidence,
+not an availability SLA or a claim that arbitrary models recover without compatible
+state and protocol configuration.
+
 ## Core capabilities
 
 | Area | Working behavior |

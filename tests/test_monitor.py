@@ -105,6 +105,27 @@ def test_monitor_samples_authenticated_rpc_and_rejects_bad_backend_shapes(tmp_pa
         (external / "manifest.json").write_text('{"trials":[{"mode":"async","final_loss":0.5}]}')
         view.external_artifacts = external
         assert view.benchmarks()[-1]["evidence_source"] == "external workload"
+        (external / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "configuration": {"steps_per_worker": 20, "workers": 2, "shards": 2},
+                    "trials": [
+                        {
+                            "failure": "worker",
+                            "max_parameter_error": 5e-8,
+                            "final_loss": 0.2,
+                            "detection_seconds": 1.0,
+                            "recovery_seconds_until_progress": 2.0,
+                            "commit": "fixture",
+                            "source_dirty": False,
+                        }
+                    ],
+                }
+            )
+        )
+        recovery = view.benchmarks()[-1]
+        assert recovery["evidence_source"] == "external recovery"
+        assert recovery["failure"]["terminated_component"] == "worker-0"
         view.close()
         backend["bad"] = True
         registry.stop(0).wait()
