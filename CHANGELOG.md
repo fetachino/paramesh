@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 — release candidate (not tagged or published)
+## 1.1.0 — published to PyPI
 
 ### Added
 
@@ -17,8 +17,8 @@
 
 - Locked package build, clean-clone setup, Windows executable and merged CI
   validation for the external-workload workflow.
-- PyPI publication workflow prepared for Trusted Publishing; publication is
-  pending the immutable `v1.1.0` tag and successful workflow run.
+- PyPI publication completed through Trusted Publishing from the immutable
+  `v1.1.0` tag (workflow run `42406474933`).
 
 ## 1.0.0 — release candidate (not tagged or published)
 

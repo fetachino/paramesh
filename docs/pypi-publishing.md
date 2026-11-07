@@ -29,6 +29,12 @@ python -m pipx install "paramesh[train]"
 paramesh-local --help
 ```
 
-The current repository contains the packaged `paramesh-local` entry point, but
-publication is not claimed until a successful trusted workflow run and an
-independent clean-environment install are recorded.
+The `1.1.0` package was published through the trusted workflow from tag
+`v1.1.0` in run `42406474933`. An isolated public-wheel smoke test confirmed:
+
+```text
+uvx --from "paramesh[train]==1.1.0" paramesh-local --help
+```
+
+The command installed the published package and train extra, then returned the
+launcher help without using repository files or credentials.
