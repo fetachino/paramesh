@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-11-07T23:25:10Z",
+  "image": "ghcr.io/fetachino/paramesh@sha256:8704ead5088d3adb03641ea6a7ce30bcdd6474311df4d9cc7f2545570ad317b3",
+  "image_source_revision": "v1.0.0 release revision (not current main)",
+  "platform": "linux/amd64",
+  "workload": {
+    "mode": "synchronous",
+    "steps": 200,
+    "workers": 2,
+    "shards": 2,
+    "learning_rate": 0.05,
+    "barrier_timeout_seconds": 30.0,
+    "compression": false,
+    "device": "cpu"
+  },
+  "trials": [
+    {"name": "same-host-linux", "max_worker_wall_seconds": 26.4208886, "shard_versions": [200, 200], "exit_codes": [0, 0]},
+    {"name": "two-host-r2", "max_worker_wall_seconds": 73.1217060, "shard_versions": [200, 200], "exit_codes": [0, 0]},
+    {"name": "two-host-r3", "max_worker_wall_seconds": 98.0956231, "shard_versions": [200, 200], "exit_codes": [0, 0]}
+  ],
+  "local_windows_reference": {
+    "worker_wall_seconds_including_startup": 6.549755100000766,
+    "shard_versions": [200, 200],
+    "max_parameter_error": 3.5762786865234375e-07,
+    "source_revision": "6a5a456212743a9b8001d3721896d3d9773de74c"
+  },
+  "limitations": [
+    "two clean repetitions only",
+    "single e2-standard-2 VM class and us-central1 placement",
+    "no WAN, compression, GPU, HA, or larger worker-count measurement",
+    "published image is the v1.0.0 immutable artifact rather than current main"
+  ]
+}

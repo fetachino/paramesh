@@ -1,0 +1,4 @@
+trial,topology,workers,shards,steps,mode,max_worker_wall_seconds,shard_versions,exit_codes,image_digest,platform
+same-host-linux,single VM,2,2,200,synchronous,26.4208886,"200;200","0;0",sha256:8704ead5088d3adb03641ea6a7ce30bcdd6474311df4d9cc7f2545570ad317b3,linux/amd64
+two-host-r2,private VPC,2,2,200,synchronous,73.1217060,"200;200","0;0",sha256:8704ead5088d3adb03641ea6a7ce30bcdd6474311df4d9cc7f2545570ad317b3,linux/amd64
+two-host-r3,private VPC,2,2,200,synchronous,98.0956231,"200;200","0;0",sha256:8704ead5088d3adb03641ea6a7ce30bcdd6474311df4d9cc7f2545570ad317b3,linux/amd64
