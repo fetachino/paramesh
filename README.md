@@ -335,6 +335,9 @@ See the [supported contract](docs/supported-contract.md) for tested boundaries a
 [adoption feedback template](docs/adoption-feedback-template.md) for a sanitized evaluation
 report that does not collect credentials or customer data.
 
+Maintainers coordinating an independent trial should use the [evaluator protocol](docs/adoption-evaluation.md)
+so setup time, artifact identity, workload shape, and blockers are recorded consistently.
+
 ### Example: a small demand-forecasting prototype
 
 Imagine a retail team testing a demand-forecasting model before committing to a larger
