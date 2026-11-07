@@ -319,10 +319,17 @@ The CI container job runs both Compose verifiers against the built image.
 
 If Docker Desktop is installed, users can either download the `paramesh-windows-launcher`
 bundle from the manually triggered **Windows launcher bundle** GitHub Actions workflow,
-extract it, and run `paramesh-launcher.exe`, or clone the repository and use the terminal
-commands above. The executable is a convenience launcher, not a Docker replacement: it
-still needs Docker Desktop and the bundled Compose files, creates the same ignored `.env`,
-and starts the same local operations stack. It does not access hosted production.
+extract it, and choose one of two executables:
+
+- `paramesh-try.exe` runs a disposable two-worker/two-shard synchronous demo directly on
+  Windows, opens a local result page, and does not require Docker.
+- `paramesh-launcher.exe` starts the full operations stack, but still requires Docker Desktop
+  and the bundled Compose files.
+
+The standalone mode is intentionally a local evaluation path: it uses the bundled synthetic
+workload and local report storage. Team deployments, persistent checkpoints, observability,
+and hosted operation continue to use Docker Compose. Neither executable accesses hosted
+production.
 
 ## Verification and testing
 

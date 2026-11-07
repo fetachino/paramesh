@@ -16,13 +16,16 @@ jobs:
           python-version: "3.12"
       - name: Build launcher
         run: |
-          python -m pip install --disable-pip-version-check pyinstaller==6.16.0
-          pyinstaller --onefile --name paramesh-launcher scripts/windows_launcher.py
+          python -m pip install --disable-pip-version-check uv==0.13.6
+          uv sync --locked --all-extras
+          .venv/Scripts/python -m pip install --disable-pip-version-check pyinstaller==6.16.0
+          .venv/Scripts/pyinstaller --onefile --name paramesh-launcher scripts/windows_launcher.py
+          .venv/Scripts/pyinstaller --onefile --name paramesh-try scripts/standalone_launcher.py
       - name: Assemble bundle
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force bundle/scripts | Out-Null
-          Copy-Item dist/paramesh-launcher.exe bundle/
+          Copy-Item dist/paramesh-launcher.exe,dist/paramesh-try.exe bundle/
           Copy-Item scripts/quickstart.py,scripts/create_dev_env.py bundle/scripts/
           Copy-Item compose.yaml,Dockerfile,pyproject.toml,uv.lock,README.md bundle/
           Copy-Item -Recurse deploy,src bundle/
