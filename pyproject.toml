@@ -20,6 +20,7 @@ operations = ["nats-py==2.16.0", "prometheus-client==0.26.0", "opentelemetry-sdk
 
 [project.scripts]
 paramesh = "paramesh.cli:main"
+paramesh-local = "paramesh.local_launcher:main"
 
 [tool.uv]
 required-version = "==0.13.6"

@@ -18,7 +18,9 @@ changing the production deployment or the v1.0.0 tag.
 
 ## Phase 3: installation and recovery UX
 
-- [ ] Make the Python path a single documented command (`uvx`/`pipx` or equivalent) while retaining the Windows executable.
+- [x] Add the packaged `paramesh-local` entry point while retaining the Windows executable.
+- [ ] Publish the train extra through a trusted package channel so `pipx install
+      "paramesh[train]"` is usable by outside evaluators.
 - [x] Add a one-command recovery demo that captures worker/shard interruption, numerical recovery, and dashboard evidence.
 - [ ] Extend the recovery demo with a coordinated checkpoint-abort/resume walkthrough before claiming full checkpoint UX.
 - [ ] Add focused tests and documentation for each user path.
