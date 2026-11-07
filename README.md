@@ -97,6 +97,31 @@ paramesh demo --mode async --output artifacts/async.json
 paramesh demo --mode bounded --output artifacts/bounded.json
 ```
 
+### Supplying a PyTorch workload
+
+The worker API also accepts a programmatic `TrainingWorkload` containing a
+model factory and a per-worker dataset factory. This keeps model construction
+outside the distributed protocol while retaining the bundled MLP as the
+reference workload:
+
+```python
+import torch
+
+from paramesh.workload import TrainingWorkload
+from paramesh.worker import train_worker
+
+workload = TrainingWorkload(
+    model_factory=lambda: torch.nn.Linear(4, 1),
+    dataset_factory=lambda worker_index: make_batch(worker_index),
+)
+train_worker("127.0.0.1:50050", "worker-0", 20, workload=workload)
+```
+
+The supplied model's named parameters use the same shape, dtype and finite-value
+checks as the bundled model. The adapter is currently a Python API; checkpoint
+CLI integration and a complete external-model example remain tracked in the
+post-v1 roadmap.
+
 ## Core capabilities
 
 | Area | Working behavior |

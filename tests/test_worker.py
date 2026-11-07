@@ -12,7 +12,48 @@ from paramesh.shard import ParameterShard
 from paramesh.state import StateDB
 from paramesh.tensors import encode, partition
 from paramesh.worker import _rpc, train_worker
-from paramesh.workload import dataset, load_parameters, local_reference, model, parameters
+from paramesh.workload import (
+    TrainingWorkload,
+    dataset,
+    load_parameters,
+    local_reference,
+    model,
+    parameters,
+)
+
+
+def test_external_workload_factory_trains_with_existing_protocol(tmp_path):
+    settings = config(mode=pb.SYNCHRONOUS, worker_ids=["worker-0"], shard_endpoints=["pending-0:0"])
+    external = TrainingWorkload(
+        model_factory=lambda: torch.nn.Linear(4, 1),
+        dataset_factory=lambda _: dataset(0),
+    )
+    initial = {
+        name: value.detach().numpy().copy()
+        for name, value in external.model_factory().named_parameters()
+    }
+    shard = ParameterShard(settings, initial)
+    shard_server_instance, shard_port = shard_server(shard, "127.0.0.1:0")
+    shard_server_instance.start()
+    settings.shard_endpoints[:] = [f"127.0.0.1:{shard_port}"]
+    coordinator = managed_coordinator(settings)
+    coordinator_server_instance, coordinator_port = coordinator_server(coordinator, "127.0.0.1:0")
+    coordinator_server_instance.start()
+    storage = StateDB(tmp_path / "worker.sqlite")
+    try:
+        result = train_worker(
+            f"127.0.0.1:{coordinator_port}",
+            "worker-0",
+            2,
+            state=storage,
+            workload=external,
+        )
+        assert result["steps"] == 2
+        assert shard.version == 2
+    finally:
+        storage.close()
+        coordinator_server_instance.stop(0).wait()
+        shard_server_instance.stop(0).wait()
 
 
 def test_parameter_loading_rejects_broadcastable_shapes_before_mutating():

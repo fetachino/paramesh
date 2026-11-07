@@ -16,7 +16,7 @@ from paramesh.rpc import training_pb2_grpc as rpc
 from paramesh.security import RpcSecurity, open_channel
 from paramesh.state import StateDB
 from paramesh.tensors import decode_many, encode, partition
-from paramesh.workload import dataset, load_parameters, model
+from paramesh.workload import TrainingWorkload, bundled_workload, load_parameters
 
 
 def _rpc(method: Any, request: Any, timeout: float, *, retry_deadline: bool = True) -> Any:
@@ -43,13 +43,15 @@ def train_worker(
     step_delay: float = 0,
     security: RpcSecurity | None = None,
     hidden_width: int = 8,
+    workload: TrainingWorkload | None = None,
 ) -> dict[str, Any]:
     if steps < 1 or not math.isfinite(timeout) or timeout <= 0:
         raise ValueError("steps and timeout must be positive")
     if not math.isfinite(step_delay) or step_delay < 0:
         raise ValueError("step_delay must be finite and nonnegative")
     torch.set_num_threads(1)
-    network = model(hidden_width)
+    active_workload = workload or bundled_workload(hidden_width)
+    network = active_workload.model_factory()
     progress = [0, 0]
     checkpoint_epoch = [0]
     progress_lock = threading.Lock()
@@ -62,7 +64,7 @@ def train_worker(
         coordinator = rpc.CoordinatorStub(channel)
         session = _register(coordinator, worker_id, timeout)
         config = session.config
-        inputs, targets = dataset(list(config.worker_ids).index(worker_id))
+        inputs, targets = active_workload.dataset_factory(list(config.worker_ids).index(worker_id))
         clients = [
             rpc.ParameterShardStub(stack.enter_context(open_channel(endpoint, security)))
             for endpoint in config.shard_endpoints

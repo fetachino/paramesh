@@ -1,10 +1,33 @@
-"""Small deterministic CPU workload; the distributed protocol is model-independent."""
+"""Workload adapters for the model-independent distributed protocol."""
+
+from collections.abc import Callable
+from dataclasses import dataclass
 
 import numpy as np
 import torch
 from torch import nn
 
 from paramesh.tensors import FloatArray
+
+ModelFactory = Callable[[], nn.Module]
+DatasetFactory = Callable[[int], tuple[torch.Tensor, torch.Tensor]]
+
+
+@dataclass(frozen=True)
+class TrainingWorkload:
+    """Model and per-worker batch factories used by a training worker."""
+
+    model_factory: ModelFactory
+    dataset_factory: DatasetFactory
+
+
+def bundled_workload(hidden_width: int = 8) -> TrainingWorkload:
+    """Return the deterministic bundled workload used by the reference tests."""
+
+    return TrainingWorkload(
+        model_factory=lambda: model(hidden_width),
+        dataset_factory=dataset,
+    )
 
 
 def model(hidden_width: int = 8) -> nn.Sequential:
@@ -43,11 +66,17 @@ def dataset(worker_index: int) -> tuple[torch.Tensor, torch.Tensor]:
 
 
 def local_reference(
-    workers: int, steps: int, learning_rate: float, hidden_width: int = 8
+    workers: int,
+    steps: int,
+    learning_rate: float,
+    hidden_width: int = 8,
+    *,
+    workload: TrainingWorkload | None = None,
 ) -> dict[str, FloatArray]:
-    reference = model(hidden_width)
+    active = workload or bundled_workload(hidden_width)
+    reference = active.model_factory()
     optimizer = torch.optim.SGD(reference.parameters(), lr=learning_rate)
-    batches = [dataset(index) for index in range(workers)]
+    batches = [active.dataset_factory(index) for index in range(workers)]
     inputs = torch.cat([batch[0] for batch in batches])
     targets = torch.cat([batch[1] for batch in batches])
     for _ in range(steps):
