@@ -44,6 +44,15 @@ def parameters(hidden_width: int = 8) -> dict[str, FloatArray]:
     }
 
 
+def parameters_for(workload: TrainingWorkload) -> dict[str, FloatArray]:
+    """Export a workload's initial model state for shard and checkpoint setup."""
+
+    return {
+        name: value.detach().cpu().numpy().astype(np.float32, copy=True)
+        for name, value in workload.model_factory().named_parameters()
+    }
+
+
 def load_parameters(network: nn.Module, values: dict[str, FloatArray]) -> None:
     expected = dict(network.named_parameters())
     if values.keys() != expected.keys():

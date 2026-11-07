@@ -24,7 +24,7 @@ from paramesh.security import RpcSecurity, open_channel
 from paramesh.shard import ParameterShard
 from paramesh.state import StateDB
 from paramesh.storage import ObjectStore
-from paramesh.tensors import partition
+from paramesh.tensors import FloatArray, partition
 
 MAX_BUNDLE_BYTES = 128 * 1024 * 1024
 
@@ -60,14 +60,18 @@ def _open(stack: ExitStack, root: Path, role: str) -> StateDB:
     return store
 
 
-def _validate(records: dict[str, bytes], root: Path) -> dict[str, Any]:
+def _validate(
+    records: dict[str, bytes],
+    root: Path,
+    initial_parameters: dict[str, FloatArray] | None = None,
+) -> dict[str, Any]:
     from paramesh.workload import parameters
 
     config = _config(records["coordinator"])
     roles = _roles(config)
     if records.keys() != roles.keys():
         raise ValueError("Checkpoint membership is incomplete or unexpected")
-    initial = parameters()
+    initial = parameters() if initial_parameters is None else initial_parameters
     owners = partition(initial, len(config.shard_endpoints))
     with ExitStack() as stack:
         stores = {name: _open(stack, root, name) for name in roles}
@@ -109,7 +113,13 @@ def _validate(records: dict[str, bytes], root: Path) -> dict[str, Any]:
     }
 
 
-def export_checkpoint(root: Path, store: ObjectStore, checkpoint_id: str) -> dict[str, Any]:
+def export_checkpoint(
+    root: Path,
+    store: ObjectStore,
+    checkpoint_id: str,
+    *,
+    initial_parameters: dict[str, FloatArray] | None = None,
+) -> dict[str, Any]:
     started = time.perf_counter()
     _manifest_key(checkpoint_id)
     records: dict[str, bytes] = {}
@@ -138,7 +148,7 @@ def export_checkpoint(root: Path, store: ObjectStore, checkpoint_id: str) -> dic
         if sum(map(len, records.values())) > MAX_BUNDLE_BYTES:
             raise ValueError("Checkpoint bundle exceeds size limit")
         with tempfile.TemporaryDirectory() as temporary:
-            summary = _validate(records, Path(temporary))
+            summary = _validate(records, Path(temporary), initial_parameters)
     return _publish_checkpoint(records, store, checkpoint_id, summary, started)
 
 
@@ -177,6 +187,7 @@ def export_online_checkpoint(
     security: RpcSecurity,
     *,
     timeout: float = 120,
+    initial_parameters: dict[str, FloatArray] | None = None,
 ) -> dict[str, Any]:
     """Quiesce the configured workers, freeze shards and publish one live cut."""
     if (
@@ -247,7 +258,7 @@ def export_online_checkpoint(
             if sum(map(len, records.values())) > MAX_BUNDLE_BYTES:
                 raise ValueError("Checkpoint bundle exceeds size limit")
             with tempfile.TemporaryDirectory() as temporary:
-                summary = _validate(records, Path(temporary))
+                summary = _validate(records, Path(temporary), initial_parameters)
             _publish_checkpoint(records, store, checkpoint_id, summary, started)
             status = coordinator.SetCheckpointPhase(
                 pb.CheckpointPhaseRequest(
@@ -368,7 +379,13 @@ def _read(store: ObjectStore, checkpoint_id: str) -> tuple[dict[str, Any], dict[
     return manifest, records
 
 
-def restore_checkpoint(store: ObjectStore, checkpoint_id: str, destination: Path) -> dict[str, Any]:
+def restore_checkpoint(
+    store: ObjectStore,
+    checkpoint_id: str,
+    destination: Path,
+    *,
+    initial_parameters: dict[str, FloatArray] | None = None,
+) -> dict[str, Any]:
     manifest, records = _read(store, checkpoint_id)
     if destination.exists():
         raise FileExistsError(
@@ -380,18 +397,24 @@ def restore_checkpoint(store: ObjectStore, checkpoint_id: str, destination: Path
     ) as temporary:
         staging = Path(temporary) / "cluster"
         staging.mkdir()
-        summary = _validate(records, staging)
+        summary = _validate(records, staging, initial_parameters)
         if any(manifest.get(key) != value for key, value in summary.items()):
             raise ValueError("Manifest summary does not match checkpoint records")
         os.rename(staging, destination)
     return manifest
 
 
-def install_checkpoint(store: ObjectStore, checkpoint_id: str, root: Path) -> dict[str, Any]:
+def install_checkpoint(
+    store: ObjectStore,
+    checkpoint_id: str,
+    root: Path,
+    *,
+    initial_parameters: dict[str, FloatArray] | None = None,
+) -> dict[str, Any]:
     """Install into empty mounted volumes, keeping startup blocked until all roles are ready."""
     manifest, records = _read(store, checkpoint_id)
     with tempfile.TemporaryDirectory() as temporary:
-        summary = _validate(records, Path(temporary))
+        summary = _validate(records, Path(temporary), initial_parameters)
     if any(manifest.get(key) != value for key, value in summary.items()):
         raise ValueError("Manifest summary does not match checkpoint records")
     roles = _roles(_config(records["coordinator"]))
