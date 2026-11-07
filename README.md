@@ -29,20 +29,32 @@ controlled scaling-performance measurements remain unverified. See the
 [Architecture](ARCHITECTURE.md) · [Evidence and methodology](BENCHMARKS.md) ·
 [Security boundaries](SECURITY.md) · [Roadmap](ROADMAP.md)
 
-## Tech stack
+## Skills and technology stack
 
-- **Language and packaging:** Python 3.12, `uv`, and a committed `uv.lock`.
-- **Distributed protocol:** gRPC and Protocol Buffers for coordinator, parameter
-  shards, and workers.
-- **Training:** CPU PyTorch and NumPy, with the documented `float32` workload
-  contract and shard-owned SGD updates.
-- **State and checkpoints:** SQLite state and journals, local checkpoints,
-  authenticated S3-compatible storage through SeaweedFS, and Azure Blob storage
-  validated locally with Azurite.
-- **Operations:** Docker Compose and Coolify, NATS lifecycle events, Prometheus
-  metrics, Grafana dashboards, OpenTelemetry traces with Tempo, and Loki logs.
-- **Delivery:** GitHub Actions, immutable GHCR images, PyPI Trusted Publishing,
-  and a Windows PyInstaller launcher.
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-CPU-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![NumPy](https://img.shields.io/badge/NumPy-2.3.4-013243?logo=numpy&logoColor=white)](https://numpy.org/)
+[![gRPC](https://img.shields.io/badge/gRPC-Protocol-244C5A?logo=googlecloud&logoColor=white)](https://grpc.io/)
+[![Protocol Buffers](https://img.shields.io/badge/Protocol_Buffers-6.33.5-4285F4?logo=google&logoColor=white)](https://protobuf.dev/)
+[![uv](https://img.shields.io/badge/uv-0.13.6-6E56CF?logo=python&logoColor=white)](https://docs.astral.sh/uv/)
+
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![Coolify](https://img.shields.io/badge/Coolify-hosted_deployment-6E56CF?logo=coolify&logoColor=white)](https://coolify.io/)
+[![NATS](https://img.shields.io/badge/NATS-lifecycle_events-27AAE1?logo=natsdotio&logoColor=white)](https://nats.io/)
+[![SQLite](https://img.shields.io/badge/SQLite-state_and_journals-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![SeaweedFS](https://img.shields.io/badge/SeaweedFS-S3_checkpoints-6B7280)](https://github.com/seaweedfs/seaweedfs)
+[![Azure Blob](https://img.shields.io/badge/Azure_Blob-checkpoints-0078D4?logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/products/storage/blobs)
+
+[![Prometheus](https://img.shields.io/badge/Prometheus-metrics-E6522C?logo=prometheus&logoColor=white)](https://prometheus.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-dashboards-F46800?logo=grafana&logoColor=white)](https://grafana.com/)
+[![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-traces-000000?logo=opentelemetry&logoColor=white)](https://opentelemetry.io/)
+[![Tempo](https://img.shields.io/badge/Tempo-trace_storage-F46800?logo=grafana&logoColor=white)](https://grafana.com/oss/tempo/)
+[![Loki](https://img.shields.io/badge/Loki-logs-F46800?logo=grafana&logoColor=white)](https://grafana.com/oss/loki/)
+
+[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI-2088FF?logo=githubactions&logoColor=white)](https://github.com/fetachino/paramesh/actions)
+[![GHCR](https://img.shields.io/badge/GHCR-immutable_images-2088FF?logo=github&logoColor=white)](https://github.com/fetachino/paramesh/pkgs/container/paramesh)
+[![PyPI](https://img.shields.io/badge/PyPI-paramesh-3775A9?logo=pypi&logoColor=white)](https://pypi.org/project/paramesh/)
+[![PyInstaller](https://img.shields.io/badge/PyInstaller-Windows_launcher-3776AB?logo=python&logoColor=white)](https://pyinstaller.org/)
 
 ![Successful recovery milestone quality and container jobs](docs/images/github-actions.png)
 
