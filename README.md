@@ -119,8 +119,10 @@ train_worker("127.0.0.1:50050", "worker-0", 20, workload=workload)
 
 The supplied model's named parameters use the same shape, dtype and finite-value
 checks as the bundled model. The adapter is currently a Python API; checkpoint
-CLI integration and a complete external-model example remain tracked in the
-post-v1 roadmap.
+export and restore accept the same workload's deterministic initial parameter
+mapping through `parameters_for(workload)`. The checkpoint CLI still uses the
+bundled reference workload, and a complete external-model example remains
+tracked in the post-v1 roadmap.
 
 ## Core capabilities
 

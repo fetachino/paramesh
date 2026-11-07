@@ -20,17 +20,24 @@ from paramesh.state import StateDB
 from paramesh.storage import LocalStore, S3Store
 from paramesh.tensors import encode, partition
 from paramesh.worker import train_worker
-from paramesh.workload import dataset, local_reference, model, parameters
+from paramesh.workload import (
+    TrainingWorkload,
+    dataset,
+    local_reference,
+    model,
+    parameters_for,
+)
 
 
-def partial_run(root):
+def partial_run(root, *, workload: TrainingWorkload | None = None):
     endpoints = []
     for _ in range(2):
         with socket.socket() as connection:
             connection.bind(("127.0.0.1", 0))
             endpoints.append(f"127.0.0.1:{connection.getsockname()[1]}")
     settings = config(mode=pb.SYNCHRONOUS, worker_ids=["worker-0"], shard_endpoints=endpoints)
-    initial = parameters()
+    active = workload or TrainingWorkload(model, dataset)
+    initial = parameters_for(active)
     owners = partition(initial, 2)
     with ExitStack() as stack:
         stores = {}
@@ -53,8 +60,8 @@ def partial_run(root):
             ],
         )
         session = coordinator.register("worker-0", 1)
-        network = model()
-        inputs, targets = dataset(0)
+        network = active.model_factory()
+        inputs, targets = active.dataset_factory(0)
         loss = torch.nn.functional.mse_loss(network(inputs), targets)
         torch.autograd.backward(loss)
         requests = [
@@ -88,8 +95,29 @@ def test_portable_checkpoint_restores_partial_step_and_matches_uninterrupted_sgd
     resume_restored(settings, restored)
 
 
-def resume_restored(settings, restored):
-    initial, owners = parameters(), partition(parameters(), 2)
+def test_external_workload_checkpoint_export_restore_and_resume(tmp_path):
+    def external_model() -> torch.nn.Linear:
+        torch.manual_seed(11)
+        return torch.nn.Linear(4, 1)
+
+    workload = TrainingWorkload(
+        model_factory=external_model,
+        dataset_factory=lambda _: dataset(0),
+    )
+    source = tmp_path / "source"
+    settings = partial_run(source, workload=workload)
+    store = LocalStore(tmp_path / "objects")
+    initial = parameters_for(workload)
+    manifest = export_checkpoint(source, store, "external", initial_parameters=initial)
+    restored = tmp_path / "restored"
+    assert restore_checkpoint(store, "external", restored, initial_parameters=initial) == manifest
+    resume_restored(settings, restored, workload=workload)
+
+
+def resume_restored(settings, restored, *, workload: TrainingWorkload | None = None):
+    active = workload or TrainingWorkload(model, dataset)
+    initial = parameters_for(active)
+    owners = partition(initial, 2)
     with ExitStack() as stack:
         shards = []
         for index in range(2):
@@ -110,10 +138,10 @@ def resume_restored(settings, restored):
         stack.callback(lambda: server.stop(0).wait())
         worker_db = StateDB(restored / "worker-0" / "worker-0.sqlite")
         stack.callback(worker_db.close)
-        result = train_worker(f"127.0.0.1:{port}", "worker-0", 4, state=worker_db)
+        result = train_worker(f"127.0.0.1:{port}", "worker-0", 4, state=worker_db, workload=active)
         assert result["replayed_contributions"] == 1
         assert coordinator.status().global_step == 4
-        expected = local_reference(1, 4, settings.learning_rate)
+        expected = local_reference(1, 4, settings.learning_rate, workload=active)
         error = 0.0
         for shard in shards:
             assert shard.version == 4
