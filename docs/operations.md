@@ -5,6 +5,14 @@ No managed cloud account is needed. Operations add several CPU/memory consumers;
 their displayed timings are observations of this machine, not scaling claims.
 
 ```powershell
+python scripts/quickstart.py
+```
+
+This creates the clone's ignored credentials before starting Compose and prints
+the dashboard and Grafana URLs. Use `--no-build` to reuse an existing local image.
+The equivalent individual commands are:
+
+```powershell
 python scripts/create_dev_env.py --operations
 docker compose --profile operations up --build -d
 docker compose exec coordinator paramesh status --coordinator coordinator:50050

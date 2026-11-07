@@ -253,6 +253,19 @@ for demonstrations. A larger target continues an existing run. The separate
 
 ## Inspect the operations stack
 
+For a fresh clone, one command creates ignored credentials, starts the operations
+profile, and prints the local operator URLs:
+
+```powershell
+python scripts/quickstart.py
+```
+
+Use `python scripts/quickstart.py --no-build` after the application image already
+exists. The wrapper runs `create_dev_env.py --operations` first; rerunning it
+preserves existing credentials.
+
+The equivalent individual commands are:
+
 ```powershell
 python scripts/create_dev_env.py --operations
 docker compose --profile operations up --build -d
