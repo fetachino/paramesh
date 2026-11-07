@@ -9,6 +9,8 @@ cluster support.
 - **Standalone Windows evaluation:** Windows 10/11 AMD64, the bundled `paramesh-try.exe`,
   two local workers, two local parameter shards, synchronous CPU training, and a
   disposable JSON/browser report.
+- **Packaged local evaluation:** the `paramesh-local` entry point exposes the same
+  no-Docker result page once the package is installed with the `train` extra.
 - **Developer workflow:** Python 3.12 with the locked dependencies on Windows AMD64,
   Linux x86-64, or Linux ARM64 where the locked wheels are available.
 - **Team/operations workflow:** Docker Compose on a Linux x86-64 host with the

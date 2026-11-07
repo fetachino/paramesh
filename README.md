@@ -383,6 +383,11 @@ workload and local report storage. Team deployments, persistent checkpoints, obs
 and hosted operation continue to use Docker Compose. Neither executable accesses hosted
 production.
 
+The same no-Docker launcher is packaged as `paramesh-local` for the planned Python
+distribution path. After a published package is available, install the train extra
+with `pipx install "paramesh[train]"` and run `paramesh-local`; until then, use the
+locked clean-clone workflow or download the Windows bundle above.
+
 See the [supported contract](docs/supported-contract.md) for tested boundaries and the
 [adoption feedback template](docs/adoption-feedback-template.md) for a sanitized evaluation
 report that does not collect credentials or customer data.
