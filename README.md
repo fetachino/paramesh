@@ -29,6 +29,21 @@ controlled scaling-performance measurements remain unverified. See the
 [Architecture](ARCHITECTURE.md) · [Evidence and methodology](BENCHMARKS.md) ·
 [Security boundaries](SECURITY.md) · [Roadmap](ROADMAP.md)
 
+## Tech stack
+
+- **Language and packaging:** Python 3.12, `uv`, and a committed `uv.lock`.
+- **Distributed protocol:** gRPC and Protocol Buffers for coordinator, parameter
+  shards, and workers.
+- **Training:** CPU PyTorch and NumPy, with the documented `float32` workload
+  contract and shard-owned SGD updates.
+- **State and checkpoints:** SQLite state and journals, local checkpoints,
+  authenticated S3-compatible storage through SeaweedFS, and Azure Blob storage
+  validated locally with Azurite.
+- **Operations:** Docker Compose and Coolify, NATS lifecycle events, Prometheus
+  metrics, Grafana dashboards, OpenTelemetry traces with Tempo, and Loki logs.
+- **Delivery:** GitHub Actions, immutable GHCR images, PyPI Trusted Publishing,
+  and a Windows PyInstaller launcher.
+
 ![Successful recovery milestone quality and container jobs](docs/images/github-actions.png)
 
 Actual GitHub Actions results for the recovery milestone; [run details](https://github.com/fetachino/paramesh/actions/runs/41349354085).
