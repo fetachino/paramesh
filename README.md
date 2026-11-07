@@ -129,6 +129,20 @@ functions (avoid lambdas or nested functions). See the runnable
 python examples/external_linear.py
 ```
 
+The same external workload interface has verified small CPU examples for three model
+families:
+
+```powershell
+python examples/external_model_families.py linear
+python examples/external_model_families.py cnn
+python examples/external_model_families.py transformer
+```
+
+These are bounded contract examples, not a claim of arbitrary PyTorch compatibility:
+they use spawn-safe factories, finite float32 parameters, synchronous CPU SGD, and
+the existing two-worker/two-shard process harness. See the [supported contract](docs/supported-contract.md)
+for the exact checkpoint and model-state boundaries.
+
 The example exercises two workers, two shards, synchronous SGD, numerical
 agreement with a local reference, and the normal dashboard-free process
 harness. The checkpoint CLI still uses the bundled reference workload; external

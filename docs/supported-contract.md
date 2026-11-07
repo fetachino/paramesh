@@ -19,7 +19,13 @@ cluster support.
 
 - The external Python API accepts a spawn-safe model factory and per-worker dataset
   factory with compatible finite float32 parameter tensors.
+- The repository has verified external examples for three small CPU model families:
+  a linear regressor, an image-shaped convolutional network, and a sequence-shaped
+  transformer encoder. Run them with `python examples/external_model_families.py
+  linear`, `cnn`, or `transformer`.
 - The bundled CLI and checkpoint validator support the deterministic reference MLP.
+- These examples define the current tested contract; they do not imply arbitrary
+  PyTorch model, optimizer, device, or distributed-data-loader support.
 - Checkpoint restore requires compatible parameter names, shapes, dtype, optimizer
   settings, shard count, and protocol/state schema. Do not mix incompatible shard
   volumes or restore into a live run.

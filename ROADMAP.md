@@ -86,6 +86,9 @@ boundary before adding GPUs, Kubernetes or high availability:
 
 - [x] Define a stable external PyTorch model/training interface and preserve the
       bundled MLP as the deterministic reference workload.
+- [x] Verify the external workload interface with deterministic linear, small CNN,
+      and small transformer CPU examples; keep arbitrary-model support out of the
+      contract.
 - [x] Add one end-to-end example using an external model, with numerical
       correctness evidence; checkpoint and worker-restart coverage remain in the
       shared API and recovery suites.

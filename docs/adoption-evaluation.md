@@ -33,6 +33,18 @@ uv sync --locked --all-extras --python 3.12
 .\.venv\Scripts\python.exe examples\external_linear.py
 ```
 
+The same clean-clone path includes three bounded model-family checks:
+
+```powershell
+\.\.venv\Scripts\python.exe examples\external_model_families.py linear
+\.\.venv\Scripts\python.exe examples\external_model_families.py cnn
+\.\.venv\Scripts\python.exe examples\external_model_families.py transformer
+```
+
+These examples verify the tested CPU contract for a linear regressor, a small
+convolutional network, and a small transformer encoder. They do not claim arbitrary
+PyTorch model or device support.
+
 For a repeatable comparison, use a new output directory and record the commit
 printed in the manifest:
 
