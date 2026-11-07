@@ -31,6 +31,24 @@ def bundled_workload(hidden_width: int = 8) -> TrainingWorkload:
     )
 
 
+def linear_workload() -> TrainingWorkload:
+    """Return the deterministic external linear-model example."""
+
+    return TrainingWorkload(linear_model, linear_dataset)
+
+
+def cnn_workload() -> TrainingWorkload:
+    """Return the deterministic small image-classification-style example."""
+
+    return TrainingWorkload(cnn_model, cnn_dataset)
+
+
+def transformer_workload() -> TrainingWorkload:
+    """Return the deterministic small sequence-model example."""
+
+    return TrainingWorkload(transformer_model, transformer_dataset)
+
+
 def model(hidden_width: int = 8) -> nn.Sequential:
     if type(hidden_width) is not int or not 1 <= hidden_width <= 32768:
         raise ValueError("Hidden width must be an integer in 1..32768")
@@ -73,6 +91,57 @@ def dataset(worker_index: int) -> tuple[torch.Tensor, torch.Tensor]:
     inputs = torch.randn(32, 4, generator=generator)
     targets = inputs @ torch.tensor([[1.0], [-2.0], [0.5], [3.0]]) + 0.25
     return inputs, targets
+
+
+def linear_model() -> nn.Linear:
+    torch.manual_seed(11)
+    return nn.Linear(4, 1)
+
+
+def linear_dataset(worker_index: int) -> tuple[torch.Tensor, torch.Tensor]:
+    generator = torch.Generator().manual_seed(200 + worker_index)
+    inputs = torch.randn(32, 4, generator=generator)
+    weights = torch.tensor([[1.0], [-2.0], [0.5], [3.0]])
+    return inputs, inputs @ weights + 0.25
+
+
+def cnn_model() -> nn.Sequential:
+    torch.manual_seed(12)
+    return nn.Sequential(
+        nn.Conv2d(1, 4, kernel_size=3, padding=1),
+        nn.ReLU(),
+        nn.AdaptiveAvgPool2d((1, 1)),
+        nn.Flatten(),
+        nn.Linear(4, 1),
+    )
+
+
+def cnn_dataset(worker_index: int) -> tuple[torch.Tensor, torch.Tensor]:
+    generator = torch.Generator().manual_seed(300 + worker_index)
+    inputs = torch.randn(16, 1, 8, 8, generator=generator)
+    return inputs, inputs.mean(dim=(1, 2, 3), keepdim=False).unsqueeze(1)
+
+
+def transformer_model() -> nn.Sequential:
+    torch.manual_seed(13)
+    encoder = nn.TransformerEncoderLayer(
+        d_model=8,
+        nhead=2,
+        dim_feedforward=16,
+        dropout=0.0,
+        batch_first=True,
+    )
+    return nn.Sequential(
+        nn.TransformerEncoder(encoder, num_layers=1),
+        nn.Flatten(start_dim=1),
+        nn.Linear(6 * 8, 1),
+    )
+
+
+def transformer_dataset(worker_index: int) -> tuple[torch.Tensor, torch.Tensor]:
+    generator = torch.Generator().manual_seed(400 + worker_index)
+    inputs = torch.randn(16, 6, 8, generator=generator)
+    return inputs, inputs.mean(dim=(1, 2), keepdim=False).unsqueeze(1)
 
 
 def local_reference(
