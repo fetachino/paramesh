@@ -135,6 +135,12 @@ source metadata and numerical checks in the same artifact schema. Keep the model
 dataset, optimizer and update budget identical when comparing modes; the existing
 warnings about different commit semantics still apply.
 
+Completed manifests can be shown in the authenticated dashboard Evidence page by setting
+`PARAMESH_EXTERNAL_ARTIFACTS_DIR` to the artifact directory before starting the operations
+Compose profile (for example, `python scripts/quickstart.py --no-build`).
+Rows are labeled `external workload` and remain read-only post-run evidence; the dashboard does
+not claim live monitoring of a separate external process harness.
+
 Each worker records start/end with the same host's system-wide monotonic performance
 clock. The aggregate window spans the earliest measured start through the latest
 end, excluding result serialization and model evaluation. Processed examples equal

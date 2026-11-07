@@ -245,6 +245,9 @@ def main() -> None:
             os.environ.get("PARAMESH_PROMETHEUS_URL", "http://prometheus:9090"),
             os.environ.get("PARAMESH_TEMPO_URL", "http://tempo:3200"),
             Path(os.environ.get("PARAMESH_EVIDENCE_DIR", "docs/evidence")),
+            Path(os.environ["PARAMESH_EXTERNAL_ARTIFACTS_DIR"])
+            if os.environ.get("PARAMESH_EXTERNAL_ARTIFACTS_DIR")
+            else None,
         )
         http = DashboardServer(
             (args.bind, args.port),

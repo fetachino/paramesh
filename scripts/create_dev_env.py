@@ -6,12 +6,12 @@ import secrets
 from pathlib import Path
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--operations", action="store_true", help="Add local demo exporter settings"
     )
-    arguments = parser.parse_args()
+    arguments = parser.parse_args(argv)
     path = Path(__file__).resolve().parents[1] / ".env"
     names = (
         "PARAMESH_RPC_TOKEN",

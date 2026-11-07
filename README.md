@@ -136,6 +136,19 @@ checkpoint export and restore use the deterministic initial mapping returned by
 `parameters_for(workload)`. The test suite also covers the external workload in
 asynchronous and bounded-staleness modes and after a worker restart.
 
+To show a completed external run in the operator dashboard, set the artifact
+directory before starting it:
+
+```powershell
+$env:PARAMESH_EXTERNAL_ARTIFACTS_DIR = (Resolve-Path artifacts/external-linear)
+python scripts/quickstart.py --no-build
+```
+
+The Compose dashboard mounts that directory read-only and labels its rows
+**external workload**. This is a read-only post-run manifest view, not live
+telemetry from the separate process harness. Leave the variable unset when no
+external artifact directory should be mounted.
+
 ## Core capabilities
 
 | Area | Working behavior |
@@ -301,6 +314,15 @@ checkpoint publication, recovery, evidence checks and limits.
 `python scripts/verify_operations.py --isolated` starts an owned synthetic stack,
 verifies real backend data and private ports, then removes only its test resources.
 The CI container job runs both Compose verifiers against the built image.
+
+### Windows download option
+
+If Docker Desktop is installed, users can either download the `paramesh-windows-launcher`
+bundle from the manually triggered **Windows launcher bundle** GitHub Actions workflow,
+extract it, and run `paramesh-launcher.exe`, or clone the repository and use the terminal
+commands above. The executable is a convenience launcher, not a Docker replacement: it
+still needs Docker Desktop and the bundled Compose files, creates the same ignored `.env`,
+and starts the same local operations stack. It does not access hosted production.
 
 ## Verification and testing
 

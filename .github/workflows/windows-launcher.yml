@@ -1,0 +1,33 @@
+name: Windows launcher bundle
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build launcher
+        run: |
+          python -m pip install --disable-pip-version-check pyinstaller==6.16.0
+          pyinstaller --onefile --name paramesh-launcher scripts/windows_launcher.py
+      - name: Assemble bundle
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force bundle/scripts | Out-Null
+          Copy-Item dist/paramesh-launcher.exe bundle/
+          Copy-Item scripts/quickstart.py,scripts/create_dev_env.py bundle/scripts/
+          Copy-Item compose.yaml,Dockerfile,pyproject.toml,uv.lock,README.md bundle/
+          Copy-Item -Recurse deploy,src bundle/
+          Compress-Archive -Path bundle/* -DestinationPath paramesh-windows-launcher.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paramesh-windows-launcher
+          path: paramesh-windows-launcher.zip
