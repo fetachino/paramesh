@@ -146,6 +146,63 @@ def test_actual_supported_host_inventory_is_recorded():
     assert inventory["clock"]["monotonic"]
 
 
+def test_benchmark_forwards_external_workload_to_trials(tmp_path, monkeypatch):
+    from paramesh import benchmarks
+
+    workload = object()
+    seen = []
+
+    def fixture_run(**options):
+        assert options["workload"] is workload
+        seen.append(options["mode"])
+        raw = {
+            "mode": options["mode"],
+            "environment": {"commit": "unit-fixture", "source_dirty": False},
+            "workload": {"samples_per_worker": 1},
+            "final_loss": 0.1,
+            "max_parameter_error": 0.0 if options["mode"] == "sync" else None,
+            "warmup": {"shard_versions": [1], "loss": 0.3},
+            "shard_versions": [2],
+            "worker_results": [
+                {
+                    "worker_id": "worker-0",
+                    "losses": [0.2],
+                    "measurement": {
+                        "start": 1.0,
+                        "end": 2.0,
+                        "sample_drops": 0,
+                        "rpc_samples": [
+                            {
+                                "method": method,
+                                "status": "OK",
+                                "duration_seconds": 0.001,
+                                "request_bytes": 20,
+                                "response_bytes": 30,
+                            }
+                            for method in ["PushGradients", "PullParameters"]
+                        ],
+                    },
+                }
+            ],
+        }
+        options["output"].write_text(json.dumps(raw))
+        return raw
+
+    monkeypatch.setattr(benchmarks, "run_demo", fixture_run)
+    monkeypatch.setattr(benchmarks, "hardware", lambda: {"cpu_model": "unit-fixture"})
+    benchmarks.run_benchmarks(
+        tmp_path / "external",
+        modes=("sync",),
+        repetitions=1,
+        warmup_steps=1,
+        measured_steps=1,
+        workers=1,
+        shards=1,
+        workload=workload,
+    )
+    assert seen == ["sync"]
+
+
 def test_recovery_benchmark_keeps_raw_trials_and_rejects_false_recovery(tmp_path, monkeypatch):
     from paramesh import recovery_benchmarks as benchmarks
 

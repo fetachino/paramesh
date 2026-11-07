@@ -15,6 +15,7 @@ from typing import Any
 import numpy as np
 
 from paramesh.demo import MODES, run_demo
+from paramesh.workload import TrainingWorkload
 
 
 def hardware() -> dict[str, Any]:
@@ -181,6 +182,7 @@ def run_benchmarks(
     workers: int = 2,
     shards: int = 2,
     hidden_width: int = 8,
+    workload: TrainingWorkload | None = None,
 ) -> dict[str, Any]:
     counts = (repetitions, warmup_steps, measured_steps, workers, shards, hidden_width)
     if (
@@ -253,6 +255,7 @@ def run_benchmarks(
                         workers=workers,
                         shards=shards,
                         hidden_width=hidden_width,
+                        workload=workload,
                         output=output / f"trial-{index:03d}-{mode}.json",
                     )
                     row = {
