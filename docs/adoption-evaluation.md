@@ -55,6 +55,10 @@ worker/shard counts, observed recovery expectations, and blockers. Do not share
 credentials, customer data, private endpoints, checkpoint files, or raw logs
 containing authentication metadata.
 
+If sharing through GitHub, use the repository's **Adoption feedback** issue form;
+it repeats the privacy warning and collects only the fields needed for the Level 3
+evidence review.
+
 An evaluator is considered independently validated only when they complete the
 workflow without project-author assistance and return a reproducible summary.
 ParamMesh will not claim adoption until multiple independent summaries exist.

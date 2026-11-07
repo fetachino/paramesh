@@ -1,0 +1,87 @@
+name: Adoption feedback
+description: Share sanitized results from an independent ParamMesh evaluation
+title: "[Adoption feedback]: "
+labels: ["adoption-feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Follow docs/adoption-evaluation.md first. Do not post passwords, tokens,
+        private keys, customer data, private endpoints, checkpoint files, or
+        unredacted logs. Use a pseudonym; personal identity is not required.
+  - type: input
+    id: evaluator
+    attributes:
+      label: Evaluator pseudonym
+      description: A project or researcher pseudonym; do not include personal data.
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Artifact run or source revision
+      description: GitHub Actions run number, downloaded artifact identity, or commit SHA.
+    validations:
+      required: true
+  - type: dropdown
+    id: path
+    attributes:
+      label: Evaluation path
+      options:
+        - Standalone Windows executable
+        - Clean clone and external PyTorch example
+        - Docker Compose operations stack
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Platform
+      description: OS, architecture, and relevant Python/Docker version; no private hostnames.
+    validations:
+      required: true
+  - type: input
+    id: setup_time
+    attributes:
+      label: Minutes to first result
+      description: Approximate elapsed time from download/clone to the first successful result.
+    validations:
+      required: true
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: First-run outcome
+      options:
+        - Completed without assistance
+        - Completed after troubleshooting
+        - Blocked before a result
+    validations:
+      required: true
+  - type: textarea
+    id: workload
+    attributes:
+      label: High-level workload
+      description: Model family, approximate size, worker/shard counts, and mode; no model files or data.
+    validations:
+      required: true
+  - type: textarea
+    id: recovery
+    attributes:
+      label: Recovery expectations and observations
+      description: Describe checkpoint or worker-restart expectations at a high level, if tested.
+    validations:
+      required: false
+  - type: textarea
+    id: blockers
+    attributes:
+      label: Biggest blocker or improvement
+      description: What was confusing, missing, or most valuable?
+    validations:
+      required: true
+  - type: checkboxes
+    id: sanitized
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I removed credentials, private endpoints, customer data, checkpoint files, and sensitive logs.
+          required: true
