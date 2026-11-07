@@ -262,8 +262,9 @@ python scripts/quickstart.py
 ```
 
 Use `python scripts/quickstart.py --no-build` after the application image already
-exists. The wrapper runs `create_dev_env.py --operations` first; rerunning it
-preserves existing credentials.
+exists. If the default UI ports are occupied, pass alternatives such as
+`--dashboard-port 18080 --grafana-port 13000`. The wrapper runs
+`create_dev_env.py --operations` first; rerunning it preserves existing credentials.
 
 The equivalent individual commands are:
 

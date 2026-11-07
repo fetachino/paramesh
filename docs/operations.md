@@ -10,6 +10,8 @@ python scripts/quickstart.py
 
 This creates the clone's ignored credentials before starting Compose and prints
 the dashboard and Grafana URLs. Use `--no-build` to reuse an existing local image.
+Pass `--dashboard-port` and `--grafana-port` when another local stack already
+occupies the defaults.
 The equivalent individual commands are:
 
 ```powershell
