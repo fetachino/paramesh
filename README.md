@@ -534,5 +534,6 @@ benchmarks and remaining release work follow in [ROADMAP.md](ROADMAP.md).
 - [Python package publication](docs/pypi-publishing.md)
 - [Release-readiness audit and deployment limits](docs/release-readiness.md)
 - [v1.0.0 release candidate notes](docs/releases/v1.0.0.md)
+- [v1.1.0 release candidate notes](docs/releases/v1.1.0.md)
 - [Changelog](CHANGELOG.md)
 - [Security model](SECURITY.md)
