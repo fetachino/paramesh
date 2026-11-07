@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "captured_at": "2026-11-07T14:25:20.523087+00:00",
+  "configuration": {
+    "workers": [
+      1,
+      2,
+      4
+    ],
+    "repetitions": 1,
+    "warmup_steps": 2,
+    "measured_steps": 6,
+    "shards": 2,
+    "mode": "sync",
+    "comparison": "ParamMesh process harness versus single-process PyTorch SGD"
+  },
+  "hardware": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "machine": "AMD64",
+    "logical_cpu_count": 24,
+    "cpu_model": [
+      "13th Gen Intel(R) Core(TM) i7-13700F"
+    ],
+    "memory_bytes": 34055766016,
+    "clock": {
+      "implementation": "QueryPerformanceCounter()",
+      "monotonic": true,
+      "adjustable": false,
+      "resolution": 1e-07
+    },
+    "load_isolation": "uncontrolled workstation; background services may affect results"
+  },
+  "environment": {
+    "python": "3.12.10",
+    "os": "Windows",
+    "machine": "AMD64",
+    "commit": "b5b55c52e58c8b83c062a725b0f83081e3387634",
+    "source_dirty": false,
+    "lock_sha256": "7e99a1ee2456a920ce230474a94c6421cee7baa7248435af1882765f76181087"
+  },
+  "rows": [
+    {
+      "implementation": "reference",
+      "trial": 0,
+      "repetition": 1,
+      "workers": 1,
+      "shards": "",
+      "steps": 6,
+      "warmup_steps": 2,
+      "elapsed_seconds": 0.0023798000038368627,
+      "examples_per_second": 80679.0485294754,
+      "final_loss": 2.3293213844299316,
+      "max_parameter_error": "",
+      "failure_type": ""
+    },
+    {
+      "implementation": "paramesh",
+      "trial": 0,
+      "repetition": 1,
+      "workers": 1,
+      "shards": 2,
+      "steps": 6,
+      "warmup_steps": 2,
+      "elapsed_seconds": 4.58758000000671,
+      "examples_per_second": 41.85213118893167,
+      "final_loss": 2.3293211460113525,
+      "max_parameter_error": 5.960464477539063e-08,
+      "failure_type": ""
+    },
+    {
+      "implementation": "reference",
+      "trial": 1,
+      "repetition": 1,
+      "workers": 2,
+      "shards": "",
+      "steps": 6,
+      "warmup_steps": 2,
+      "elapsed_seconds": 0.002723500001593493,
+      "examples_per_second": 140995.0430605197,
+      "final_loss": 2.6959614753723145,
+      "max_parameter_error": "",
+      "failure_type": ""
+    },
+    {
+      "implementation": "paramesh",
+      "trial": 1,
+      "repetition": 1,
+      "workers": 2,
+      "shards": 2,
+      "steps": 6,
+      "warmup_steps": 2,
+      "elapsed_seconds": 4.256580000001122,
+      "examples_per_second": 90.21326980813205,
+      "final_loss": 2.6959614753723145,
+      "max_parameter_error": 8.940696716308594e-08,
+      "failure_type": ""
+    },
+    {
+      "implementation": "reference",
+      "trial": 2,
+      "repetition": 1,
+      "workers": 4,
+      "shards": "",
+      "steps": 6,
+      "warmup_steps": 2,
+      "elapsed_seconds": 0.0027786999999079853,
+      "examples_per_second": 276388.23911376967,
+      "final_loss": 2.4003067016601562,
+      "max_parameter_error": "",
+      "failure_type": ""
+    },
+    {
+      "implementation": "paramesh",
+      "trial": 2,
+      "repetition": 1,
+      "workers": 4,
+      "shards": 2,
+      "steps": 6,
+      "warmup_steps": 2,
+      "elapsed_seconds": 4.806079300004058,
+      "examples_per_second": 159.79761299389122,
+      "final_loss": 2.4003067016601562,
+      "max_parameter_error": 5.960464477539063e-08,
+      "failure_type": ""
+    }
+  ]
+}
