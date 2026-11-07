@@ -46,6 +46,39 @@ def test_process_harness_accepts_external_workload(tmp_path):
 
 @pytest.mark.distributed
 @pytest.mark.parametrize("mode", ["async", "bounded"])
+def test_external_workload_trains_in_other_modes(mode, tmp_path):
+    result = run_demo(
+        mode=mode,
+        steps=6,
+        workers=2,
+        shards=2,
+        workload=TrainingWorkload(external_model, external_dataset),
+        output=tmp_path / f"external-{mode}.json",
+    )
+    assert result["shard_versions"] == [12, 12]
+    assert result["final_loss"] < result["initial_loss"]
+    assert result["max_parameter_error"] is None
+
+
+@pytest.mark.distributed
+def test_external_workload_recovers_after_worker_restart(tmp_path):
+    result = run_demo(
+        mode="sync",
+        steps=15,
+        workers=2,
+        shards=2,
+        failure="worker",
+        workload=TrainingWorkload(external_model, external_dataset),
+        output=tmp_path / "external-recovery.json",
+    )
+    assert result["shard_versions"] == [15, 15]
+    assert result["failure"]["terminated_component"] == "worker-0"
+    assert result["final_loss"] < result["initial_loss"]
+    assert result["max_parameter_error"] < 1e-6
+
+
+@pytest.mark.distributed
+@pytest.mark.parametrize("mode", ["async", "bounded"])
 def test_independent_workers_train_in_other_modes(mode, tmp_path):
     result = run_demo(mode=mode, steps=6, workers=2, shards=2, output=tmp_path / "run.json")
     assert result["shard_versions"] == [12, 12]
