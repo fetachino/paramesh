@@ -132,6 +132,11 @@ and deliberately paced recovery evidence above.
 use the same two-worker/two-shard correctness path with 31.4x larger raw gradient
 payloads. They remain local loopback measurements and do not justify compression.
 
+[Private-VPC two-host trials](benchmarks/gcp-multihost-performance-2026-11-07/README.md)
+record two clean Linux runs, a same-host baseline, immutable image identity, and
+the remaining topology limits. Local 1/2/4/8-worker scaling is covered separately
+by the [eight-worker matrix](benchmarks/scaling-matrix-local-2026-11-07-eight-worker/README.md).
+
 ## Local readiness audit
 
 [Readiness record](release-readiness.json) links a fresh GitHub clone/new locked
