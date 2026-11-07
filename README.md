@@ -331,6 +331,10 @@ workload and local report storage. Team deployments, persistent checkpoints, obs
 and hosted operation continue to use Docker Compose. Neither executable accesses hosted
 production.
 
+See the [supported contract](docs/supported-contract.md) for tested boundaries and the
+[adoption feedback template](docs/adoption-feedback-template.md) for a sanitized evaluation
+report that does not collect credentials or customer data.
+
 ### Example: a small demand-forecasting prototype
 
 Imagine a retail team testing a demand-forecasting model before committing to a larger
