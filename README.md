@@ -331,6 +331,54 @@ workload and local report storage. Team deployments, persistent checkpoints, obs
 and hosted operation continue to use Docker Compose. Neither executable accesses hosted
 production.
 
+### Example: a small demand-forecasting prototype
+
+Imagine a retail team testing a demand-forecasting model before committing to a larger
+training platform. They can split a deterministic training batch by region, run one worker
+per region, keep parameters on two shards, and use a checkpoint before changing the worker
+pool. If a worker disappears, the team can restart that worker and compare the resumed result
+with the uninterrupted reference run. ParamMesh is designed for this kind of inspectable,
+small-team experiment: worker leases, shard versions, checkpoint state, and recovery history
+are visible instead of hidden behind a cluster scheduler.
+
+The downloadable no-Docker demo uses a bundled synthetic regression workload so it is safe to
+try without customer data. It demonstrates the process topology and result workflow; it does
+not claim forecast quality or support arbitrary models through the executable yet.
+
+#### Step-by-step: try the local demo
+
+1. Install Windows 10/11 on an AMD64 machine. No Python or Docker installation is required
+   for this mode.
+2. Sign in to GitHub, open the [Windows launcher workflow](https://github.com/fetachino/paramesh/actions/workflows/windows-launcher.yml),
+   select the latest successful run, and open **Artifacts**.
+3. Download `paramesh-windows-launcher.zip` and extract it to a folder you control, such as
+   `C:\Tools\ParamMesh`.
+4. Double-click `paramesh-try.exe`. If Windows SmartScreen appears, verify that you downloaded
+   the artifact from the ParamMesh GitHub Actions run and choose **More info → Run anyway**.
+5. The program starts two workers and two shards, runs synchronous training, and opens a local
+   result page. If it does not open automatically, browse to the printed address, normally
+   [http://127.0.0.1:8765](http://127.0.0.1:8765).
+6. Review the initial/final loss, shard versions, worker count, and reference error. Use
+   **Download report JSON** to keep the result for your own notes. Reports are stored under
+   `%USERPROFILE%\.paramesh\runs\` unless you choose another output directory.
+7. Close the terminal window or press `Ctrl+C` when finished. The run is disposable; it does
+   not modify the hosted deployment or any production credentials.
+
+#### Step-by-step: run the team operations mode
+
+For persistent checkpoints, Grafana, Prometheus, Loki, Tempo, NATS, and the authenticated
+operations dashboard:
+
+1. Install Docker Desktop with Linux containers enabled.
+2. Extract the same bundle and run `paramesh-launcher.exe`.
+3. Open [http://127.0.0.1:8080](http://127.0.0.1:8080) for the dashboard or
+   [http://127.0.0.1:3000](http://127.0.0.1:3000) for Grafana.
+4. Sign in with username `operator`. The generated passwords are kept in the bundle's local
+   ignored `.env`; they are not shared by the repository or the download.
+5. Use this mode when the experiment needs durable state, recovery testing, or operational
+   evidence. Keep customer data out of the demo until you have reviewed the security and
+   storage guidance in [docs/operations.md](docs/operations.md).
+
 ## Verification and testing
 
 ```powershell
