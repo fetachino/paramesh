@@ -19,7 +19,8 @@ changing the production deployment or the v1.0.0 tag.
 ## Phase 3: installation and recovery UX
 
 - [ ] Make the Python path a single documented command (`uvx`/`pipx` or equivalent) while retaining the Windows executable.
-- [ ] Add a one-command recovery demo that captures worker interruption, checkpoint restore, final-state comparison, and dashboard evidence.
+- [x] Add a one-command recovery demo that captures worker/shard interruption, numerical recovery, and dashboard evidence.
+- [ ] Extend the recovery demo with a coordinated checkpoint-abort/resume walkthrough before claiming full checkpoint UX.
 - [ ] Add focused tests and documentation for each user path.
 
 ## Checkpoint

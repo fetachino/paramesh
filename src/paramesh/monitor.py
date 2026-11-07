@@ -342,7 +342,9 @@ class ClusterView:
                     raise ValueError("External artifact exceeds size limit")
                 document = json.loads(payload)
                 for trial in document.get("trials", []):
-                    if isinstance(trial, dict) and trial.get("mode"):
+                    if not isinstance(trial, dict):
+                        continue
+                    if trial.get("mode"):
                         reports.append(
                             dict(
                                 trial,
@@ -354,6 +356,32 @@ class ClusterView:
                                 evidence_source="external workload",
                                 evidence_manifest=manifest.name,
                                 workload=document.get("workload"),
+                            )
+                        )
+                    elif trial.get("failure"):
+                        configuration = document.get("configuration", {})
+                        steps = configuration.get("steps_per_worker")
+                        reports.append(
+                            dict(
+                                trial,
+                                mode="sync",
+                                steps_per_worker=steps,
+                                worker_count=configuration.get("workers"),
+                                shard_versions=[steps] * configuration.get("shards", 2),
+                                failure={
+                                    "terminated_component": f"{trial['failure']}-0",
+                                    "detection_seconds": trial.get("detection_seconds"),
+                                    "recovery_seconds_until_progress": trial.get(
+                                        "recovery_seconds_until_progress"
+                                    ),
+                                    "step_delay_seconds": configuration.get("step_delay_seconds"),
+                                },
+                                environment={
+                                    "commit": trial.get("commit"),
+                                    "source_dirty": trial.get("source_dirty", False),
+                                },
+                                evidence_source="external recovery",
+                                evidence_manifest=manifest.name,
                             )
                         )
         return reports
