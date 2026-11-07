@@ -32,7 +32,10 @@ services:
       PARAMESH_DASHBOARD_PASSWORD: ${PARAMESH_DASHBOARD_PASSWORD:-}
       PARAMESH_COOKIE_SECURE: ${PARAMESH_COOKIE_SECURE:-false}
       PARAMESH_EVIDENCE_DIR: /app/evidence
-    volumes: [dashboard-state:/app/state]
+      PARAMESH_EXTERNAL_ARTIFACTS_DIR: ${PARAMESH_EXTERNAL_ARTIFACTS_DIR_CONTAINER:-/app/external-artifacts}
+    volumes:
+      - dashboard-state:/app/state
+      - ${PARAMESH_EXTERNAL_ARTIFACTS_DIR:-./artifacts}:/app/external-artifacts:ro
     ports: ['127.0.0.1:${PARAMESH_DASHBOARD_PORT:-8080}:8080']
     restart: unless-stopped
     healthcheck:

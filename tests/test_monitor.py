@@ -100,6 +100,11 @@ def test_monitor_samples_authenticated_rpc_and_rejects_bad_backend_shapes(tmp_pa
         view.evidence.mkdir()
         (view.evidence / "sync-cpu.json").write_text('{"mode":"sync"}')
         assert view.benchmarks() == [{"mode": "sync"}]
+        external = tmp_path / "external"
+        external.mkdir()
+        (external / "manifest.json").write_text('{"trials":[{"mode":"async","final_loss":0.5}]}')
+        view.external_artifacts = external
+        assert view.benchmarks()[-1]["evidence_source"] == "external workload"
         view.close()
         backend["bad"] = True
         registry.stop(0).wait()

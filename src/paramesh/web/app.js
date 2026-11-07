@@ -261,8 +261,8 @@ function renderEvidence() {
     restored.append(node("p", `Fresh-volume install and S3 round trip · source ${restore.source_commit.slice(0, 7)}${restore.source_dirty ? " (development tree)" : ""}. This recorded check is separate from the latest observed publication below.`, "panel-note"));
   } else empty(restored, "No recorded whole-run restore report is available.");
   const body = $("benchmark-body"); body.replaceChildren();
-  for (const report of evidence.filter((item) => item.mode && !item.failure)) cells(body, [report.mode, format(report.initial_loss, 4), format(report.final_loss, 4), (report.shard_versions || []).join(", "), report.max_parameter_error === null ? "Different update semantics" : format(report.max_parameter_error, 9), node("code", (report.environment?.commit || "unknown").slice(0, 7))]);
-  if (!body.children.length) noRows(body, 6, "No captured run reports are available.");
+  for (const report of evidence.filter((item) => item.mode && !item.failure)) cells(body, [report.mode, format(report.initial_loss, 4), format(report.final_loss, 4), (report.shard_versions || report.shard_commit_deltas || []).toString().replaceAll(",", ", "), report.max_parameter_error === null ? "Different update semantics" : format(report.max_parameter_error, 9), node("code", (report.environment?.commit || report.commit || "unknown").slice(0, 7)), report.evidence_source || "repository evidence"]);
+  if (!body.children.length) noRows(body, 7, "No captured run reports are available.");
   const failures = evidence.filter((item) => item.failure), summary = $("recovery-evidence"), bars = $("failure-bars");
   summary.replaceChildren(); bars.replaceChildren();
   const maximum = Math.max(1, ...failures.map((report) => report.failure.recovery_seconds_until_progress));

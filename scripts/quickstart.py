@@ -15,9 +15,18 @@ def main(argv: list[str] | None = None) -> None:
         "--no-build", action="store_true", help="Reuse the existing local application image"
     )
     arguments = parser.parse_args(argv)
-    root = Path(__file__).resolve().parents[1]
-    generator = [sys.executable, str(root / "scripts" / "create_dev_env.py"), "--operations"]
-    subprocess.run(generator, cwd=root, check=True)
+    root = (
+        Path(sys.executable).resolve().parent
+        if getattr(sys, "frozen", False)
+        else Path(__file__).resolve().parents[1]
+    )
+    if getattr(sys, "frozen", False):
+        from scripts.create_dev_env import main as create_dev_env
+
+        create_dev_env(["--operations"])
+    else:
+        generator = [sys.executable, str(root / "scripts" / "create_dev_env.py"), "--operations"]
+        subprocess.run(generator, cwd=root, check=True)
     compose = ["docker", "compose", "--profile", "operations", "up"]
     if not arguments.no_build:
         compose.append("--build")

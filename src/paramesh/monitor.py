@@ -182,9 +182,11 @@ class ClusterView:
         prometheus: str,
         tempo: str,
         evidence: Path,
+        external_artifacts: Path | None = None,
     ) -> None:
         self.config, self.coordinator, self.security = config, coordinator, security
         self.log, self.sink, self.evidence = log, sink, evidence
+        self.external_artifacts = external_artifacts
         self.prometheus, self.tempo = _endpoint(prometheus), _endpoint(tempo)
         self.lock, self.stopped = threading.Lock(), threading.Event()
         self.current: dict[str, Any] = {
@@ -331,6 +333,29 @@ class ClusterView:
                 if len(payload) > 1024 * 1024:
                     raise ValueError("Evidence artifact exceeds size limit")
                 reports.append(json.loads(payload))
+        if self.external_artifacts:
+            manifest = self.external_artifacts / "manifest.json"
+            if manifest.is_file():
+                with manifest.open("rb") as stream:
+                    payload = stream.read(1024 * 1024 + 1)
+                if len(payload) > 1024 * 1024:
+                    raise ValueError("External artifact exceeds size limit")
+                document = json.loads(payload)
+                for trial in document.get("trials", []):
+                    if isinstance(trial, dict) and trial.get("mode"):
+                        reports.append(
+                            dict(
+                                trial,
+                                initial_loss=trial.get("loss_after_warmup"),
+                                environment={
+                                    "commit": trial.get("commit"),
+                                    "source_dirty": trial.get("source_dirty", False),
+                                },
+                                evidence_source="external workload",
+                                evidence_manifest=manifest.name,
+                                workload=document.get("workload"),
+                            )
+                        )
         return reports
 
     def close(self) -> None:
