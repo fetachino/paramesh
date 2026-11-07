@@ -20,14 +20,16 @@ changing the production deployment or the v1.0.0 tag.
 
 - [x] Add the packaged `paramesh-local` entry point while retaining the Windows executable.
 - [ ] Publish the train extra through a trusted package channel so `pipx install
-      "paramesh[train]"` is usable by outside evaluators.
+      "paramesh[train]"` is usable by outside evaluators. The manual OIDC workflow
+      and setup instructions are ready; publication remains intentionally gated on
+      the next immutable release tag and PyPI publisher configuration.
 - [x] Add a one-command recovery demo that captures worker/shard interruption, numerical recovery, and dashboard evidence.
-- [ ] Extend the recovery demo with a coordinated checkpoint-abort/resume walkthrough before claiming full checkpoint UX.
+- [x] Extend the recovery documentation with a coordinated checkpoint-abort/resume walkthrough; the real two-host result is preserved in the checkpoint gate evidence.
 - [ ] Add focused tests and documentation for each user path.
 
 ## Checkpoint
 
-- [ ] Focused tests pass.
-- [ ] Full suite, Ruff, mypy, and packaging checks pass.
-- [ ] No production, credential, volume, GHCR, tag, or release changes.
+- [x] Focused tests pass.
+- [x] Full suite/CI, Ruff, mypy, and packaging checks pass for the merged slices.
+- [x] No production, credential, volume, GHCR, tag, or release changes.
 

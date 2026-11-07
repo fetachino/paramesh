@@ -178,9 +178,9 @@ python examples/scaling_matrix.py `
 
 This is a controlled workload comparison, not proof of multi-host scaling or a
 claim that ParamMesh is faster than PyTorch. Use `--workers 8` only on a host with
-enough CPU headroom, and report failed trials rather than dropping them. A
-clean-source 1/2/4-worker smoke capture with raw files and checksums is preserved
-in [`docs/evidence/benchmarks/scaling-matrix-local-2026-11-07/`](docs/evidence/benchmarks/scaling-matrix-local-2026-11-07/README.md).
+enough CPU headroom, and report failed trials rather than dropping them. Clean-source
+1/2/4-worker smoke and three-repetition captures with raw files and checksums are
+preserved in the [benchmark evidence](docs/evidence/benchmarks/).
 
 For the recovery demonstration, run the actual process-kill harness and keep its
 raw report directory:
@@ -202,6 +202,33 @@ python scripts/quickstart.py --no-build
 The dashboard labels these rows **external recovery**. They are local evidence,
 not an availability SLA or a claim that arbitrary models recover without compatible
 state and protocol configuration.
+
+For a checkpoint-specific recovery walkthrough, use a disposable Compose run and
+keep the same persistent volumes throughout the exercise:
+
+```powershell
+# Start a normal run, then request a live checkpoint from another terminal.
+docker compose --profile maintenance run --rm --no-deps checkpoint checkpoint live-export `
+  --id abort-demo --coordinator coordinator:50050 --store /checkpoints
+
+# While the export is waiting at its safe point, interrupt one worker.
+docker compose stop worker-1
+
+# Release the uncommitted epoch; this must report {"aborted": true}.
+docker compose --profile maintenance run --rm --no-deps checkpoint checkpoint live-abort `
+  --id abort-demo --coordinator coordinator:50050
+
+# Rejoin the worker from its durable journal, then publish a new checkpoint ID.
+docker compose start worker-1
+docker compose --profile maintenance run --rm --no-deps checkpoint checkpoint live-export `
+  --id after-abort --coordinator coordinator:50050 --store /checkpoints
+```
+
+Verify that `after-abort` has a committed manifest, equal shard versions, and
+the expected worker progress. Abort is only valid before publication; retry a
+committed ID instead of aborting it. The completed two-host run with raw
+manifests, checksums, and direct numerical comparison is preserved in the
+[checkpoint gate evidence](docs/evidence/gcp-multihost-919bc0-20261104/README.md).
 
 ## Core capabilities
 
@@ -385,10 +412,11 @@ workload and local report storage. Team deployments, persistent checkpoints, obs
 and hosted operation continue to use Docker Compose. Neither executable accesses hosted
 production.
 
-The same no-Docker launcher is packaged as `paramesh-local` for the planned Python
-distribution path. After a published package is available, install the train extra
-with `pipx install "paramesh[train]"` and run `paramesh-local`; until then, use the
-locked clean-clone workflow or download the Windows bundle above.
+The same no-Docker launcher is packaged as `paramesh-local`. After a package is
+published through the [trusted PyPI workflow](docs/pypi-publishing.md), install
+the train extra with `pipx install "paramesh[train]"` and run `paramesh-local`.
+Until that publication is completed, use the locked clean-clone workflow or
+download the Windows bundle above.
 
 See the [supported contract](docs/supported-contract.md) for tested boundaries and the
 [adoption feedback template](docs/adoption-feedback-template.md) for a sanitized evaluation
@@ -503,6 +531,7 @@ benchmarks and remaining release work follow in [ROADMAP.md](ROADMAP.md).
 - [Multi-host Linux deployment path](docs/multi-host.md)
 - [Architecture and consistency model](ARCHITECTURE.md)
 - [Correctness evidence and benchmark policy](BENCHMARKS.md)
+- [Python package publication](docs/pypi-publishing.md)
 - [Release-readiness audit and deployment limits](docs/release-readiness.md)
 - [v1.0.0 release candidate notes](docs/releases/v1.0.0.md)
 - [Changelog](CHANGELOG.md)
