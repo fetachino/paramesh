@@ -58,7 +58,7 @@ def model(hidden_width: int = 8) -> nn.Sequential:
 
 def parameters(hidden_width: int = 8) -> dict[str, FloatArray]:
     return {
-        name: value.detach().numpy().copy()
+        name: value.detach().cpu().numpy().copy()
         for name, value in model(hidden_width).named_parameters()
     }
 
@@ -83,7 +83,7 @@ def load_parameters(network: nn.Module, values: dict[str, FloatArray]) -> None:
             raise ValueError("Parameter values must be finite")
     with torch.no_grad():
         for name, parameter in expected.items():
-            parameter.copy_(torch.from_numpy(values[name]))
+            parameter.copy_(torch.from_numpy(values[name]).to(parameter.device))
 
 
 def dataset(worker_index: int) -> tuple[torch.Tensor, torch.Tensor]:
@@ -163,4 +163,6 @@ def local_reference(
         loss = torch.nn.functional.mse_loss(reference(inputs), targets)
         torch.autograd.backward(loss)
         optimizer.step()
-    return {name: value.detach().numpy().copy() for name, value in reference.named_parameters()}
+    return {
+        name: value.detach().cpu().numpy().copy() for name, value in reference.named_parameters()
+    }

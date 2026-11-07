@@ -201,7 +201,7 @@ def train_worker(
                                     step=step,
                                     base_version=snapshots[index].version,
                                     tensors=[
-                                        encode(name, parameter.grad.detach().numpy())
+                                        encode(name, parameter.grad.detach().cpu().numpy())
                                         for name, parameter in network.named_parameters()
                                         if ownership[name] == index and parameter.grad is not None
                                     ],
