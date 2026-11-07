@@ -74,7 +74,7 @@ boundary before adding GPUs, Kubernetes or high availability:
 - [x] Add one end-to-end example using an external model, with numerical
       correctness evidence; checkpoint and worker-restart coverage remain in the
       shared API and recovery suites.
-- [ ] Provide a one-command local quickstart that creates ignored credentials,
+- [x] Provide a one-command local quickstart that creates ignored credentials,
       starts the self-hosted stack and links to the operator checks.
 - [ ] Validate the workflow with several research or small-team users before
       committing to GPU, scheduler or managed-service features.
