@@ -190,11 +190,11 @@ model quality or a universal speedup. Add `8` only when the host has enough
 isolated CPU capacity. Failures are preserved in the manifest and invalidate a
 performance claim rather than being treated as missing samples.
 
-A clean-source one-repetition 1/2/4-worker capture is preserved in
+The clean-source one-repetition smoke capture is preserved in
 [`docs/evidence/benchmarks/scaling-matrix-local-2026-11-07/`](docs/evidence/benchmarks/scaling-matrix-local-2026-11-07/README.md).
-It is intentionally a smoke matrix; use the three-repetition command above for
-release-quality local comparison and preserve its raw output with the same
-metadata and checksum rules.
+The first three-repetition 1/2/4-worker capture is preserved in
+[`docs/evidence/benchmarks/scaling-matrix-local-2026-11-07-three-repetition/`](docs/evidence/benchmarks/scaling-matrix-local-2026-11-07-three-repetition/README.md).
+Both retain raw output with the same metadata and checksum rules.
 
 ## Remaining performance work
 
