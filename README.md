@@ -412,11 +412,17 @@ workload and local report storage. Team deployments, persistent checkpoints, obs
 and hosted operation continue to use Docker Compose. Neither executable accesses hosted
 production.
 
-The same no-Docker launcher is packaged as `paramesh-local`. After a package is
-published through the [trusted PyPI workflow](docs/pypi-publishing.md), install
-the train extra with `pipx install "paramesh[train]"` and run `paramesh-local`.
-Until that publication is completed, use the locked clean-clone workflow or
-download the Windows bundle above.
+The same no-Docker launcher is published as `paramesh-local`. Install the train
+extra from PyPI and run it directly:
+
+```powershell
+pipx install "paramesh[train]"
+paramesh-local --help
+```
+
+The [trusted PyPI workflow](docs/pypi-publishing.md) publishes immutable tagged
+versions. Use the locked clean-clone workflow or the Windows bundle above when
+you need source-level or packaged executable evaluation instead.
 
 See the [supported contract](docs/supported-contract.md) for tested boundaries and the
 [adoption feedback template](docs/adoption-feedback-template.md) for a sanitized evaluation
