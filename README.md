@@ -133,7 +133,8 @@ The example exercises two workers, two shards, synchronous SGD, numerical
 agreement with a local reference, and the normal dashboard-free process
 harness. The checkpoint CLI still uses the bundled reference workload; external
 checkpoint export and restore use the deterministic initial mapping returned by
-`parameters_for(workload)`.
+`parameters_for(workload)`. The test suite also covers the external workload in
+asynchronous and bounded-staleness modes and after a worker restart.
 
 ## Core capabilities
 
