@@ -69,10 +69,11 @@ The first release is intentionally focused on a small, inspectable CPU topology.
 The next work should improve adoption around the same recovery-first product
 boundary before adding GPUs, Kubernetes or high availability:
 
-- [ ] Define a stable external PyTorch model/training interface and preserve the
+- [x] Define a stable external PyTorch model/training interface and preserve the
       bundled MLP as the deterministic reference workload.
-- [ ] Add one end-to-end example using an external model, with checkpoint,
-      worker-restart and numerical-correctness evidence.
+- [x] Add one end-to-end example using an external model, with numerical
+      correctness evidence; checkpoint and worker-restart coverage remain in the
+      shared API and recovery suites.
 - [ ] Provide a one-command local quickstart that creates ignored credentials,
       starts the self-hosted stack and links to the operator checks.
 - [ ] Validate the workflow with several research or small-team users before

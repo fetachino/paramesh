@@ -25,6 +25,7 @@ from paramesh.services import coordinator_server, managed_coordinator, shard_ser
 from paramesh.shard import ParameterShard
 from paramesh.state import StateDB
 from paramesh.tensors import decode_many, partition
+from paramesh.workload import TrainingWorkload, bundled_workload, parameters_for
 
 MODES = {"sync": pb.SYNCHRONOUS, "async": pb.ASYNCHRONOUS, "bounded": pb.BOUNDED_STALENESS}
 
@@ -49,6 +50,7 @@ def _serve(
     fast_leases: bool = False,
     security: RpcSecurity | None = None,
     hidden_width: int = 8,
+    workload: TrainingWorkload | None = None,
 ) -> None:
     server = None
     storage = None
@@ -66,9 +68,8 @@ def _serve(
             )
             server, port = coordinator_server(coordinator, address, security=security)
         else:
-            from paramesh.workload import parameters
-
-            values = parameters(hidden_width)
+            active_workload = workload or bundled_workload(hidden_width)
+            values = parameters_for(active_workload)
             ownership = partition(values, len(config.shard_endpoints))
             shard = ParameterShard(
                 config, {k: v for k, v in values.items() if ownership[k] == index}, state=storage
@@ -100,6 +101,7 @@ def _train(
     security: RpcSecurity | None = None,
     warmup_steps: int = 0,
     hidden_width: int = 8,
+    workload: TrainingWorkload | None = None,
 ) -> None:
     from paramesh import telemetry
     from paramesh.worker import train_worker
@@ -117,6 +119,7 @@ def _train(
                 state=storage,
                 security=security,
                 hidden_width=hidden_width,
+                workload=workload,
             )
             warmup_elapsed = time.perf_counter() - warmup_started
             pipe.send({"phase": "warmup_complete"})
@@ -133,6 +136,7 @@ def _train(
             step_delay=step_delay,
             security=security,
             hidden_width=hidden_width,
+            workload=workload,
         )
         ended = time.perf_counter()
         if signals is not None:
@@ -197,6 +201,7 @@ def run_demo(
     failure: str | None = None,
     warmup_steps: int = 0,
     hidden_width: int = 8,
+    workload: TrainingWorkload | None = None,
 ) -> dict[str, Any]:
     if (
         mode not in MODES
@@ -215,7 +220,9 @@ def run_demo(
         )
     import torch
 
-    from paramesh.workload import dataset, load_parameters, local_reference, model, parameters
+    from paramesh.workload import load_parameters, local_reference
+
+    active_workload = workload or bundled_workload(hidden_width)
 
     torch.set_num_threads(1)
     config = pb.RunConfig(
@@ -257,6 +264,7 @@ def run_demo(
                 index,
                 state_path=directory / f"shard-{index}.sqlite",
                 hidden_width=hidden_width,
+                workload=active_workload,
             )
             endpoints.append(_receive(pipe)["address"])
         config.shard_endpoints[:] = endpoints
@@ -282,6 +290,7 @@ def run_demo(
                 step_delay=0.1 if failure else 0,
                 warmup_steps=warmup_steps,
                 hidden_width=hidden_width,
+                workload=active_workload,
             )
             for name in config.worker_ids
         ]
@@ -338,6 +347,7 @@ def run_demo(
                         state_path=directory / "worker-0.sqlite",
                         step_delay=0.1,
                         hidden_width=hidden_width,
+                        workload=active_workload,
                     )
                     expected_dead.discard("worker-0")
                     wait_for(
@@ -365,6 +375,7 @@ def run_demo(
                         0,
                         state_path=directory / "shard-0.sqlite",
                         address=endpoints[0],
+                        workload=active_workload,
                     )
                     _receive(replacement)
                     wait_for(lambda: (item := worker_state()) and item.step > active.step)
@@ -406,14 +417,16 @@ def run_demo(
         final = decode_many(tensor for snapshot in snapshots for tensor in snapshot.tensors)
         with open_channel(address, security) as channel:
             state = rpc.CoordinatorStub(channel).GetStatus(pb.Empty(), timeout=5)
-    initial = parameters(hidden_width)
+    initial = parameters_for(active_workload)
     reference = (
-        local_reference(workers, steps, config.learning_rate, hidden_width)
+        local_reference(
+            workers, steps, config.learning_rate, hidden_width, workload=active_workload
+        )
         if mode == "sync"
         else None
     )
-    evaluation = model(hidden_width)
-    batches = [dataset(index) for index in range(workers)]
+    evaluation = active_workload.model_factory()
+    batches = [active_workload.dataset_factory(index) for index in range(workers)]
     inputs = torch.cat([batch[0] for batch in batches])
     targets = torch.cat([batch[1] for batch in batches])
 
@@ -472,12 +485,10 @@ def run_demo(
             "captured_at": datetime.now(UTC).isoformat(),
         },
         "workload": {
-            "model": f"MLP 4-{hidden_width}-1, tanh",
+            "model": type(evaluation).__name__,
             "hidden_width": hidden_width,
-            "dataset": "synthetic regression",
+            "dataset": "factory-provided regression batches",
             "samples_per_worker": 32,
-            "model_seed": 7,
-            "data_seed_base": 100,
             "learning_rate": config.learning_rate,
             "aggregation": "mean",
             "optimizer": "SGD",

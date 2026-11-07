@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 
 import numpy as np
 import torch
@@ -25,7 +26,7 @@ def bundled_workload(hidden_width: int = 8) -> TrainingWorkload:
     """Return the deterministic bundled workload used by the reference tests."""
 
     return TrainingWorkload(
-        model_factory=lambda: model(hidden_width),
+        model_factory=partial(model, hidden_width),
         dataset_factory=dataset,
     )
 
