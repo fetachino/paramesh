@@ -163,6 +163,23 @@ The Compose dashboard mounts that directory read-only and labels its rows
 telemetry from the separate process harness. Leave the variable unset when no
 external artifact directory should be mounted.
 
+For a direct scaling comparison against a single-process PyTorch reference, use
+the matrix runner. It records raw JSON/CSV, hardware, lock hash, source identity,
+and a chart for each requested worker count:
+
+```powershell
+python examples/scaling_matrix.py `
+  --output artifacts/scaling-matrix `
+  --workers 1 2 4 `
+  --repetitions 3 `
+  --warmup-steps 20 `
+  --steps 200
+```
+
+This is a controlled workload comparison, not proof of multi-host scaling or a
+claim that ParamMesh is faster than PyTorch. Use `--workers 8` only on a host with
+enough CPU headroom, and report failed trials rather than dropping them.
+
 ## Core capabilities
 
 | Area | Working behavior |
