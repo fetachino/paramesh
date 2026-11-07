@@ -5,13 +5,14 @@ changing the production deployment or the v1.0.0 tag.
 
 ## Phase 1: model-family contract
 
-- [ ] Add deterministic linear, small CNN, and small transformer external-workload examples.
-- [ ] Add correctness tests for each example through the existing `TrainingWorkload` interface.
-- [ ] Update the supported contract to name the tested families and keep arbitrary-model claims out.
+- [x] Add deterministic linear, small CNN, and small transformer external-workload examples.
+- [x] Add correctness tests for each example through the existing `TrainingWorkload` interface.
+- [x] Update the supported contract to name the tested families and keep arbitrary-model claims out.
 
 ## Phase 2: benchmark matrix
 
-- [ ] Add a measured 1/2/4-worker benchmark runner with raw JSON/CSV and hardware/source metadata.
+- [x] Add a measured 1/2/4-worker benchmark runner with raw JSON/CSV and hardware/source metadata.
+- [ ] Capture and publish a clean-source 1/2/4-worker matrix; results must remain raw and host-specific.
 - [ ] Add a simple PyTorch single-process reference and documented comparison tolerances.
 - [ ] Preserve failure/recovery measurements separately from throughput claims.
 

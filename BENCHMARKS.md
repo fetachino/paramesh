@@ -168,6 +168,28 @@ the boundaries; [Python clock semantics](https://docs.python.org/3.12/library/ti
 and [Matplotlib export](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.savefig.html)
 support the timing and chart implementation.
 
+### ParamMesh versus a local PyTorch reference
+
+The scaling-matrix helper measures the same seeded workload through the existing
+ParamMesh process harness and a single-process PyTorch SGD reference:
+
+```powershell
+python examples/scaling_matrix.py `
+  --output artifacts/scaling-matrix `
+  --workers 1 2 4 `
+  --repetitions 3 `
+  --warmup-steps 20 `
+  --steps 200
+```
+
+Each worker count gets raw ParamMesh and reference JSON, a combined `trials.csv`,
+an environment/lock manifest, and a chart. The reference uses the same model
+factory, worker datasets, optimizer, steps and CPU thread limit; the comparison
+therefore describes protocol overhead and scaling behavior for that workload, not
+model quality or a universal speedup. Add `8` only when the host has enough
+isolated CPU capacity. Failures are preserved in the manifest and invalidate a
+performance claim rather than being treated as missing samples.
+
 ## Remaining performance work
 
 ### Repeated local fault trials
