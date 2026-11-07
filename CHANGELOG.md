@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.1.0 — release candidate (not tagged or published)
+
+### Added
+
+- Public `paramesh-local` packaging path for no-Docker Windows evaluation and
+  clean Python environments.
+- External PyTorch workload examples for linear, small CNN and small transformer
+  models, with documented supported-contract boundaries.
+- Reproducible sync, async and bounded-staleness comparison benchmarks with raw
+  artifacts, charts and host metadata.
+- Coordinated checkpoint-abort/resume walkthrough and recovery evidence for
+  evaluator onboarding.
+
+### Verified
+
+- Locked package build, clean-clone setup, Windows executable and merged CI
+  validation for the external-workload workflow.
+- PyPI publication workflow prepared for Trusted Publishing; publication is
+  pending the immutable `v1.1.0` tag and successful workflow run.
+
 ## 1.0.0 — release candidate (not tagged or published)
 
 ### Added
