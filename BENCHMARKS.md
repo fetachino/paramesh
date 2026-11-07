@@ -120,6 +120,21 @@ cross-host bandwidth or establish that compression will help. Large widths can
 destabilize this fixed-learning-rate workload; failed numerical checks invalidate
 the trial rather than producing performance evidence.
 
+### External workloads
+
+The same benchmark API accepts a `TrainingWorkload` with top-level, spawn-safe
+model and batch factories. The bundled CLI remains the deterministic MLP default;
+custom workloads can use the runnable example:
+
+```powershell
+python examples/external_benchmark.py --output artifacts/external-linear
+```
+
+This records the external model, raw RPC observations, mode-specific results,
+source metadata and numerical checks in the same artifact schema. Keep the model,
+dataset, optimizer and update budget identical when comparing modes; the existing
+warnings about different commit semantics still apply.
+
 Each worker records start/end with the same host's system-wide monotonic performance
 clock. The aggregate window spans the earliest measured start through the latest
 end, excluding result serialization and model evaluation. Processed examples equal
