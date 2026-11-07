@@ -3,6 +3,21 @@
 The supplied project brief is the long-term target. This checklist reports actual
 implementation boundaries, not a claim that infrastructure examples are deployed.
 
+## Product maturity levels
+
+These levels describe the product path without moving or overwriting released tags:
+
+| Level | Meaning | Status |
+| --- | --- | --- |
+| **1 · Foundation** | Recovery-first distributed CPU training, operations, hosted validation, immutable deployment, and the stable `v1.0.0` release. | **Complete** |
+| **2 · Usability** | External PyTorch workload support, reproducible comparisons, clean-clone onboarding, dashboard evidence, and simple local evaluation. | **Implemented; external-user validation remains** |
+| **3 · Team adoption** | Evidence that several real teams can use the workflow, stable configuration/data guidance, support boundaries, and only then justified integrations or paid services. | **Next** |
+
+Level 3 is not a plan to add Kubernetes, GPUs, high availability, or a hosted
+service by default. Those are decisions gated by observed user needs. The first
+Level 3 deliverable is structured feedback from several independent researchers
+or small teams using the documented workflow.
+
 - [x] Python packaging, generated protobuf tooling, local checks and CI definition.
 - [x] Coordinator registration, fixed membership, heartbeat leases and status RPCs.
 - [x] Deterministic ownership, validated float32 transport and atomic shard-local SGD.
@@ -78,10 +93,25 @@ boundary before adding GPUs, Kubernetes or high availability:
       starts the self-hosted stack and links to the operator checks.
 - [x] Provide a reproducible external-workload comparison benchmark for sync,
       async and bounded-staleness modes with raw artifacts and charts.
+- [x] Provide a no-Docker Windows local evaluation executable while retaining the
+      Docker Compose operations path for persistent/team deployments.
 - [ ] Validate the workflow with several research or small-team users before
       committing to GPU, scheduler or managed-service features.
 - [ ] Evaluate paid deployment, support and integration services only after the
       external-model workflow has adoption evidence.
+
+## Level 3 · Team adoption gates
+
+- [ ] Recruit and document feedback from at least three independent research or
+      small-team users using the clean-clone or standalone workflow.
+- [ ] Record the first-run success rate, setup time, workload shape, recovery
+      expectations, and blockers without collecting private data or credentials.
+- [ ] Convert repeated feedback into a small supported-contract document: tested
+      Python/OS/CPU combinations, model/workload constraints, state/backups, and
+      operational limits.
+- [ ] Add only the highest-value adoption fixes justified by that evidence.
+- [ ] Revisit paid support, integrations, GPU scheduling, or managed hosting only
+      after the adoption evidence supports a specific user-funded need.
 
 ## Intended cloud portability
 
