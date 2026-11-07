@@ -76,6 +76,8 @@ boundary before adding GPUs, Kubernetes or high availability:
       shared API and recovery suites.
 - [x] Provide a one-command local quickstart that creates ignored credentials,
       starts the self-hosted stack and links to the operator checks.
+- [x] Provide a reproducible external-workload comparison benchmark for sync,
+      async and bounded-staleness modes with raw artifacts and charts.
 - [ ] Validate the workflow with several research or small-team users before
       committing to GPU, scheduler or managed-service features.
 - [ ] Evaluate paid deployment, support and integration services only after the
