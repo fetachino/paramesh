@@ -103,7 +103,8 @@ boundary before adding GPUs, Kubernetes or high availability:
 ## Level 3 · Team adoption gates
 
 - [ ] Recruit and document feedback from at least three independent research or
-      small-team users using the clean-clone or standalone workflow.
+      small-team users using the clean-clone or standalone workflow; current
+      sanitized registry: [0 / 3](docs/evidence/adoption/README.md).
 - [ ] Record the first-run success rate, setup time, workload shape, recovery
       expectations, and blockers without collecting private data or credentials.
 - [ ] Convert repeated feedback into a small supported-contract document: tested

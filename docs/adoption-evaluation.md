@@ -62,3 +62,6 @@ evidence review.
 An evaluator is considered independently validated only when they complete the
 workflow without project-author assistance and return a reproducible summary.
 ParamMesh will not claim adoption until multiple independent summaries exist.
+
+The public count and sanitized summaries live in
+[`docs/evidence/adoption/`](evidence/adoption/README.md).
