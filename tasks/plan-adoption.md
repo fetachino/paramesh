@@ -12,9 +12,9 @@ changing the production deployment or the v1.0.0 tag.
 ## Phase 2: benchmark matrix
 
 - [x] Add a measured 1/2/4-worker benchmark runner with raw JSON/CSV and hardware/source metadata.
-- [ ] Capture and publish a clean-source 1/2/4-worker matrix; results must remain raw and host-specific.
-- [ ] Add a simple PyTorch single-process reference and documented comparison tolerances.
-- [ ] Preserve failure/recovery measurements separately from throughput claims.
+- [x] Capture and publish a clean-source 1/2/4-worker matrix; results remain raw and host-specific in [the November 7 capture](../docs/evidence/benchmarks/scaling-matrix-local-2026-11-07/README.md).
+- [x] Add a simple PyTorch single-process reference and documented comparison tolerances.
+- [x] Preserve failure/recovery measurements separately from throughput claims.
 
 ## Phase 3: installation and recovery UX
 

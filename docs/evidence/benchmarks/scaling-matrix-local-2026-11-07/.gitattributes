@@ -1,0 +1,5 @@
+*.json binary
+*.csv binary
+*.lock binary
+*.png binary
+*.svg binary

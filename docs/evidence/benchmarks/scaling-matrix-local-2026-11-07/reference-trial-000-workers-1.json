@@ -1,0 +1,14 @@
+{
+  "status": "complete",
+  "workers": 1,
+  "steps": 6,
+  "warmup_steps": 2,
+  "elapsed_seconds": 0.0023798000038368627,
+  "examples_per_second": 80679.0485294754,
+  "initial_loss": 20.71241569519043,
+  "final_loss": 2.3293213844299316,
+  "samples_per_worker": 32,
+  "model": "Sequential",
+  "optimizer": "SGD",
+  "device": "cpu"
+}

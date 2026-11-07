@@ -178,7 +178,9 @@ python examples/scaling_matrix.py `
 
 This is a controlled workload comparison, not proof of multi-host scaling or a
 claim that ParamMesh is faster than PyTorch. Use `--workers 8` only on a host with
-enough CPU headroom, and report failed trials rather than dropping them.
+enough CPU headroom, and report failed trials rather than dropping them. A
+clean-source 1/2/4-worker smoke capture with raw files and checksums is preserved
+in [`docs/evidence/benchmarks/scaling-matrix-local-2026-11-07/`](docs/evidence/benchmarks/scaling-matrix-local-2026-11-07/README.md).
 
 For the recovery demonstration, run the actual process-kill harness and keep its
 raw report directory:
