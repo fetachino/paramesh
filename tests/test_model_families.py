@@ -21,3 +21,4 @@ def test_supported_external_model_family_matches_reference(factory):
     assert result["shard_versions"] == [2, 2]
     assert result["max_parameter_error"] < 1e-6
     assert all(item["steps"] == 2 for item in result["worker_results"])
+    assert result["workload"]["device"] == "cpu"

@@ -492,7 +492,7 @@ def run_demo(
             "learning_rate": config.learning_rate,
             "aggregation": "mean",
             "optimizer": "SGD",
-            "device": "cpu",
+            "device": str(next(evaluation.parameters()).device),
             "torch_threads": 1,
             "parameter_bytes": sum(value.nbytes for value in initial.values()),
             "transport_dtype": "float32",
