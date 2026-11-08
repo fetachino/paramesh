@@ -8,12 +8,13 @@ are not stored in this directory.
 ## Result
 
 The run reached the promoted coordinator and both workers continued to their
-configured target. The post-promotion checkpoint did **not** complete: workers
-did not reach a checkpoint-safe lease before the bounded verification timeout.
-This is a release-gate failure, not a passing HA claim.
+configured target. Both workers re-registered at generation 2, reached healthy
+checkpoint-safe leases, and published checkpoint `ha-after-failover` at global
+step 8 with matching shard versions `[8, 8]`. Both then completed step 80 with
+matching final shard versions `[80, 80]`.
 
-The raw sanitized result is in `results.json`; it records the failure reason and
-the source/test configuration is the checked-in verifier. No production services,
+The raw sanitized result is in `results.json`; the source/test configuration is
+the checked-in verifier. No production services,
 volumes, credentials, or cloud resources were used.
 
 ## Reproduce
@@ -24,5 +25,6 @@ uv run python scripts/verify_postgres_training_failover.py `
 ```
 
 The verifier removes its temporary Docker network, containers, and volumes in a
-`finally` block. The current limitation is that active worker session recovery
-must be made checkpoint-safe before this gate can close.
+`finally` block. This closes local active-training coordinator/database failover
+evidence for the disposable single-host topology. It does not claim replicated
+production PostgreSQL HA or cross-host availability.

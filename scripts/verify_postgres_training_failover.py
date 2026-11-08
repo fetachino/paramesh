@@ -325,20 +325,47 @@ def main() -> None:
             checkpoint_root = root / "checkpoint"
             checkpoint_store = LocalStore(checkpoint_root)
             checkpoint_error = None
-            for _ in range(30):
+            health_timeline: list[dict[str, object]] = []
+            failover_started = time.monotonic()
+            for _ in range(10):
+                observed = coordinator_status(f"127.0.0.1:{coordinator_port}").workers
+                health_timeline.append(
+                    {
+                        "elapsed_seconds": round(time.monotonic() - failover_started, 3),
+                        "workers": [
+                            {
+                                "worker_id": item.worker_id,
+                                "health": item.health,
+                                "step": item.step,
+                                "generation": item.generation,
+                            }
+                            for item in observed
+                        ],
+                    }
+                )
                 try:
                     checkpoint = export_online_checkpoint(
                         f"127.0.0.1:{coordinator_port}",
                         checkpoint_store,
                         "ha-after-failover",
                         None,
-                        timeout=10,
+                        timeout=3,
                     )
                     break
                 except Exception as error:
                     checkpoint_error = f"{type(error).__name__}: {error}"
                     time.sleep(1)
             else:
+                result["health_timeline"] = health_timeline
+                for process in workers:
+                    if process.is_alive():
+                        process.terminate()
+                    process.join(timeout=5)
+                if queue is not None:
+                    messages = []
+                    while not queue.empty():
+                        messages.append(queue.get())
+                    result["worker_messages"] = messages
                 raise TimeoutError(
                     "workers did not reach a checkpoint-safe lease after promotion: "
                     f"{checkpoint_error}"
