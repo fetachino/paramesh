@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "status": "failed",
+  "failure": "TimeoutError: workers did not reach a checkpoint-safe lease after promotion: TimeoutError: Workers did not reach the checkpoint safe point before timeout"
+}
