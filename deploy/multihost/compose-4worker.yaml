@@ -1,0 +1,74 @@
+services:
+  worker-2:
+    image: ${PARAMESH_IMAGE:-paramesh:local}
+    build:
+      context: .
+      args:
+        SOURCE_COMMIT: ${PARAMESH_SOURCE_COMMIT:-unknown}
+        BUILD_DATE: ${PARAMESH_BUILD_DATE:-unknown}
+        SOURCE_DIRTY: ${PARAMESH_SOURCE_DIRTY:-unknown}
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [host-link]
+    environment:
+      PARAMESH_RPC_TOKEN: ${PARAMESH_RPC_TOKEN:?Generate service credentials}
+      PARAMESH_METRICS_PORT: '9100'
+      PARAMESH_METRICS_BIND: '0.0.0.0'
+      PARAMESH_NATS_URL: ${PARAMESH_NATS_URL:-}
+      PARAMESH_NATS_TOKEN: ${PARAMESH_NATS_TOKEN:-}
+      PARAMESH_OTLP_ENDPOINT: ${PARAMESH_OTLP_ENDPOINT:-}
+      PARAMESH_TRACE_SAMPLE_RATIO: ${PARAMESH_TRACE_SAMPLE_RATIO:-0.2}
+      PARAMESH_TLS_CA: /run/paramesh/tls/ca.pem
+      PARAMESH_TLS_CERT: /run/paramesh/tls/rpc.crt
+      PARAMESH_TLS_KEY: /run/paramesh/tls/rpc.key
+      PARAMESH_REQUIRE_CLIENT_CERT: 'true'
+    volumes:
+      - '${PARAMESH_TLS_DIR:?Set PARAMESH_TLS_DIR to the host TLS directory}:/run/paramesh/tls:ro'
+      - worker-2-state:/app/state
+    command: [worker, --coordinator, '${PARAMESH_COORDINATOR_ENDPOINT:?Set the coordinator endpoint}', --id, worker-2, --steps, '${PARAMESH_STEPS:-20}', --step-delay, '${PARAMESH_STEP_DELAY:-0}']
+    restart: on-failure
+    depends_on: !reset []
+    ports:
+      - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:9107:9100'
+
+  worker-3:
+    image: ${PARAMESH_IMAGE:-paramesh:local}
+    build:
+      context: .
+      args:
+        SOURCE_COMMIT: ${PARAMESH_SOURCE_COMMIT:-unknown}
+        BUILD_DATE: ${PARAMESH_BUILD_DATE:-unknown}
+        SOURCE_DIRTY: ${PARAMESH_SOURCE_DIRTY:-unknown}
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [host-link]
+    environment:
+      PARAMESH_RPC_TOKEN: ${PARAMESH_RPC_TOKEN:?Generate service credentials}
+      PARAMESH_METRICS_PORT: '9100'
+      PARAMESH_METRICS_BIND: '0.0.0.0'
+      PARAMESH_NATS_URL: ${PARAMESH_NATS_URL:-}
+      PARAMESH_NATS_TOKEN: ${PARAMESH_NATS_TOKEN:-}
+      PARAMESH_OTLP_ENDPOINT: ${PARAMESH_OTLP_ENDPOINT:-}
+      PARAMESH_TRACE_SAMPLE_RATIO: ${PARAMESH_TRACE_SAMPLE_RATIO:-0.2}
+      PARAMESH_TLS_CA: /run/paramesh/tls/ca.pem
+      PARAMESH_TLS_CERT: /run/paramesh/tls/rpc.crt
+      PARAMESH_TLS_KEY: /run/paramesh/tls/rpc.key
+      PARAMESH_REQUIRE_CLIENT_CERT: 'true'
+    volumes:
+      - '${PARAMESH_TLS_DIR:?Set PARAMESH_TLS_DIR to the host TLS directory}:/run/paramesh/tls:ro'
+      - worker-3-state:/app/state
+    command: [worker, --coordinator, '${PARAMESH_COORDINATOR_ENDPOINT:?Set the coordinator endpoint}', --id, worker-3, --steps, '${PARAMESH_STEPS:-20}', --step-delay, '${PARAMESH_STEP_DELAY:-0}']
+    restart: on-failure
+    depends_on: !reset []
+    ports:
+      - '${PARAMESH_PRIVATE_BIND_IP:?Set the host private interface IP}:9108:9100'
+
+volumes:
+  worker-2-state:
+  worker-3-state:

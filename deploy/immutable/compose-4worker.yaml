@@ -1,0 +1,8 @@
+# Merge after deploy/multihost/compose-4worker.yaml for an immutable four-worker run.
+services:
+  worker-2:
+    build: !reset null
+    image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}
+  worker-3:
+    build: !reset null
+    image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}

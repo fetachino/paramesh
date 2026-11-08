@@ -1,0 +1,7 @@
+services:
+  shard-1:
+    profiles: [secondary-4worker]
+  worker-2:
+    profiles: [secondary-4worker]
+  worker-3:
+    profiles: [secondary-4worker]
