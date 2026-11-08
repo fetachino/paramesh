@@ -28,6 +28,7 @@ def main() -> None:
     parser.add_argument("--repetitions", type=int, default=3)
     parser.add_argument("--warmup-steps", type=int, default=20)
     parser.add_argument("--steps", type=int, default=200)
+    parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     args = parser.parse_args()
     report = run_benchmarks(
         args.output,
@@ -35,6 +36,7 @@ def main() -> None:
         warmup_steps=args.warmup_steps,
         measured_steps=args.steps,
         workload=TrainingWorkload(make_model, make_batch),
+        device=args.device,
     )
     print(json.dumps(report, indent=2))
 
