@@ -45,6 +45,9 @@ or small teams using the documented workflow.
       is in [the four-worker evidence](docs/evidence/benchmarks/gcp-multihost-4worker-2026-11-08/README.md).
 - [x] Add repeated four-worker performance and fault-timing measurements with raw
       JSON/CSV, checksums, and explicit workstation limitations.
+- [x] Extend the local controlled scaling matrix to 1/2/4/8 workers with three
+      repetitions and deterministic reference checks; see the
+      [clean-source evidence](docs/evidence/benchmarks/scaling-matrix-main-2026-11-08/README.md).
 - [x] Prepare and verify private host addressing, RPC mTLS, NATS TLS, remote metrics targets and persistent role restart on an isolated Docker bridge; this is a single-host simulation only.
 - [x] Run an actual two-VM Google Cloud private-VPC deployment with cross-host training,
       observability, controlled live checkpoint publication/restore validation and process restart;

@@ -196,6 +196,9 @@ The first three-repetition 1/2/4-worker capture is preserved in
 [`docs/evidence/benchmarks/scaling-matrix-local-2026-11-07-three-repetition/`](docs/evidence/benchmarks/scaling-matrix-local-2026-11-07-three-repetition/README.md).
 The later three-repetition 1/2/4/8-worker capture is preserved in
 [`docs/evidence/benchmarks/scaling-matrix-local-2026-11-07-eight-worker/`](docs/evidence/benchmarks/scaling-matrix-local-2026-11-07-eight-worker/README.md).
+The clean-source 1/2/4/8-worker rerun after the coordinator-capacity fix is
+preserved in
+[`docs/evidence/benchmarks/scaling-matrix-main-2026-11-08/`](docs/evidence/benchmarks/scaling-matrix-main-2026-11-08/README.md).
 These captures retain raw output with the same metadata and checksum rules. The
 8-worker run extends the local baseline; it does not substitute for a measured
 multi-host network run.
