@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "run_id": "demo-95d8db15f0a5",
+  "configuration": {
+    "run_id": "demo-95d8db15f0a5",
+    "mode": "SYNCHRONOUS",
+    "shard_endpoints": [
+      "127.0.0.1:61687",
+      "127.0.0.1:57020"
+    ],
+    "worker_ids": [
+      "worker-0",
+      "worker-1"
+    ],
+    "max_staleness": 1,
+    "learning_rate": 0.05,
+    "barrier_timeout_seconds": 15.0,
+    "aggregation": "MEAN"
+  },
+  "mode": "sync",
+  "steps_per_worker": 20,
+  "worker_count": 2,
+  "shard_count": 2,
+  "process_count": 5,
+  "shard_versions": [
+    20,
+    20
+  ],
+  "worker_health": {
+    "worker-0": "completed",
+    "worker-1": "completed"
+  },
+  "worker_generations": {
+    "worker-0": 1,
+    "worker-1": 1
+  },
+  "ownership": {
+    "0.bias": 0,
+    "0.weight": 1,
+    "2.bias": 1,
+    "2.weight": 1
+  },
+  "initial_loss": 14.232687950134277,
+  "final_loss": 0.7338234186172485,
+  "max_parameter_error": 1.1920928955078125e-07,
+  "worker_results": [
+    {
+      "worker_id": "worker-0",
+      "steps": 20,
+      "losses": [
+        20.712413787841797,
+        18.751750946044922,
+        16.691438674926758,
+        14.417372703552246,
+        12.010741233825684,
+        9.650433540344238,
+        7.522832870483398,
+        5.757126808166504,
+        4.399211883544922,
+        3.4210174083709717,
+        2.7507338523864746,
+        2.3055248260498047,
+        2.0129318237304688,
+        1.8187098503112793,
+        1.6860288381576538,
+        1.5913922786712646,
+        1.5203514099121094,
+        1.4641742706298828,
+        1.4175939559936523,
+        1.3774036169052124
+      ],
+      "refreshes": 0,
+      "resumed_from": 0,
+      "replayed_contributions": 0
+    },
+    {
+      "worker_id": "worker-1",
+      "steps": 20,
+      "losses": [
+        7.752959728240967,
+        7.090562343597412,
+        6.336277008056641,
+        5.43095588684082,
+        4.406224727630615,
+        3.3546087741851807,
+        2.386598587036133,
+        1.5873961448669434,
+        0.992711067199707,
+        0.5913145542144775,
+        0.3445637822151184,
+        0.20694845914840698,
+        0.13876566290855408,
+        0.11070556193590164,
+        0.1035347431898117,
+        0.1057964563369751,
+        0.11126339435577393,
+        0.11688684672117233,
+        0.12139324843883514,
+        0.12442104518413544
+      ],
+      "refreshes": 0,
+      "resumed_from": 0,
+      "replayed_contributions": 0
+    }
+  ],
+  "failure": null,
+  "worker_wall_seconds_including_startup": 4.688895699997374,
+  "environment": {
+    "python": "3.12.10",
+    "torch": "2.11.0+cu128",
+    "os": "Windows",
+    "machine": "AMD64",
+    "commit": "83f405045ff7567ee7ebb755ba4b4eaa12c3eed7",
+    "source_dirty": false,
+    "captured_at": "2026-11-08T05:38:29.347499+00:00"
+  },
+  "workload": {
+    "model": "Sequential",
+    "hidden_width": 8,
+    "dataset": "factory-provided regression batches",
+    "samples_per_worker": 32,
+    "learning_rate": 0.05,
+    "aggregation": "mean",
+    "optimizer": "SGD",
+    "device": "cuda",
+    "torch_threads": 1,
+    "parameter_bytes": 196,
+    "transport_dtype": "float32"
+  }
+}
