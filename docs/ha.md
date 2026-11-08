@@ -19,10 +19,13 @@ This is active/passive coordinator failover, not a replicated PostgreSQL service
 zero-downtime high availability. The database itself must be durable and independently protected;
 the free local Docker test only verifies fencing and state recovery.
 
-The local recovery harness also verifies coordinator process replacement during an active
-synchronous run: workers reconnect to the replacement endpoint, shards fence the old generation,
-and the run completes with matching shard versions and the existing numerical reference check.
-This is single-host process-failure evidence, not a claim of cross-region availability.
+The existing SQLite harness verifies coordinator process replacement during an active synchronous
+run. The PostgreSQL-backed harness in
+`artifacts/postgres-training-failover-20261108/` extends that check through a promoted database.
+The validated run re-registered both workers at generation 2, published a post-failover
+checkpoint at global step 8 with equal shard versions, and completed training at step 80 with
+equal shard versions. This closes the disposable single-host active-training failover evidence;
+it is not a claim of replicated production PostgreSQL HA or cross-region availability.
 
 ## Disposable PostgreSQL replication evidence
 
@@ -40,7 +43,6 @@ promotes the standby, and verifies both the pre-failover and post-promotion rows
 result from the validated run is [preserved here](evidence/postgres-ha-local-20261108/results.json)
 with SHA-256 `788d71987f07c652b3c51772441c960d5438ef190daca0fa83b02aeb9ef3a97c`.
 
-This closes database replication and promotion evidence for the disposable Docker topology. It
-does not yet close the ParamMesh release gate: coordinator replacement must still be exercised
-against the promoted endpoint while a real training run is active, including worker reconnect,
-checkpoint continuity, and an explicit stop condition for any mixed-version state.
+This closes database replication and promotion evidence for the disposable Docker topology. The
+active-training coordinator replacement and checkpoint continuity check is preserved separately
+above; production database redundancy and cross-host availability remain out of scope.
