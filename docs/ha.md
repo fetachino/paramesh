@@ -18,3 +18,8 @@ is opt-in and does not change the SQLite default.
 This is active/passive coordinator failover, not a replicated PostgreSQL service or a claim of
 zero-downtime high availability. The database itself must be durable and independently protected;
 the free local Docker test only verifies fencing and state recovery.
+
+The local recovery harness also verifies coordinator process replacement during an active
+synchronous run: workers reconnect to the replacement endpoint, shards fence the old generation,
+and the run completes with matching shard versions and the existing numerical reference check.
+This is single-host process-failure evidence, not a claim of cross-region availability.

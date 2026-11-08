@@ -216,7 +216,9 @@ def run_demo(
         or not 1 <= hidden_width <= 32768
     ):
         raise ValueError("Use sync/async/bounded, positive steps, 1..8 workers and 1..4 shards")
-    if failure not in (None, "worker", "shard") or (failure and (mode != "sync" or steps < 15)):
+    if failure not in (None, "worker", "shard", "coordinator") or (
+        failure and (mode != "sync" or steps < 15)
+    ):
         raise ValueError("Failure evidence currently requires sync mode and at least 15 steps")
     if not 0 <= warmup_steps < steps or (warmup_steps and failure):
         raise ValueError(
@@ -257,14 +259,14 @@ def run_demo(
             return parent
 
         endpoints = []
-        shard_configuration = config.SerializeToString()
+        shard_process_configuration = config.SerializeToString()
         # Each shard binds an OS-assigned port and reports it before workers start.
         for index in range(shards):
             pipe = start(
                 f"shard-{index}",
                 _serve,
                 "shard",
-                shard_configuration,
+                shard_process_configuration,
                 index,
                 state_path=directory / f"shard-{index}.sqlite",
                 hidden_width=hidden_width,
@@ -272,11 +274,12 @@ def run_demo(
             )
             endpoints.append(_receive(pipe)["address"])
         config.shard_endpoints[:] = endpoints
+        coordinator_configuration = config.SerializeToString()
         coordinator_pipe = start(
             "coordinator",
             _serve,
             "coordinator",
-            config.SerializeToString(),
+            coordinator_configuration,
             0,
             state_path=directory / "coordinator.sqlite",
             fast_leases=bool(failure),
@@ -304,7 +307,10 @@ def run_demo(
                 observer = rpc.CoordinatorStub(channel)
 
                 def worker_state() -> pb.WorkerState | None:
-                    status = observer.GetStatus(pb.Empty(), timeout=2)
+                    try:
+                        status = observer.GetStatus(pb.Empty(), timeout=2)
+                    except grpc.RpcError:
+                        return None
                     return next(
                         (item for item in status.workers if item.worker_id == "worker-0"), None
                     )
@@ -336,7 +342,13 @@ def run_demo(
                 expected_dead: set[str] = set()
                 active = wait_for(active_worker)
                 killed_at = time.monotonic()
-                victim = "worker-0" if failure == "worker" else "shard-0"
+                victim = (
+                    "worker-0"
+                    if failure == "worker"
+                    else "coordinator"
+                    if failure == "coordinator"
+                    else "shard-0"
+                )
                 expected_dead.add(victim)
                 processes[victim].terminate()
                 processes[victim].join(timeout=5)
@@ -361,6 +373,26 @@ def run_demo(
                         and item.step > active.step
                     )
                     detector = "coordinator heartbeat lease"
+                elif failure == "coordinator":
+                    detected_at = time.monotonic()
+                    replacement = start(
+                        "coordinator",
+                        _serve,
+                        "coordinator",
+                        coordinator_configuration,
+                        0,
+                        state_path=directory / "coordinator.sqlite",
+                        address=address,
+                        fast_leases=True,
+                    )
+                    _receive(replacement)
+                    expected_dead.discard("coordinator")
+                    wait_for(
+                        lambda: (item := worker_state())
+                        and item.generation > active.generation
+                        and item.step > active.step
+                    )
+                    detector = "coordinator endpoint loss"
                 else:
                     with open_channel(endpoints[0], security) as shard_channel:
                         try:
@@ -376,7 +408,7 @@ def run_demo(
                         "shard-0",
                         _serve,
                         "shard",
-                        shard_configuration,
+                        shard_process_configuration,
                         0,
                         state_path=directory / "shard-0.sqlite",
                         address=endpoints[0],
