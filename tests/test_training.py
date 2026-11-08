@@ -30,6 +30,13 @@ def test_two_workers_two_shards_match_local_sgd_reference(tmp_path):
 
 
 @pytest.mark.distributed
+def test_single_worker_two_shards_uses_the_worker_device_slot(tmp_path):
+    result = run_demo(mode="sync", steps=2, workers=1, shards=2, output=tmp_path / "run.json")
+    assert result["worker_count"] == 1
+    assert result["shard_versions"] == [2, 2]
+
+
+@pytest.mark.distributed
 def test_process_harness_accepts_external_workload(tmp_path):
     result = run_demo(
         mode="sync",

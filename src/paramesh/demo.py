@@ -305,7 +305,7 @@ def run_demo(
                 workload=active_workload,
                 device=worker_devices[index],
             )
-            for name in config.worker_ids
+            for index, name in enumerate(config.worker_ids)
         ]
         if failure:
             with open_channel(address, security) as channel:
