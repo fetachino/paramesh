@@ -4,8 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from paramesh.postgres_state import PostgresStateDB
 from paramesh.coordinator import Coordinator
+from paramesh.postgres_state import PostgresStateDB
 from paramesh.rpc import training_pb2 as pb
 from paramesh.state import MAX_STATE_BYTES
 
