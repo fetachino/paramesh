@@ -6,8 +6,17 @@ import sqlite3
 import sys
 import threading
 from pathlib import Path
+from typing import Protocol
 
 MAX_STATE_BYTES = 16 * 1024 * 1024
+
+
+class StateStore(Protocol):
+    def get(self, key: str) -> bytes | None: ...
+
+    def put(self, key: str, payload: bytes) -> None: ...
+
+    def close(self) -> None: ...
 
 
 class StateDB:

@@ -13,7 +13,7 @@ from paramesh.rpc import training_pb2 as pb
 from paramesh.rpc import training_pb2_grpc as rpc
 from paramesh.security import CHANNEL_OPTIONS, RpcSecurity, ServerAuth, open_channel
 from paramesh.shard import ParameterShard, StaleGradientError
-from paramesh.state import StateDB
+from paramesh.state import StateStore
 
 
 def _call[T](context: Any, operation: Callable[[], T]) -> T:
@@ -141,7 +141,7 @@ class ShardService:
 def managed_coordinator(
     config: pb.RunConfig,
     *,
-    state: StateDB | None = None,
+    state: StateStore | None = None,
     suspect_after: float = 5,
     unavailable_after: float = 15,
     security: RpcSecurity | None = None,

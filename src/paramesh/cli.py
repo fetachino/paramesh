@@ -18,7 +18,7 @@ from paramesh.rpc import training_pb2_grpc as rpc
 from paramesh.security import RpcSecurity, open_channel
 from paramesh.services import coordinator_server, managed_coordinator, shard_server
 from paramesh.shard import ParameterShard
-from paramesh.state import StateDB
+from paramesh.state import StateDB, StateStore
 from paramesh.tensors import partition
 
 
@@ -76,6 +76,10 @@ def main() -> None:
         if name == "coordinator":
             service.add_argument("--suspect-after", type=float, default=5)
             service.add_argument("--unavailable-after", type=float, default=15)
+            service.add_argument(
+                "--postgres-dsn",
+                help="Optional PostgreSQL DSN for durable coordinator state and fencing",
+            )
         if name == "shard":
             service.add_argument("--index", type=int, required=True)
     worker = commands.add_parser("worker")
@@ -311,10 +315,16 @@ def main() -> None:
         assert security is not None
         security.require_admin()
         if args.command == "coordinator":
-            storage = StateDB(args.state_dir / "coordinator.sqlite")
+            coordinator_storage: StateStore
+            if args.postgres_dsn:
+                from paramesh.postgres_state import PostgresStateDB
+
+                coordinator_storage = PostgresStateDB(args.postgres_dsn)
+            else:
+                coordinator_storage = StateDB(args.state_dir / "coordinator.sqlite")
             coordinator = managed_coordinator(
                 config,
-                state=storage,
+                state=coordinator_storage,
                 suspect_after=args.suspect_after,
                 unavailable_after=args.unavailable_after,
                 security=security,
@@ -389,7 +399,10 @@ def main() -> None:
             pass
         finally:
             server.stop(3).wait()
-            storage.close()
+            if args.command == "coordinator":
+                coordinator_storage.close()
+            else:
+                storage.close()
 
 
 if __name__ == "__main__":
