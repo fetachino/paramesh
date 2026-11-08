@@ -89,8 +89,10 @@ shared run configuration must list `worker-0` through `worker-3`.
 
 The primary host runs the coordinator, shard-0, and workers 0/1. The secondary host
 runs shard-1 and workers 2/3. These overlays preserve separate worker state volumes
-and the existing mTLS environment. They are an experimental measurement path, not
-a production default or a claim of arbitrary worker-count scaling.
+and the existing mTLS environment. For digest-qualified runs, merge
+`deploy/immutable/compose-4worker.yaml` after the four-worker overlay on both hosts.
+They are an experimental measurement path, not a production default or a claim of
+arbitrary worker-count scaling.
 Include `localhost` and `127.0.0.1` for the existing in-container health probes.
 Use a separate NATS server certificate and key in `PARAMESH_NATS_TLS_DIR`; only
 the NATS container mounts that directory. NATS clients trust `ca.pem` and use the

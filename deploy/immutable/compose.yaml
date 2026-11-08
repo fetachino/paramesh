@@ -22,9 +22,3 @@ services:
   worker-1:
     build: !reset null
     image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}
-  worker-2:
-    build: !reset null
-    image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}
-  worker-3:
-    build: !reset null
-    image: ${PARAMESH_IMAGE:?Set PARAMESH_IMAGE to a digest-qualified image}
