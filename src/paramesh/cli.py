@@ -81,6 +81,9 @@ def main() -> None:
     worker.add_argument("--steps", type=int, default=20)
     worker.add_argument("--state-dir", type=Path, default=Path("state"))
     worker.add_argument("--step-delay", type=float, default=0)
+    worker.add_argument(
+        "--device", default="cpu", help="PyTorch device (cpu or an available CUDA device)"
+    )
     status = commands.add_parser("status")
     status.add_argument("--coordinator", default="127.0.0.1:50050")
     check = commands.add_parser("check-shard")
@@ -284,6 +287,7 @@ def main() -> None:
                         state=storage,
                         step_delay=args.step_delay,
                         security=security,
+                        device=args.device,
                     )
                 )
             )

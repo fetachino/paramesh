@@ -43,14 +43,15 @@ or small teams using the documented workflow.
 - [x] Extend the controlled topology beyond the initial two-host baseline with an
       experimental four-worker private-VPC run; the completion/equal-state record
       is in [the four-worker evidence](docs/evidence/benchmarks/gcp-multihost-4worker-2026-11-08/README.md).
-- [ ] Add repeated four-worker performance and fault-timing measurements; the
-      two-host performance baseline and four-worker completion run do not establish
-      a general scaling law.
+- [x] Add repeated four-worker performance and fault-timing measurements with raw
+      JSON/CSV, checksums, and explicit workstation limitations.
 - [x] Prepare and verify private host addressing, RPC mTLS, NATS TLS, remote metrics targets and persistent role restart on an isolated Docker bridge; this is a single-host simulation only.
 - [x] Run an actual two-VM Google Cloud private-VPC deployment with cross-host training,
       observability, controlled live checkpoint publication/restore validation and process restart;
       [completed checkpoint-gate evidence](docs/evidence/gcp-multihost-919bc0-20261104/README.md).
 - [x] Add configurable larger-payload loopback measurements while retaining numerical-reference checks.
+- [x] Measure uncompressed network/payload behavior before making a compression decision;
+      compression remains deferred because the measured small workload is not network-bound.
 - [ ] Add compression only when measured payload/network bottlenecks justify it;
       current larger-payload and private-VPC measurements do not yet establish that
       bottleneck.

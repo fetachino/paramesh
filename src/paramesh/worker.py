@@ -44,14 +44,21 @@ def train_worker(
     security: RpcSecurity | None = None,
     hidden_width: int = 8,
     workload: TrainingWorkload | None = None,
+    device: str = "cpu",
 ) -> dict[str, Any]:
     if steps < 1 or not math.isfinite(timeout) or timeout <= 0:
         raise ValueError("steps and timeout must be positive")
     if not math.isfinite(step_delay) or step_delay < 0:
         raise ValueError("step_delay must be finite and nonnegative")
+    try:
+        training_device = torch.device(device)
+    except RuntimeError as error:
+        raise ValueError(f"Unsupported training device: {device}") from error
+    if training_device.type == "cuda" and not torch.cuda.is_available():
+        raise ValueError("CUDA training requested but this PyTorch runtime has no CUDA device")
     torch.set_num_threads(1)
     active_workload = workload or bundled_workload(hidden_width)
-    network = active_workload.model_factory()
+    network = active_workload.model_factory().to(training_device)
     progress = [0, 0]
     checkpoint_epoch = [0]
     progress_lock = threading.Lock()
@@ -65,6 +72,7 @@ def train_worker(
         session = _register(coordinator, worker_id, timeout)
         config = session.config
         inputs, targets = active_workload.dataset_factory(list(config.worker_ids).index(worker_id))
+        inputs, targets = inputs.to(training_device), targets.to(training_device)
         clients = [
             rpc.ParameterShardStub(stack.enter_context(open_channel(endpoint, security)))
             for endpoint in config.shard_endpoints

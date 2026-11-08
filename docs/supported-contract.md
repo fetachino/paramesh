@@ -31,9 +31,10 @@ cluster support.
 - Checkpoint restore requires compatible parameter names, shapes, dtype, optimizer
   settings, shard count, and protocol/state schema. Do not mix incompatible shard
   volumes or restore into a live run.
-- The system is CPU-focused. GPU scheduling, arbitrary model packaging, coordinator
-  consensus, high availability, and managed multi-tenant operation are not supported
-  claims.
+- Workers accept an opt-in PyTorch `--device` value, including CUDA when the runtime provides it.
+  The published CPU-only environment validates the device contract but does not claim native GPU
+  correctness or performance. Arbitrary model packaging, coordinator consensus, high availability,
+  and managed multi-tenant operation are not supported claims.
 
 ## What adoption feedback should measure
 
