@@ -552,7 +552,9 @@ the measured payload and latency evidence does not yet show a bandwidth bottlene
 Process restart requires retained local volumes;
 offline whole-run recovery can use an exported local/S3/Azure checkpoint. The system
 does not provide coordinator consensus or replicated live training state.
-The protocol is float32-only and the workload is fixed and CPU-only.
+The protocol is float32-only. Workers default to CPU and support an opt-in PyTorch device via
+`--device`; see [optional GPU execution](docs/gpu.md). Native CUDA validation and GPU packaging
+remain outside the published CPU release.
 
 See [checkpoint operator commands](docs/checkpoints.md) for private SeaweedFS/Azurite verification,
 offline export, coordinated live export, fresh-directory restore and fresh-volume installation.
