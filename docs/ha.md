@@ -46,3 +46,8 @@ with SHA-256 `788d71987f07c652b3c51772441c960d5438ef190daca0fa83b02aeb9ef3a97c`.
 This closes database replication and promotion evidence for the disposable Docker topology. The
 active-training coordinator replacement and checkpoint continuity check is preserved separately
 above; production database redundancy and cross-host availability remain out of scope.
+
+The provider-neutral production prerequisites and failover procedure are in the
+[production PostgreSQL HA readiness runbook](production-postgres-ha.md). That
+runbook is preparation only; it does not claim that the current single-node
+production deployment has been migrated.
