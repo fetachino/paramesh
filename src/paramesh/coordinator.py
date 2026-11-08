@@ -100,7 +100,9 @@ class Coordinator:
                     raise ValueError("Stored worker is outside configured membership")
                 self.workers[name] = Worker(
                     session_id="",
-                    last_seen=self.clock() - unavailable_after,
+                    # Leave a strict lease margin so a replacement can immediately
+                    # fence the prior session instead of racing the expiry boundary.
+                    last_seen=self.clock() - unavailable_after - 1,
                     step=worker["step"],
                     version=worker["version"],
                     completed=worker["completed"],

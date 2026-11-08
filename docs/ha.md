@@ -19,10 +19,12 @@ This is active/passive coordinator failover, not a replicated PostgreSQL service
 zero-downtime high availability. The database itself must be durable and independently protected;
 the free local Docker test only verifies fencing and state recovery.
 
-The local recovery harness also verifies coordinator process replacement during an active
-synchronous run: workers reconnect to the replacement endpoint, shards fence the old generation,
-and the run completes with matching shard versions and the existing numerical reference check.
-This is single-host process-failure evidence, not a claim of cross-region availability.
+The existing SQLite harness verifies coordinator process replacement during an active synchronous
+run. The PostgreSQL-backed harness in
+`artifacts/postgres-training-failover-20261108/` extends that check through a promoted database;
+the current run reached the replacement and workers completed, but the post-failover checkpoint
+did not reach a safe lease before its bounded timeout. This release gate remains open until that
+checkpoint-continuity run passes. This is not a claim of cross-region availability.
 
 ## Disposable PostgreSQL replication evidence
 
