@@ -102,6 +102,7 @@ def _train(
     warmup_steps: int = 0,
     hidden_width: int = 8,
     workload: TrainingWorkload | None = None,
+    device: str = "cpu",
 ) -> None:
     from paramesh import telemetry
     from paramesh.worker import train_worker
@@ -120,6 +121,7 @@ def _train(
                 security=security,
                 hidden_width=hidden_width,
                 workload=workload,
+                device=device,
             )
             warmup_elapsed = time.perf_counter() - warmup_started
             pipe.send({"phase": "warmup_complete"})
@@ -137,6 +139,7 @@ def _train(
             security=security,
             hidden_width=hidden_width,
             workload=workload,
+            device=device,
         )
         ended = time.perf_counter()
         if signals is not None:
@@ -202,6 +205,7 @@ def run_demo(
     warmup_steps: int = 0,
     hidden_width: int = 8,
     workload: TrainingWorkload | None = None,
+    device: str = "cpu",
 ) -> dict[str, Any]:
     if (
         mode not in MODES
@@ -291,6 +295,7 @@ def run_demo(
                 warmup_steps=warmup_steps,
                 hidden_width=hidden_width,
                 workload=active_workload,
+                device=device,
             )
             for name in config.worker_ids
         ]

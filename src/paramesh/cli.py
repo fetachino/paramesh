@@ -41,6 +41,9 @@ def main() -> None:
     demo.add_argument("--shards", type=int, default=2)
     demo.add_argument("--steps", type=int, default=20)
     demo.add_argument("--output", type=Path, default=Path("artifacts/demo.json"))
+    demo.add_argument(
+        "--device", default="cpu", help="PyTorch device (cpu or an available CUDA device)"
+    )
     demo.add_argument("--failure", choices=["worker", "shard"], default=None)
     benchmark = commands.add_parser(
         "benchmark", help="Measure repeated uncompressed warm-process runs"
@@ -216,6 +219,7 @@ def main() -> None:
             steps=args.steps,
             output=args.output,
             failure=args.failure,
+            device=args.device,
         )
         print(
             json.dumps(
