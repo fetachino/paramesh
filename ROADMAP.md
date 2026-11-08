@@ -58,6 +58,9 @@ or small teams using the documented workflow.
 - [ ] Add compression only when measured payload/network bottlenecks justify it;
       current larger-payload and private-VPC measurements do not yet establish that
       bottleneck.
+- [ ] Deploy and validate a durable two-node production PostgreSQL topology;
+      the provider-neutral [readiness runbook](docs/production-postgres-ha.md)
+      is preparation only and the current hosted deployment remains single-node.
 - [x] Add optional NATS lifecycle events without using it for gradient traffic.
 - [x] Instrument Prometheus metrics, OpenTelemetry context propagation and structured lifecycle logs.
 - [x] Exercise Grafana, Tempo and Loki against real training runs.
