@@ -40,13 +40,17 @@ or small teams using the documented workflow.
 - [x] Add Azure Blob checkpoint storage and actual authenticated Azurite/SDK restore tests.
 - [x] Measure local uncompressed RPC latency, byte counts, throughput and loss;
       preserve raw JSON/CSV, charts, hardware/configuration/source metadata.
-- [ ] Extend controlled measurements to multi-host scaling and repeated faults.
+- [ ] Extend controlled measurements beyond the initial two-host baseline and add
+      repeated-fault timing; the first two clean private-VPC runs are preserved in
+      [the GCP performance evidence](docs/evidence/benchmarks/gcp-multihost-performance-2026-11-07/README.md).
 - [x] Prepare and verify private host addressing, RPC mTLS, NATS TLS, remote metrics targets and persistent role restart on an isolated Docker bridge; this is a single-host simulation only.
 - [x] Run an actual two-VM Google Cloud private-VPC deployment with cross-host training,
       observability, controlled live checkpoint publication/restore validation and process restart;
       [completed checkpoint-gate evidence](docs/evidence/gcp-multihost-919bc0-20261104/README.md).
 - [x] Add configurable larger-payload loopback measurements while retaining numerical-reference checks.
-- [ ] Add compression only when measured payload/network bottlenecks justify it.
+- [ ] Add compression only when measured payload/network bottlenecks justify it;
+      current larger-payload and private-VPC measurements do not yet establish that
+      bottleneck.
 - [x] Add optional NATS lifecycle events without using it for gradient traffic.
 - [x] Instrument Prometheus metrics, OpenTelemetry context propagation and structured lifecycle logs.
 - [x] Exercise Grafana, Tempo and Loki against real training runs.

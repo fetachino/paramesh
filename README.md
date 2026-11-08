@@ -543,7 +543,11 @@ Existing correctness screenshots and startup-inclusive durations remain separate
 
 The host-addressing, mTLS, NATS TLS, metrics-discovery and restart path is prepared
 and verified on an isolated private Docker network; that remains a single-host
-simulation. Compression and controlled multi-host performance measurements remain pending. Process restart requires retained local volumes;
+simulation. A narrow two-host private-VPC performance baseline is now recorded in
+[the GCP evidence](docs/evidence/benchmarks/gcp-multihost-performance-2026-11-07/README.md),
+but it is not a general scaling claim. Compression remains deferred because the
+measured payload and latency evidence does not yet show a bandwidth bottleneck.
+Process restart requires retained local volumes;
 offline whole-run recovery can use an exported local/S3/Azure checkpoint. The system
 does not provide coordinator consensus or replicated live training state.
 The protocol is float32-only and the workload is fixed and CPU-only.
