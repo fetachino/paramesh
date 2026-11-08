@@ -1,0 +1,715 @@
+{
+  "schema_version": 1,
+  "run_id": "demo-1c418f0218c7",
+  "configuration": {
+    "run_id": "demo-1c418f0218c7",
+    "mode": "SYNCHRONOUS",
+    "shard_endpoints": [
+      "127.0.0.1:45531",
+      "127.0.0.1:38545"
+    ],
+    "worker_ids": [
+      "worker-0",
+      "worker-1"
+    ],
+    "max_staleness": 1,
+    "learning_rate": 0.05,
+    "barrier_timeout_seconds": 15.0,
+    "aggregation": "MEAN"
+  },
+  "mode": "sync",
+  "steps_per_worker": 8,
+  "worker_count": 2,
+  "shard_count": 2,
+  "process_count": 5,
+  "shard_versions": [
+    8,
+    8
+  ],
+  "worker_health": {
+    "worker-0": "completed",
+    "worker-1": "completed"
+  },
+  "worker_generations": {
+    "worker-0": 2,
+    "worker-1": 2
+  },
+  "ownership": {
+    "bias": 0,
+    "weight": 0
+  },
+  "initial_loss": 17.03907585144043,
+  "final_loss": 3.062697649002075,
+  "max_parameter_error": 2.9802322387695312e-08,
+  "worker_results": [
+    {
+      "worker_id": "worker-0",
+      "steps": 8,
+      "losses": [
+        11.275457382202148,
+        8.943159103393555,
+        7.113824844360352,
+        5.67512845993042,
+        4.5405473709106445,
+        3.6433022022247314
+      ],
+      "refreshes": 0,
+      "resumed_from": 2,
+      "replayed_contributions": 0,
+      "measurement": {
+        "start": 839.181979271,
+        "end": 839.429501898,
+        "sample_drops": 0,
+        "warmup_session_seconds": 0.7279685170000221,
+        "rpc_samples": [
+          {
+            "method": "RegisterWorker",
+            "status": "OK",
+            "duration_seconds": 0.02420083300000897,
+            "request_bytes": 12,
+            "response_bytes": 133
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0021553990000029444,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0020265219999373585,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.007333939999966788,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0012735200000406621,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0010809249999965687,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0026362810000364334,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "Heartbeat",
+            "status": "OK",
+            "duration_seconds": 0.016181386000084785,
+            "request_bytes": 67,
+            "response_bytes": 54
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.013384653999992224,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.007334595999964222,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0012307260000170572,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0010185480000473035,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0013241059999700155,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0008471950000057404,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.0042114480000918775,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.0072991099999626385,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0010736550000274292,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0010604240000020582,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0010907900000347581,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0008110470000701753,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.0066953180000837165,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.007257741999978862,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0014985430000251654,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0009791360000690474,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.001461856999981137,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0010873040000660694,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.005077099999994061,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.00710118799997872,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0012227429999711603,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.00101699800006827,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0009330950000503435,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0008396030000312749,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.014309234999927867,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.007245176999958858,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.001143791999993482,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0009811450000825062,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.001262518999965323,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0009865879999324534,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.007096142000023065,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.0041594449999138305,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "unknown",
+            "status": "OK",
+            "duration_seconds": 0.0012692389999529041,
+            "request_bytes": 29,
+            "response_bytes": 0
+          },
+          {
+            "method": "Heartbeat",
+            "status": "OK",
+            "duration_seconds": 0.007473997000033705,
+            "request_bytes": 69,
+            "response_bytes": 56
+          }
+        ]
+      }
+    },
+    {
+      "worker_id": "worker-1",
+      "steps": 8,
+      "losses": [
+        10.527002334594727,
+        8.574457168579102,
+        7.002775192260742,
+        5.733956336975098,
+        4.706692218780518,
+        3.872657299041748
+      ],
+      "refreshes": 0,
+      "resumed_from": 2,
+      "replayed_contributions": 0,
+      "measurement": {
+        "start": 839.18232993,
+        "end": 839.432513979,
+        "sample_drops": 0,
+        "warmup_session_seconds": 0.710225424999976,
+        "rpc_samples": [
+          {
+            "method": "RegisterWorker",
+            "status": "OK",
+            "duration_seconds": 0.04540922099999989,
+            "request_bytes": 12,
+            "response_bytes": 133
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0018689209999820378,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.002010441000038554,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "Heartbeat",
+            "status": "OK",
+            "duration_seconds": 0.0012322449999828677,
+            "request_bytes": 67,
+            "response_bytes": 54
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0013991850000820705,
+            "request_bytes": 19,
+            "response_bytes": 68
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0008006639999393883,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.000976320999939162,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0008840190000682924,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.004002434999961224,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.0074367539999684595,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.001117723999982445,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0010263969999186884,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.001040074000002278,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0009230429999433909,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.004326641999909953,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.0071438789999547225,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0012291589999904318,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.001152525000065907,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0011276950000365105,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0009173340000643293,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.0041472479999811185,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.00740083899995625,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0014196160000210511,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.001145497000038631,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.001039374000015414,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0009675689999539827,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.005033675000049698,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.007151002999989942,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0014985170000727521,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0010590330000468384,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.001106782999954703,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0012441320000107225,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.012058727000066938,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.007191842999986875,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0009403839999322372,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "GetProgress",
+            "status": "OK",
+            "duration_seconds": 0.0010271620000139592,
+            "request_bytes": 19,
+            "response_bytes": 58
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0010627149999891117,
+            "request_bytes": 19,
+            "response_bytes": 75
+          },
+          {
+            "method": "PullParameters",
+            "status": "OK",
+            "duration_seconds": 0.0009354590000612006,
+            "request_bytes": 19,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.009689245999993545,
+            "request_bytes": 108,
+            "response_bytes": 2
+          },
+          {
+            "method": "PushGradients",
+            "status": "OK",
+            "duration_seconds": 0.0041269069999998464,
+            "request_bytes": 35,
+            "response_bytes": 2
+          },
+          {
+            "method": "unknown",
+            "status": "OK",
+            "duration_seconds": 0.0016213970000080735,
+            "request_bytes": 29,
+            "response_bytes": 0
+          },
+          {
+            "method": "Heartbeat",
+            "status": "OK",
+            "duration_seconds": 0.01015974900008132,
+            "request_bytes": 69,
+            "response_bytes": 56
+          }
+        ]
+      }
+    }
+  ],
+  "failure": null,
+  "worker_wall_seconds_including_startup": 2.849173981999911,
+  "environment": {
+    "python": "3.13.16",
+    "torch": "2.11.0+cu130",
+    "os": "Linux",
+    "machine": "x86_64",
+    "commit": "51b9d3d36c485ec7bf8c27f92fdb6594bb80014f",
+    "source_dirty": false,
+    "captured_at": "2026-11-08T19:14:05.037386+00:00"
+  },
+  "workload": {
+    "model": "Linear",
+    "hidden_width": 8,
+    "dataset": "factory-provided regression batches",
+    "samples_per_worker": 32,
+    "learning_rate": 0.05,
+    "aggregation": "mean",
+    "optimizer": "SGD",
+    "device": [
+      "cuda:0",
+      "cuda:1"
+    ],
+    "torch_threads": 1,
+    "parameter_bytes": 20,
+    "transport_dtype": "float32"
+  },
+  "warmup": {
+    "steps_per_worker": 2,
+    "shard_versions": [
+      2,
+      2
+    ],
+    "loss": 10.901229858398438
+  }
+}

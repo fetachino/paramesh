@@ -8,6 +8,7 @@ import platform
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -184,6 +185,7 @@ def run_benchmarks(
     hidden_width: int = 8,
     workload: TrainingWorkload | None = None,
     device: str = "cpu",
+    devices: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     counts = (repetitions, warmup_steps, measured_steps, workers, shards, hidden_width)
     if (
@@ -198,6 +200,7 @@ def run_benchmarks(
         or len(set(modes)) != len(modes)
         or any(mode not in MODES for mode in modes)
         or device not in ("cpu", "cuda")
+        or (devices is not None and len(devices) != workers)
     ):
         raise ValueError("Invalid benchmark modes, repetitions, warm-up, steps or topology")
     output.mkdir(parents=True, exist_ok=False)
@@ -217,6 +220,7 @@ def run_benchmarks(
             "hidden_width": hidden_width,
             "compression": "none",
             "device": device,
+            "devices": list(devices) if devices is not None else None,
         },
         "hardware": hardware(),
         "lock_sha256": hashlib.sha256(lock.read_bytes()).hexdigest() if lock.exists() else None,
@@ -260,6 +264,7 @@ def run_benchmarks(
                         hidden_width=hidden_width,
                         workload=workload,
                         device=device,
+                        devices=devices,
                         output=output / f"trial-{index:03d}-{mode}.json",
                     )
                     row = {

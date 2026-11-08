@@ -23,6 +23,18 @@ def test_warm_process_measurement_excludes_warmup_and_preserves_numerical_refere
         assert all(item["request_bytes"] > 0 for item in pushes)
 
 
+def test_per_worker_devices_are_recorded_and_preserve_correctness(tmp_path):
+    report = run_demo(
+        steps=3,
+        workers=2,
+        shards=2,
+        devices=["cpu", "cpu"],
+        output=tmp_path / "per-worker-devices.json",
+    )
+    assert report["workload"]["device"] == ["cpu", "cpu"]
+    assert report["max_parameter_error"] < 1e-6
+
+
 def test_larger_model_payload_preserves_reference_and_is_reported(tmp_path):
     report = run_demo(
         steps=3,

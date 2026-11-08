@@ -29,6 +29,12 @@ def main() -> None:
     parser.add_argument("--warmup-steps", type=int, default=20)
     parser.add_argument("--steps", type=int, default=200)
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    parser.add_argument(
+        "--devices",
+        nargs=2,
+        metavar=("WORKER0", "WORKER1"),
+        help="Optional per-worker PyTorch devices, e.g. cuda:0 cuda:1",
+    )
     args = parser.parse_args()
     report = run_benchmarks(
         args.output,
@@ -37,6 +43,7 @@ def main() -> None:
         measured_steps=args.steps,
         workload=TrainingWorkload(make_model, make_batch),
         device=args.device,
+        devices=args.devices,
     )
     print(json.dumps(report, indent=2))
 
