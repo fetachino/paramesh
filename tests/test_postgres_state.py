@@ -5,6 +5,8 @@ from types import SimpleNamespace
 import pytest
 
 from paramesh.postgres_state import PostgresStateDB
+from paramesh.coordinator import Coordinator
+from paramesh.rpc import training_pb2 as pb
 from paramesh.state import MAX_STATE_BYTES
 
 
@@ -91,3 +93,47 @@ def test_postgres_state_roundtrip_and_fencing():
         assert replacement.get("coordinator-test") == b"durable"
     finally:
         replacement.close()
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PARAMESH_POSTGRES_DSN"), reason="PostgreSQL integration opt-in"
+)
+def test_postgres_coordinator_replacement_recovers_worker_session_state():
+    dsn = os.environ["PARAMESH_POSTGRES_DSN"]
+    config = pb.RunConfig(
+        run_id="postgres-ha-test",
+        mode=pb.SYNCHRONOUS,
+        shard_endpoints=["127.0.0.1:1"],
+        worker_ids=["worker-0"],
+        learning_rate=0.05,
+        barrier_timeout_seconds=5,
+    )
+    primary_store = PostgresStateDB(dsn, lock_name="postgres-ha-test")
+    primary = Coordinator(config, state=primary_store)
+    session = primary.register("worker-0", 1)
+    primary.heartbeat(
+        pb.HeartbeatRequest(
+            run_id=config.run_id,
+            worker_id="worker-0",
+            session_id=session.session_id,
+            step=3,
+            parameter_version=3,
+        )
+    )
+    primary_store.close()
+    replacement_store = PostgresStateDB(dsn, lock_name="postgres-ha-test")
+    replacement = Coordinator(config, state=replacement_store)
+    assert replacement.status().global_step == 3
+    replacement_session = replacement.register("worker-0", 1)
+    assert replacement_session.generation == 2
+    with pytest.raises(PermissionError):
+        replacement.heartbeat(
+            pb.HeartbeatRequest(
+                run_id=config.run_id,
+                worker_id="worker-0",
+                session_id=session.session_id,
+                step=4,
+                parameter_version=4,
+            )
+        )
+    replacement_store.close()
