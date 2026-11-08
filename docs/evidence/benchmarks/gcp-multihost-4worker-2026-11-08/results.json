@@ -1,0 +1,19 @@
+{
+  "run_id": "mh-perf-4worker-20261108",
+  "source_sha": "ed5809e27352ffc5623fe3ea93dbe148a97d3e5d",
+  "image": "ghcr.io/fetachino/paramesh@sha256:8704ead5088d3adb03641ea6a7ce30bcdd6474311df4d9cc7f2545570ad317b3",
+  "platform": "linux/amd64",
+  "hosts": 2,
+  "workers": 4,
+  "shards": 2,
+  "steps": 100,
+  "mode": "SYNCHRONOUS",
+  "barrier_timeout_seconds": 30,
+  "compression": false,
+  "worker_steps": {"worker-0": 100, "worker-1": 100, "worker-2": 100, "worker-3": 100},
+  "shard_versions": {"shard-0": 100, "shard-1": 100},
+  "shard_receipts": {"shard-0": 4, "shard-1": 4},
+  "checkpoint_epoch": 0,
+  "production_changed": false,
+  "temporary_resources_cleaned": true
+}

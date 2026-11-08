@@ -40,9 +40,12 @@ or small teams using the documented workflow.
 - [x] Add Azure Blob checkpoint storage and actual authenticated Azurite/SDK restore tests.
 - [x] Measure local uncompressed RPC latency, byte counts, throughput and loss;
       preserve raw JSON/CSV, charts, hardware/configuration/source metadata.
-- [ ] Extend controlled measurements beyond the initial two-host baseline and add
-      repeated-fault timing; the first two clean private-VPC runs are preserved in
-      [the GCP performance evidence](docs/evidence/benchmarks/gcp-multihost-performance-2026-11-07/README.md).
+- [x] Extend the controlled topology beyond the initial two-host baseline with an
+      experimental four-worker private-VPC run; the completion/equal-state record
+      is in [the four-worker evidence](docs/evidence/benchmarks/gcp-multihost-4worker-2026-11-08/README.md).
+- [ ] Add repeated four-worker performance and fault-timing measurements; the
+      two-host performance baseline and four-worker completion run do not establish
+      a general scaling law.
 - [x] Prepare and verify private host addressing, RPC mTLS, NATS TLS, remote metrics targets and persistent role restart on an isolated Docker bridge; this is a single-host simulation only.
 - [x] Run an actual two-VM Google Cloud private-VPC deployment with cross-host training,
       observability, controlled live checkpoint publication/restore validation and process restart;
