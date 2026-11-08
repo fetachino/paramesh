@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "captured_at": "2026-11-08T04:01:28.980527+00:00",
+  "configuration": {
+    "failures": [
+      "worker",
+      "shard"
+    ],
+    "repetitions": 3,
+    "mode": "sync",
+    "steps_per_worker": 20,
+    "workers": 2,
+    "shards": 2,
+    "step_delay_seconds": 0.1,
+    "lease_suspect_seconds": 1.5,
+    "lease_unavailable_seconds": 3
+  },
+  "hardware": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "machine": "AMD64",
+    "logical_cpu_count": 24,
+    "cpu_model": [
+      "13th Gen Intel(R) Core(TM) i7-13700F"
+    ],
+    "memory_bytes": 34055766016,
+    "clock": {
+      "implementation": "QueryPerformanceCounter()",
+      "monotonic": true,
+      "adjustable": false,
+      "resolution": 1e-07
+    },
+    "load_isolation": "uncontrolled workstation; background services may affect results"
+  },
+  "lock_sha256": "b56a8d30ff52d6068b98cc90eb41936c8cf3ccdf61f4de68d5f64698b3c12c42",
+  "trials": [
+    {
+      "trial": 0,
+      "repetition": 1,
+      "failure": "worker",
+      "commit": "07a40ac1e78679ca5fedeaf7ee248f82e0e3d5f8",
+      "source_dirty": false,
+      "worker_step_before_failure": 6,
+      "detection_seconds": 3.0,
+      "recovery_seconds_until_progress": 7.625,
+      "max_parameter_error": 5.960464477539063e-08,
+      "final_loss": 0.7338235378265381
+    },
+    {
+      "trial": 1,
+      "repetition": 1,
+      "failure": "shard",
+      "commit": "07a40ac1e78679ca5fedeaf7ee248f82e0e3d5f8",
+      "source_dirty": false,
+      "worker_step_before_failure": 6,
+      "detection_seconds": 0.5460000000002765,
+      "recovery_seconds_until_progress": 5.0460000000002765,
+      "max_parameter_error": 5.960464477539063e-08,
+      "final_loss": 0.7338235378265381
+    },
+    {
+      "trial": 2,
+      "repetition": 2,
+      "failure": "shard",
+      "commit": "07a40ac1e78679ca5fedeaf7ee248f82e0e3d5f8",
+      "source_dirty": false,
+      "worker_step_before_failure": 7,
+      "detection_seconds": 0.5470000000004802,
+      "recovery_seconds_until_progress": 4.109000000000378,
+      "max_parameter_error": 5.960464477539063e-08,
+      "final_loss": 0.7338235378265381
+    },
+    {
+      "trial": 3,
+      "repetition": 2,
+      "failure": "worker",
+      "commit": "07a40ac1e78679ca5fedeaf7ee248f82e0e3d5f8",
+      "source_dirty": false,
+      "worker_step_before_failure": 6,
+      "detection_seconds": 2.9689999999991414,
+      "recovery_seconds_until_progress": 6.546999999998661,
+      "max_parameter_error": 5.960464477539063e-08,
+      "final_loss": 0.7338235378265381
+    },
+    {
+      "trial": 4,
+      "repetition": 3,
+      "failure": "worker",
+      "commit": "07a40ac1e78679ca5fedeaf7ee248f82e0e3d5f8",
+      "source_dirty": false,
+      "worker_step_before_failure": 7,
+      "detection_seconds": 2.985000000000582,
+      "recovery_seconds_until_progress": 7.59400000000096,
+      "max_parameter_error": 5.960464477539063e-08,
+      "final_loss": 0.7338235378265381
+    },
+    {
+      "trial": 5,
+      "repetition": 3,
+      "failure": "shard",
+      "commit": "07a40ac1e78679ca5fedeaf7ee248f82e0e3d5f8",
+      "source_dirty": false,
+      "worker_step_before_failure": 7,
+      "detection_seconds": 0.5470000000004802,
+      "recovery_seconds_until_progress": 5.093999999999141,
+      "max_parameter_error": 5.960464477539063e-08,
+      "final_loss": 0.7338235378265381
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+089ca4cb0d480c8fabe2fdda067a67868289e8ea3eff46508ee647c01d73cd9f  docs/evidence/benchmarks/network-payload-local-2026-11-08/manifest.json
+35b23b60be80aa3af9689eb6a17019c31f8a4a5feba24f0dd9e3704a5d43e97a  docs/evidence/benchmarks/network-payload-local-2026-11-08/overview.png
+8c1f8f1bbd18f80e19fe4f79b3bb8fe22e352941a5771491aff8bdf9eded5b23  docs/evidence/benchmarks/network-payload-local-2026-11-08/overview.svg
+c8b774b0951a0a25f485e7599915777ec2fa2072d2e6079f8ee8db5b53f2ea57  docs/evidence/benchmarks/network-payload-local-2026-11-08/README.md
+d969e9415fb6bae865e977cb700a6a2f0d1a9c74aa42c7273170631e66846d9e  docs/evidence/benchmarks/network-payload-local-2026-11-08/rpc.csv
+74a94e37d8e05dc83c779062d3c1d766fa7434eb59f4f170a5eba858d06fc364  docs/evidence/benchmarks/network-payload-local-2026-11-08/trial-000-sync.json
+5e7a8d6515edebc2c490f4eb59a254ab8bbaefc1d2891901702e3a94fef11f2d  docs/evidence/benchmarks/network-payload-local-2026-11-08/trial-001-async.json
+957bc0c9aa2620927caa8df3b8007210947fde829c966c467b0f76a78d857985  docs/evidence/benchmarks/network-payload-local-2026-11-08/trial-002-bounded.json
+3af828f37fe8a23ee91bf54e2dcc1eae7e3b47a13e73787b7d238c136f21be92  docs/evidence/benchmarks/network-payload-local-2026-11-08/trial-003-async.json
+4d938123e63afdd477319d80b9b0bf5b6cd6ddb0ce8ce7d85c8261343c112b66  docs/evidence/benchmarks/network-payload-local-2026-11-08/trial-004-bounded.json
+a689632f80db29a87eb2e99d781af177b5b03818d3e7122868a72f126fe677d4  docs/evidence/benchmarks/network-payload-local-2026-11-08/trial-005-sync.json
+46175af29a20ca24899c5b4085740dca3b5a50f42d2266d4cc79bc8cba4a7734  docs/evidence/benchmarks/network-payload-local-2026-11-08/trial-006-bounded.json
+c1ba864b1156bd9bc5229ad2b208cef676020ba4f3213519fdd6beef9894d46d  docs/evidence/benchmarks/network-payload-local-2026-11-08/trial-007-sync.json
+6433c50ab87cee62cd30a4d9794c293b676ed60033e316cf9ebf5e008212a8ad  docs/evidence/benchmarks/network-payload-local-2026-11-08/trial-008-async.json
+d3f9bab7ae19a01ff702dbb3e424f5933fb589723cd548b2a44549f81c8c4f84  docs/evidence/benchmarks/network-payload-local-2026-11-08/trials.csv

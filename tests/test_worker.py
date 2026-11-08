@@ -56,6 +56,13 @@ def test_external_workload_factory_trains_with_existing_protocol(tmp_path):
         shard_server_instance.stop(0).wait()
 
 
+def test_worker_rejects_cuda_without_a_cuda_runtime():
+    if torch.cuda.is_available():
+        pytest.skip("This host has CUDA; the negative-path contract is host-specific")
+    with pytest.raises(ValueError, match="CUDA training requested"):
+        train_worker("127.0.0.1:1", "worker-0", 1, device="cuda")
+
+
 def test_parameter_loading_rejects_broadcastable_shapes_before_mutating():
     network = model()
     values = parameters()

@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "run_id": "demo-555e7d8c8c89",
+  "configuration": {
+    "run_id": "demo-555e7d8c8c89",
+    "mode": "SYNCHRONOUS",
+    "shard_endpoints": [
+      "127.0.0.1:59485",
+      "127.0.0.1:59486"
+    ],
+    "worker_ids": [
+      "worker-0",
+      "worker-1"
+    ],
+    "max_staleness": 1,
+    "learning_rate": 0.05,
+    "barrier_timeout_seconds": 15.0,
+    "aggregation": "MEAN"
+  },
+  "mode": "sync",
+  "steps_per_worker": 20,
+  "worker_count": 2,
+  "shard_count": 2,
+  "process_count": 5,
+  "shard_versions": [
+    20,
+    20
+  ],
+  "worker_health": {
+    "worker-0": "completed",
+    "worker-1": "completed"
+  },
+  "worker_generations": {
+    "worker-0": 2,
+    "worker-1": 1
+  },
+  "ownership": {
+    "0.bias": 0,
+    "0.weight": 1,
+    "2.bias": 1,
+    "2.weight": 1
+  },
+  "initial_loss": 14.232686996459961,
+  "final_loss": 0.7338235378265381,
+  "max_parameter_error": 5.960464477539063e-08,
+  "worker_results": [
+    {
+      "worker_id": "worker-0",
+      "steps": 20,
+      "losses": [
+        5.757126808166504,
+        4.399211883544922,
+        3.421017646789551,
+        2.7507338523864746,
+        2.305525302886963,
+        2.0129318237304688,
+        1.8187100887298584,
+        1.686029076576233,
+        1.5913925170898438,
+        1.5203518867492676,
+        1.4641742706298828,
+        1.417594075202942,
+        1.377403974533081
+      ],
+      "refreshes": 0,
+      "resumed_from": 7,
+      "replayed_contributions": 0
+    },
+    {
+      "worker_id": "worker-1",
+      "steps": 20,
+      "losses": [
+        7.752960205078125,
+        7.09056282043457,
+        6.336276054382324,
+        5.43095588684082,
+        4.406224727630615,
+        3.3546082973480225,
+        2.3865983486175537,
+        1.5873960256576538,
+        0.992711067199707,
+        0.5913145542144775,
+        0.344563752412796,
+        0.206948384642601,
+        0.1387656033039093,
+        0.11070553213357925,
+        0.1035347506403923,
+        0.1057964563369751,
+        0.11126337945461273,
+        0.11688678711652756,
+        0.12139322608709335,
+        0.12442101538181305
+      ],
+      "refreshes": 0,
+      "resumed_from": 0,
+      "replayed_contributions": 0
+    }
+  ],
+  "failure": {
+    "terminated_component": "worker-0",
+    "detector": "coordinator heartbeat lease",
+    "worker_step_before_failure": 7,
+    "lease_suspect_seconds": 1.5,
+    "lease_unavailable_seconds": 3,
+    "step_delay_seconds": 0.1,
+    "detection_seconds": 2.985000000000582,
+    "recovery_seconds_until_progress": 7.59400000000096,
+    "uncommitted_computation_lost": "not instrumented"
+  },
+  "worker_wall_seconds_including_startup": 13.343122700000094,
+  "environment": {
+    "python": "3.12.10",
+    "torch": "2.15.0+cpu",
+    "os": "Windows",
+    "machine": "AMD64",
+    "commit": "07a40ac1e78679ca5fedeaf7ee248f82e0e3d5f8",
+    "source_dirty": false,
+    "captured_at": "2026-11-08T04:03:35.346313+00:00"
+  },
+  "workload": {
+    "model": "Sequential",
+    "hidden_width": 8,
+    "dataset": "factory-provided regression batches",
+    "samples_per_worker": 32,
+    "learning_rate": 0.05,
+    "aggregation": "mean",
+    "optimizer": "SGD",
+    "device": "cpu",
+    "torch_threads": 1,
+    "parameter_bytes": 196,
+    "transport_dtype": "float32"
+  }
+}
