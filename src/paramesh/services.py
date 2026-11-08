@@ -196,7 +196,9 @@ def _server(address: str, concurrency: int, security: RpcSecurity | None) -> tup
 def coordinator_server(
     coordinator: Coordinator, address: str, *, security: RpcSecurity | None = None
 ) -> tuple[Any, int]:
-    server, port = _server(address, 8, security)
+    # Heartbeats and synchronous control RPCs must not exhaust the coordinator
+    # pool when the supported eight-worker topology is active.
+    server, port = _server(address, 2 * len(coordinator.config.worker_ids) + 4, security)
     rpc.add_CoordinatorServicer_to_server(CoordinatorService(coordinator), server)
     return server, port
 
