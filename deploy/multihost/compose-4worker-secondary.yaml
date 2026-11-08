@@ -1,0 +1,19 @@
+services:
+  checkpoint:
+    profiles: [primary-4worker]
+  coordinator:
+    profiles: [primary-4worker]
+  shard-0:
+    profiles: [primary-4worker]
+  worker-0:
+    profiles: [primary-4worker]
+  worker-1:
+    profiles: [primary-4worker]
+  dashboard:
+    profiles: [primary-4worker]
+  nats:
+    profiles: [primary-4worker]
+  tempo:
+    profiles: [primary-4worker]
+  prometheus:
+    profiles: [primary-4worker]
