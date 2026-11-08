@@ -1,5 +1,5 @@
 {
   "schema_version": 1,
   "status": "failed",
-  "failure": "TimeoutError: workers did not reach a checkpoint-safe lease after promotion: _InactiveRpcError: <_InactiveRpcError of RPC that terminated with:\n\tstatus = StatusCode.FAILED_PRECONDITION\n\tdetails = \"Every configured worker must be active with a healthy lease\"\n\tdebug_error_string = \"UNKNOWN:Error received from peer  {grpc_message:\"Every configured worker must be active with a healthy lease\", grpc_status:9}\"\n>"
+  "failure": "TimeoutError: workers did not reach a checkpoint-safe lease after promotion: _InactiveRpcError: <_InactiveRpcError of RPC that terminated with:\n\tstatus = StatusCode.FAILED_PRECONDITION\n\tdetails = \"Every configured worker must be active with a healthy lease\"\n\tdebug_error_string = \"UNKNOWN:Error received from peer  {grpc_status:9, grpc_message:\"Every configured worker must be active with a healthy lease\"}\"\n>"
 }

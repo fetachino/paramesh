@@ -18,6 +18,45 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.verify_postgres_replication import docker, sql, wait_for
 
 
+def serve_postgres_coordinator(
+    serialized: bytes, address: str, dsn: str, lock_name: str, pipe: Any
+) -> None:
+    from paramesh.postgres_state import PostgresStateDB
+    from paramesh.rpc import training_pb2 as pb
+    from paramesh.services import coordinator_server, managed_coordinator
+
+    server = None
+    store = None
+    try:
+        config = pb.RunConfig()
+        config.ParseFromString(serialized)
+        store = PostgresStateDB(dsn, lock_name=lock_name)
+        coordinator = managed_coordinator(config, state=store, suspect_after=1, unavailable_after=3)
+        server, port = coordinator_server(coordinator, address)
+        server.start()
+        pipe.send({"address": f"127.0.0.1:{port}"})
+        pipe.recv()
+    except EOFError:
+        pass
+    except Exception as error:
+        pipe.send({"error": f"{type(error).__name__}: {error}"})
+    finally:
+        if server is not None:
+            server.stop(0).wait()
+        if store is not None:
+            store.close()
+        pipe.close()
+
+
+def coordinator_status(address: str) -> Any:
+    from paramesh.rpc import training_pb2 as pb
+    from paramesh.rpc import training_pb2_grpc as rpc
+    from paramesh.security import open_channel
+
+    with open_channel(address, None) as channel:
+        return rpc.CoordinatorStub(channel).GetStatus(pb.Empty(), timeout=5)
+
+
 def free_port() -> int:
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
@@ -54,8 +93,8 @@ def main() -> None:
     host_db_port = free_port()
     coordinator_port = free_port()
     result: dict[str, object] = {"schema_version": 1, "status": "running"}
-    coordinator_server = None
-    coordinator_store = None
+    coordinator_process = None
+    coordinator_pipe = None
     shard_servers: list[Any] = []
     shard_stores: list[Any] = []
     workers: list[mp.Process] = []
@@ -65,8 +104,7 @@ def main() -> None:
         from paramesh.rpc import training_pb2 as pb
         from paramesh.rpc import training_pb2_grpc as rpc
         from paramesh.security import open_channel
-        from paramesh.services import coordinator_server as make_coordinator_server
-        from paramesh.services import managed_coordinator, shard_server
+        from paramesh.services import shard_server
         from paramesh.shard import ParameterShard
         from paramesh.state import StateDB
         from paramesh.storage import LocalStore
@@ -184,19 +222,23 @@ def main() -> None:
                 shard_servers.append(server)
                 settings.shard_endpoints[index] = f"127.0.0.1:{port}"
 
-            from paramesh.postgres_state import PostgresStateDB
-
-            coordinator_store = PostgresStateDB(
-                f"postgresql://postgres:{password}@127.0.0.1:{host_db_port}/postgres",
-                lock_name=f"training-{suffix}",
+            context = mp.get_context("spawn")
+            dsn = f"postgresql://postgres:{password}@127.0.0.1:{host_db_port}/postgres"
+            coordinator_pipe, child_pipe = context.Pipe()
+            coordinator_process = context.Process(
+                target=serve_postgres_coordinator,
+                args=(
+                    settings.SerializeToString(),
+                    f"127.0.0.1:{coordinator_port}",
+                    dsn,
+                    f"training-{suffix}",
+                    child_pipe,
+                ),
             )
-            coordinator = managed_coordinator(
-                settings, state=coordinator_store, suspect_after=1, unavailable_after=3
-            )
-            coordinator_server, port = make_coordinator_server(
-                coordinator, f"127.0.0.1:{coordinator_port}"
-            )
-            coordinator_server.start()
+            coordinator_process.start()
+            ready = coordinator_pipe.recv()
+            if "error" in ready:
+                raise RuntimeError(ready["error"])
             queue = mp.get_context("spawn").Queue()
             for worker_id in settings.worker_ids:
                 process = mp.get_context("spawn").Process(
@@ -208,11 +250,14 @@ def main() -> None:
 
             deadline = time.monotonic() + 45
             while time.monotonic() < deadline:
-                states = coordinator.status().workers
+                states = coordinator_status(f"127.0.0.1:{coordinator_port}").workers
                 if len(states) == 2 and min(item.step for item in states) >= 3:
                     break
                 time.sleep(0.2)
-            before = {item.worker_id: item.step for item in coordinator.status().workers}
+            before = {
+                item.worker_id: item.step
+                for item in coordinator_status(f"127.0.0.1:{coordinator_port}").workers
+            }
             if min(before.values(), default=0) < 3:
                 result["observed_workers"] = before
                 result["worker_exit_codes"] = [process.exitcode for process in workers]
@@ -225,10 +270,9 @@ def main() -> None:
                     result["worker_messages"] = messages
                 raise TimeoutError("workers did not enter active training before failover")
 
-            coordinator_server.stop(0).wait()
-            coordinator_store.close()
-            coordinator_server = None
-            coordinator_store = None
+            coordinator_process.terminate()
+            coordinator_process.join(timeout=10)
+            coordinator_process = None
             docker("stop", primary)
             docker(
                 "exec",
@@ -262,22 +306,21 @@ def main() -> None:
             )
             wait_for(promoted, password, "SELECT pg_is_in_recovery()", "f")
 
-            coordinator_store = PostgresStateDB(
-                f"postgresql://postgres:{password}@127.0.0.1:{host_db_port}/postgres",
-                lock_name=f"training-{suffix}",
+            coordinator_pipe, child_pipe = context.Pipe()
+            coordinator_process = context.Process(
+                target=serve_postgres_coordinator,
+                args=(
+                    settings.SerializeToString(),
+                    f"127.0.0.1:{coordinator_port}",
+                    dsn,
+                    f"training-{suffix}",
+                    child_pipe,
+                ),
             )
-            replacement = managed_coordinator(
-                settings, state=coordinator_store, suspect_after=1, unavailable_after=3
-            )
-            coordinator_server, _ = make_coordinator_server(
-                replacement, f"127.0.0.1:{coordinator_port}"
-            )
-            coordinator_server.start()
-
-            # Replacement coordinators must fence the persisted generations before
-            # workers can resume an in-flight synchronous barrier.
-            for worker_id in settings.worker_ids:
-                replacement.register(worker_id, 1)
+            coordinator_process.start()
+            ready = coordinator_pipe.recv()
+            if "error" in ready:
+                raise RuntimeError(ready["error"])
 
             checkpoint_root = root / "checkpoint"
             checkpoint_store = LocalStore(checkpoint_root)
@@ -303,7 +346,7 @@ def main() -> None:
             for process in workers:
                 process.join(timeout=90)
             messages = [queue.get(timeout=5) for _ in workers]
-            final = replacement.status()
+            final = coordinator_status(f"127.0.0.1:{coordinator_port}")
             shard_versions = []
             for endpoint in settings.shard_endpoints:
                 with open_channel(endpoint, None) as channel:
@@ -332,10 +375,9 @@ def main() -> None:
         result.update(status="failed", failure=f"{type(error).__name__}: {error}")
         raise
     finally:
-        if coordinator_server is not None:
-            coordinator_server.stop(0).wait()
-        if coordinator_store is not None:
-            coordinator_store.close()
+        if coordinator_process is not None:
+            coordinator_process.terminate()
+            coordinator_process.join(timeout=10)
         for process in workers:
             if process.is_alive():
                 process.terminate()
