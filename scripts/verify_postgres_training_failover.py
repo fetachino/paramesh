@@ -201,7 +201,7 @@ def main() -> None:
             for worker_id in settings.worker_ids:
                 process = mp.get_context("spawn").Process(
                     target=train_process,
-                    args=(f"127.0.0.1:{coordinator_port}", worker_id, 200, 0.2, queue),
+                        args=(f"127.0.0.1:{coordinator_port}", worker_id, 80, 1.0, queue),
                 )
                 process.start()
                 workers.append(process)
