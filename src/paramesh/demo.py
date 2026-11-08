@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import time
 import uuid
+from collections.abc import Sequence
 from contextlib import ExitStack
 from datetime import UTC, datetime
 from multiprocessing.process import BaseProcess
@@ -206,6 +207,7 @@ def run_demo(
     hidden_width: int = 8,
     workload: TrainingWorkload | None = None,
     device: str = "cpu",
+    devices: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     if (
         mode not in MODES
@@ -229,6 +231,9 @@ def run_demo(
     from paramesh.workload import load_parameters, local_reference
 
     active_workload = workload or bundled_workload(hidden_width)
+    worker_devices = list(devices) if devices is not None else [device] * workers
+    if len(worker_devices) != workers or not all(worker_devices):
+        raise ValueError("devices must provide exactly one non-empty device per worker")
 
     torch.set_num_threads(1)
     config = pb.RunConfig(
@@ -298,7 +303,7 @@ def run_demo(
                 warmup_steps=warmup_steps,
                 hidden_width=hidden_width,
                 workload=active_workload,
-                device=device,
+                device=worker_devices[index],
             )
             for name in config.worker_ids
         ]
@@ -529,7 +534,7 @@ def run_demo(
             "learning_rate": config.learning_rate,
             "aggregation": "mean",
             "optimizer": "SGD",
-            "device": device,
+            "device": worker_devices if devices is not None else device,
             "torch_threads": 1,
             "parameter_bytes": sum(value.nbytes for value in initial.values()),
             "transport_dtype": "float32",
