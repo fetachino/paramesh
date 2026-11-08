@@ -4,7 +4,7 @@ from paramesh.demo import run_demo
 
 
 @pytest.mark.distributed
-@pytest.mark.parametrize("component", ["worker", "shard"])
+@pytest.mark.parametrize("component", ["worker", "shard", "coordinator"])
 def test_terminated_process_recovers_without_changing_synchronous_sgd(component, tmp_path):
     result = run_demo(
         mode="sync",

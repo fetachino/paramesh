@@ -71,6 +71,10 @@ def train_worker(
         coordinator = rpc.CoordinatorStub(channel)
         session = _register(coordinator, worker_id, timeout)
         config = session.config
+        session_lock = threading.Lock()
+        session_ref = [session]
+        session_ready = threading.Event()
+        session_ready.set()
         inputs, targets = active_workload.dataset_factory(list(config.worker_ids).index(worker_id))
         inputs, targets = inputs.to(training_device), targets.to(training_device)
         clients = [
@@ -93,12 +97,14 @@ def train_worker(
                 while not stopped.is_set():
                     with progress_lock:
                         step, version = progress
+                    with session_lock:
+                        current = session_ref[0]
                     state = _rpc(
                         coordinator.Heartbeat,
                         pb.HeartbeatRequest(
                             run_id=config.run_id,
                             worker_id=worker_id,
-                            session_id=session.session_id,
+                            session_id=current.session_id,
                             step=step,
                             parameter_version=version,
                         ),
@@ -110,7 +116,33 @@ def train_worker(
                         checkpoint_requested.set()
                     stopped.wait(1)
             except Exception as error:
-                heartbeat_errors.append(error)
+                if not isinstance(error, grpc.RpcError) or error.code() not in (
+                    grpc.StatusCode.UNAVAILABLE,
+                    grpc.StatusCode.DEADLINE_EXCEEDED,
+                    grpc.StatusCode.PERMISSION_DENIED,
+                ):
+                    heartbeat_errors.append(error)
+                    return
+                # Re-registering on the same endpoint lets a replacement coordinator fence
+                # the old generation at every shard before training resumes.
+                session_ready.clear()
+                while not stopped.is_set():
+                    try:
+                        replacement = _register(coordinator, worker_id, timeout)
+                    except grpc.RpcError as retry_error:
+                        if retry_error.code() not in (
+                            grpc.StatusCode.UNAVAILABLE,
+                            grpc.StatusCode.DEADLINE_EXCEEDED,
+                            grpc.StatusCode.ALREADY_EXISTS,
+                        ):
+                            heartbeat_errors.append(retry_error)
+                            return
+                        stopped.wait(0.2)
+                        continue
+                    with session_lock:
+                        session_ref[0] = replacement
+                    session_ready.set()
+                    return
 
         thread = threading.Thread(target=heartbeat, name=f"heartbeat-{worker_id}", daemon=True)
         thread.start()
@@ -129,7 +161,7 @@ def train_worker(
                 pb.CheckpointAck(
                     run_id=config.run_id,
                     worker_id=worker_id,
-                    session_id=session.session_id,
+                    session_id=session_ref[0].session_id,
                     epoch=epoch,
                     step=step,
                     parameter_version=version,
@@ -224,7 +256,9 @@ def train_worker(
                             if index in accepted:
                                 continue
                             request = journal.record.requests[index]
-                            request.generation = session.generation
+                            with session_lock:
+                                current = session_ref[0]
+                            request.generation = current.generation
                             try:
                                 result: pb.UpdateResult = _rpc(
                                     client.PushGradients, request, timeout, retry_deadline=False
@@ -267,6 +301,12 @@ def train_worker(
                                             "synchronous RPC deadline"
                                         ) from error
                                     break
+                                if error.code() == grpc.StatusCode.PERMISSION_DENIED:
+                                    session_ready.wait(timeout=timeout)
+                                    with session_lock:
+                                        reconnected = session_ref[0].generation > current.generation
+                                    if reconnected:
+                                        continue
                                 if error.code() != grpc.StatusCode.FAILED_PRECONDITION:
                                     raise
                                 refreshes += 1
@@ -313,22 +353,37 @@ def train_worker(
                     checkpoint_epoch[0] = control.epoch
                 checkpoint_requested.set()
                 wait_for_checkpoint()
+            if not session_ready.wait(timeout=timeout):
+                raise RuntimeError("Coordinator replacement session was not restored")
             stopped.set()
             thread.join(timeout=timeout + 1)
             if heartbeat_errors:
                 raise RuntimeError("Coordinator heartbeat failed") from heartbeat_errors[0]
-            _rpc(
-                coordinator.Heartbeat,
-                pb.HeartbeatRequest(
-                    run_id=config.run_id,
-                    worker_id=worker_id,
-                    session_id=session.session_id,
-                    step=progress[0],
-                    parameter_version=progress[1],
-                    completed=True,
-                ),
-                timeout,
-            )
+            for _ in range(3):
+                with session_lock:
+                    current = session_ref[0]
+                try:
+                    _rpc(
+                        coordinator.Heartbeat,
+                        pb.HeartbeatRequest(
+                            run_id=config.run_id,
+                            worker_id=worker_id,
+                            session_id=current.session_id,
+                            step=progress[0],
+                            parameter_version=progress[1],
+                            completed=True,
+                        ),
+                        timeout,
+                    )
+                    break
+                except grpc.RpcError as error:
+                    if error.code() != grpc.StatusCode.PERMISSION_DENIED:
+                        raise
+                    replacement = _register(coordinator, worker_id, timeout)
+                    with session_lock:
+                        session_ref[0] = replacement
+            else:
+                raise RuntimeError("Coordinator completion session was not accepted")
             return {
                 "worker_id": worker_id,
                 "steps": steps,
