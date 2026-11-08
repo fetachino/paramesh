@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "source_commit": "51b9d3d36c485ec7bf8c27f92fdb6594bb80014f",
+  "platform": "linux/amd64",
+  "python": "3.13.16",
+  "torch": "2.11.0+cu130",
+  "cuda_runtime": "13.0",
+  "cuda_available": true,
+  "gpu_count": 2,
+  "gpus": [
+    "Tesla T4",
+    "Tesla T4"
+  ],
+  "worker_devices": [
+    "cuda:0",
+    "cuda:1"
+  ],
+  "trial_count": 9,
+  "sync_trials": [
+    {
+      "trial": 0,
+      "max_parameter_error": 2.9802322387695312e-08,
+      "shard_commit_deltas": "6,6",
+      "worker_steps_per_second": 48.26785221307716
+    },
+    {
+      "trial": 5,
+      "max_parameter_error": 2.9802322387695312e-08,
+      "shard_commit_deltas": "6,6",
+      "worker_steps_per_second": 47.769568201509436
+    },
+    {
+      "trial": 7,
+      "max_parameter_error": 2.9802322387695312e-08,
+      "shard_commit_deltas": "6,6",
+      "worker_steps_per_second": 47.89755517628286
+    }
+  ],
+  "checksums": {
+    "manifest.json": "d25cba0ce2f1ad969140252ddb27f022463efb4e24fdd4e314a1f695084db98a",
+    "overview.png": "20f343dcab561cf754c122b76b840632d923e3bc98e145dd09fdf301f1f72b4b",
+    "overview.svg": "01bf30dd5541c5cf85383ca5a3789a750b0a37d33a0bb2444b05b90385def1ca",
+    "rpc.csv": "f3855a2f49c2c0d0d394c51b8f5d2ef1b1766e17a99bccc10cc0ac30f78767e7",
+    "trial-000-sync.json": "c55542f57117af6cad3c8c0a6db5613a1f4d1a41456127a42ba7781395311bb5",
+    "trial-001-async.json": "2b2bfcb5d0db7ddb1cf87cf313a54374ae101a3dfe5c49e7e7ec91aa8b961243",
+    "trial-002-bounded.json": "a950a273858457469341f20a3a04e4d7a81e2a8f3c1e9ae3a8295404364ff527",
+    "trial-003-async.json": "ff53ebd2584965d454b2ba9b77bba7ac3403df504345cc64aee0ab930a9110bd",
+    "trial-004-bounded.json": "d40478f00b2f441b2fb010736c8e91cd91b4537dd2888d4a410ec785b5e643a3",
+    "trial-005-sync.json": "8c584ddf50b4dd9a21aabb9c44aea02697d2b41e0a27dedcf0e116b3676a65a4",
+    "trial-006-bounded.json": "463e903d747a65098690c65b14915c939f449f86bf7dc6432403a776f6eb593f",
+    "trial-007-sync.json": "cacebf6e4d9f0bb850232a7a45517a867d7f58c8bbe76dadfac72a53aa276f91",
+    "trial-008-async.json": "4e53045ce4c42a999fa90b71f6831a319fcb9f3bc3d4fa32f2fc745567abd200",
+    "trials.csv": "910ed02af98a7a49eacbab233ff4cff1496e90a67a472f6caacda11c12facca8"
+  }
+}
