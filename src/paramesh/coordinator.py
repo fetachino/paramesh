@@ -13,7 +13,7 @@ from typing import Any
 from paramesh.config import copy_config, validate_config
 from paramesh.events import emit
 from paramesh.rpc import training_pb2 as pb
-from paramesh.state import StateDB
+from paramesh.state import StateStore
 
 
 @dataclass
@@ -39,7 +39,7 @@ class Coordinator:
         clock: Callable[[], float] = time.monotonic,
         suspect_after: float = 5,
         unavailable_after: float = 15,
-        state: StateDB | None = None,
+        state: StateStore | None = None,
         fence: Callable[[str, int], None] | None = None,
     ) -> None:
         validate_config(config)
