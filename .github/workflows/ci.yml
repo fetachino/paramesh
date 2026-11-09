@@ -75,3 +75,33 @@ jobs:
         with:
           name: operations-evidence
           path: artifacts/operations-stack.json
+
+  arm64-native:
+    # GitHub's public-repository ARM runner is native hardware, not QEMU.
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install uv==0.13.6
+      - run: uv lock --check
+      - run: uv sync --locked --all-extras
+      - run: |
+          mkdir -p artifacts/arm64-native
+          python -m pytest --basetemp artifacts/arm64-native/test-runs
+      - run: python scripts/create_dev_env.py
+      - run: docker buildx build --platform linux/arm64 --load -t paramesh:arm64-ci .
+      - run: |
+          docker run --rm --entrypoint python paramesh:arm64-ci -c \
+            "import importlib.metadata, platform; assert platform.machine() == 'aarch64'; print(importlib.metadata.version('paramesh'))"
+      - run: |
+          docker image inspect paramesh:arm64-ci --format \
+            '{"architecture":"{{.Architecture}}","os":"{{.Os}}","source":"${GITHUB_SHA}"}' \
+            > artifacts/arm64-native/image.json
+          docker compose config --quiet
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arm64-native-evidence
+          path: artifacts/arm64-native
