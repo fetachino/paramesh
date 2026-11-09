@@ -9,6 +9,13 @@ dependencies, runs the test suite, builds the application image for
 the image platform and source SHA as an artifact. This is native ARM hardware
 validation, not QEMU emulation.
 
+The job also runs the existing isolated operations verifier on that ARM host.
+That exercises the coordinator, both parameter shards, workers, dashboard
+authentication, Prometheus, Loki, Tempo, NATS, and the checkpoint service using
+the normal operations Compose profile. The verifier publishes sanitized JSON
+evidence as the `arm64-native-evidence` workflow artifact and removes its
+disposable containers and volumes when it finishes.
+
 The job is an ephemeral validation environment. It does not provide a
 persistent ARM server, public HTTPS, Coolify, long-running PostgreSQL, or
 production deployment evidence. Those claims still require an authorized
