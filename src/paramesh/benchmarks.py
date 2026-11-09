@@ -46,10 +46,15 @@ def hardware() -> dict[str, Any]:
             )
             result.update(json.loads(inventory))
         elif sys.platform == "linux":
+            cpuinfo = Path("/proc/cpuinfo").read_text().splitlines()
             result["cpu_model"] = next(
-                line.split(":", 1)[1].strip()
-                for line in Path("/proc/cpuinfo").read_text().splitlines()
-                if line.startswith("model name")
+                (
+                    line.split(":", 1)[1].strip()
+                    for line in cpuinfo
+                    if line.startswith(("model name", "Model", "Hardware", "Processor"))
+                    and ":" in line
+                ),
+                platform.processor() or platform.machine(),
             )
             result["memory_bytes"] = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
     except (OSError, ValueError, StopIteration, subprocess.SubprocessError) as error:

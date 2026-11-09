@@ -1,8 +1,23 @@
 # Linux ARM64 deployment gate
 
-Oracle Cloud Always Free Ampere A1 remains one candidate for native Linux ARM64
-deployment if capacity returns. This page records local ARM64 validation only.
-At the time of this test, no cloud VM or Coolify resource existed. A later
+## Native ARM CI path
+
+The public repository now runs an `arm64-native` job on GitHub's
+`ubuntu-24.04-arm` hosted runner. The job installs the locked Linux `aarch64`
+dependencies, runs the test suite, builds the application image for
+`linux/arm64`, executes a package smoke check inside that image, and records
+the image platform and source SHA as an artifact. This is native ARM hardware
+validation, not QEMU emulation.
+
+The job is an ephemeral validation environment. It does not provide a
+persistent ARM server, public HTTPS, Coolify, long-running PostgreSQL, or
+production deployment evidence. Those claims still require an authorized
+persistent ARM host such as Oracle A1 when capacity is available.
+
+Oracle Cloud Always Free Ampere A1 remains one candidate for a persistent native
+Linux ARM64 deployment if capacity returns. Before the native CI job was added,
+this page recorded local ARM64 validation only. At the time of that local test,
+no cloud VM or Coolify resource existed. A later
 [Google Cloud deployment](evidence/gcp-single-host-2026-11-03/README.md) ran on
 x86-64 and does not establish native ARM64 correctness.
 
