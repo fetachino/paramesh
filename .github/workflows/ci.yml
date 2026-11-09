@@ -98,6 +98,8 @@ jobs:
           docker run --rm --entrypoint python paramesh:arm64-ci -c \
             "import importlib.metadata, platform; assert platform.machine() == 'aarch64'; print(importlib.metadata.version('paramesh'))"
       - name: Verify the operations stack on native ARM
+        env:
+          PARAMESH_IMAGE: paramesh:arm64-ci
         run: |
           mkdir -p artifacts/arm64-native
           python scripts/verify_operations.py \
