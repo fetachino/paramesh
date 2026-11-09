@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">ParamMesh logo</title>
+  <desc id="desc">An interlocking charcoal and coral PM monogram for ParamMesh.</desc>
+  <path fill="#30343b" d="M102 82h202c66 0 107 35 107 91 0 37-17 64-50 78l-55-42c20-7 29-18 29-35 0-22-17-34-51-34h-80v88l-102 74z"/>
+  <path fill="#ff6b5f" d="M204 190l102-74v76h52l-51 43h-1v121l-72 0v-75l-101 73v-77l71-52z"/>
+  <path fill="#ff6b5f" d="M307 234h44c66 0 107 35 107 91 0 47-26 78-75 88l-62-47c24-6 35-18 35-40 0-22-17-34-51-34h-1z"/>
+</svg>
