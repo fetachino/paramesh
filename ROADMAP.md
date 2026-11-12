@@ -148,9 +148,11 @@ of having deployed their managed equivalents.
 The first hosted target is a Google Cloud Free Trial `e2-standard-2` VM with a 50 GiB
 persistent disk. [Single-host evidence](docs/evidence/gcp-single-host-2026-11-03/README.md)
 records the native x86-64 Coolify run. The [two-host evidence](docs/evidence/gcp-multihost-919bc0-20261104/README.md)
-records the completed private-VPC checkpoint gate on separate x86-64 Linux VMs. The [local ARM64 validation](docs/arm64-validation.md)
-exercises that architecture under emulation; native ARM64 remains open. Oracle
-Always Free A1 remains a future option if capacity returns.
+records the completed private-VPC checkpoint gate on separate x86-64 Linux VMs. The
+[native ARM64 CI validation](docs/arm64-validation.md) is complete; persistent ARM
+hosting and ARM Coolify remain pending the OSL request. Oracle Always Free A1
+remains an alternative if capacity returns. The [persistent ARM64 runbook](docs/arm64-osl-runbook.md)
+is ready for an approved host and does not claim production ARM hosting in advance.
 
 Dependency locking, the [controlled local baseline](docs/evidence/benchmarks/uncompressed-local-2026-11-02/README.md),
 [larger-payload loopback trial](docs/evidence/benchmarks/uncompressed-wide-sync-local-2026-11-02/README.md),

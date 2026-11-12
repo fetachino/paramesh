@@ -22,12 +22,13 @@ changes in Git; do not maintain a pasted, divergent stack in Coolify.
 
 The first hosted target is a Google Cloud `e2-standard-2` (2 vCPU, 8 GB RAM) VM
 in `us-central1-a`, with a 50 GiB `pd-balanced` persistent boot disk. The VM is
-x86-64. [Local ARM64 validation](arm64-validation.md) covers emulation only;
-native ARM64 remains unverified. The [completed two-host Google Cloud checkpoint evidence](evidence/gcp-multihost-919bc0-20261104/README.md)
+x86-64. [Native ARM64 CI validation](arm64-validation.md) is complete, while a
+persistent ARM host and ARM Coolify deployment remain pending. The [completed two-host Google Cloud checkpoint evidence](evidence/gcp-multihost-919bc0-20261104/README.md)
 verified private-VPC operation, high-rate checkpoint publication, abort/recovery,
 raw manifests and numerical agreement. The separate hosted live rollback gate
 has also passed on the single production VM.
-Oracle A1 remains an option if Always Free capacity becomes available.
+Oracle A1 remains an option if Always Free capacity becomes available; an OSL
+AArch64 hosting request is the current no-cost alternative.
 
 For any new target, check compute, disk, public IPv4, egress, snapshots and DNS
 charges before provisioning. The Google VM consumes promotional credit while it

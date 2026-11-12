@@ -93,8 +93,9 @@ and similar projects remain better fits for those workloads.
 ## Run the distributed demo
 
 Requires Python 3.12 on Windows AMD64 or Linux x86-64/ARM64. Native Windows,
-local Linux x86-64 containers and an emulated Linux ARM64 Compose stack have
-been exercised; native ARM64 hardware remains to be checked.
+local Linux x86-64 containers, and the public GitHub native ARM64 CI job have
+been exercised. A persistent ARM host, Coolify deployment, and ARM production
+hosting remain unverified.
 
 ```powershell
 python -m pip install uv==0.13.6
@@ -568,6 +569,8 @@ benchmarks and remaining release work follow in [ROADMAP.md](ROADMAP.md).
 - [Operations and signals](docs/operations.md)
 - [Dependency locking and updates](docs/dependencies.md)
 - [Git-backed Coolify deployment](docs/coolify.md)
+- [Native ARM64 validation and persistent-host runbook](docs/arm64-validation.md)
+- [OSL persistent ARM64 validation runbook](docs/arm64-osl-runbook.md)
 - [Immutable deployment and rollback](docs/immutable-deployment.md)
 - [Multi-host Linux deployment path](docs/multi-host.md)
 - [Architecture and consistency model](ARCHITECTURE.md)
