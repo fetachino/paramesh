@@ -19,12 +19,12 @@ disposable containers and volumes when it finishes.
 The job is an ephemeral validation environment. It does not provide a
 persistent ARM server, public HTTPS, Coolify, long-running PostgreSQL, or
 production deployment evidence. Those claims still require an authorized
-persistent ARM host such as Oracle A1 when capacity is available.
+persistent ARM host. The current request is pending with the OSU Open Source
+Lab AArch64 OpenStack service; Oracle Cloud Always Free Ampere A1 remains an
+alternative only if capacity returns.
 
-Oracle Cloud Always Free Ampere A1 remains one candidate for a persistent native
-Linux ARM64 deployment if capacity returns. Before the native CI job was added,
-this page recorded local ARM64 validation only. At the time of that local test,
-no cloud VM or Coolify resource existed. A later
+Before the native CI job was added, this page recorded local ARM64 validation
+only. At the time of that local test, no cloud VM or Coolify resource existed. A later
 [Google Cloud deployment](evidence/gcp-single-host-2026-11-03/README.md) ran on
 x86-64 and does not establish native ARM64 correctness.
 
