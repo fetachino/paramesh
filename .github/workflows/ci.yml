@@ -86,6 +86,29 @@ jobs:
           python-version: '3.12'
           cache: pip
       - run: python -m pip install uv==0.13.6
+      - name: Verify native ARM runner
+        run: |
+          mkdir -p artifacts/arm64-native
+          python - <<'PY'
+          import json
+          import os
+          import platform
+
+          machine = platform.machine().lower()
+          if machine not in {"aarch64", "arm64"}:
+              raise SystemExit(f"native ARM runner required, got {machine!r}")
+          metadata = {
+              "machine": machine,
+              "python": platform.python_version(),
+              "system": platform.system(),
+              "release": platform.release(),
+              "source": os.environ["GITHUB_SHA"],
+          }
+          print(json.dumps(metadata, sort_keys=True))
+          with open("artifacts/arm64-native/runner.json", "w", encoding="utf-8") as handle:
+              json.dump(metadata, handle, sort_keys=True, indent=2)
+              handle.write("\n")
+          PY
       - run: uv lock --check
       - run: uv sync --locked --all-extras
       - run: echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
