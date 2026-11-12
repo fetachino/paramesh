@@ -569,6 +569,8 @@ benchmarks and remaining release work follow in [ROADMAP.md](ROADMAP.md).
 - [Operations and signals](docs/operations.md)
 - [Dependency locking and updates](docs/dependencies.md)
 - [Git-backed Coolify deployment](docs/coolify.md)
+- [Native ARM64 validation and persistent-host runbook](docs/arm64-validation.md)
+- [OSL persistent ARM64 validation runbook](docs/arm64-osl-runbook.md)
 - [Immutable deployment and rollback](docs/immutable-deployment.md)
 - [Multi-host Linux deployment path](docs/multi-host.md)
 - [Architecture and consistency model](ARCHITECTURE.md)
