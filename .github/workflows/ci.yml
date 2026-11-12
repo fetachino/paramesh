@@ -130,7 +130,7 @@ jobs:
             --output artifacts/arm64-native/operations.json
       - run: |
           docker image inspect paramesh:arm64-ci --format \
-            '{"architecture":"{{.Architecture}}","os":"{{.Os}}","source":"${GITHUB_SHA}"}' \
+            "{\"architecture\":\"{{.Architecture}}\",\"os\":\"{{.Os}}\",\"source\":\"$GITHUB_SHA\"}" \
             > artifacts/arm64-native/image.json
           docker compose config --quiet
       - uses: actions/upload-artifact@v4
